@@ -1,0 +1,89 @@
+# Типы заявлений и правила вердикта.
+#
+# Для каждого типа:
+#   title    — название в интерфейсе;
+#   form     — id бланка из forms/*.yaml (null — бланк ещё не настроен);
+#   enabled  — показывать ли тип как доступный;
+#   needs_passport — нужен ли паспорт для проверки;
+#   rules    — правила вердикта, проверяются сверху вниз:
+#     reject — любое сработавшее правило → «Отклонить» (причины собираются все);
+#     review — любое сработавшее правило → «Ручная проверка»;
+#     иначе  → «Принять».
+#
+# Условия (when):
+#   check: <название проверки> + status: [fail, warn, review, ok, info] — статус конкретной проверки
+#   any_status: [...]          — у любой проверки такой статус
+#   missing: <ключ поля>       — поле заявления пустое
+#   flag: <имя>                — служебный признак (old_passport, admin_mismatch, passport_invalid)
+#
+# Списки условий в when — все должны выполниться (И). Несколько правил — ИЛИ.
+# ВНИМАНИЕ: правила ниже — стартовый вариант, их нужно сверить с регламентом.
+
+case_types:
+  admin_change_person:
+    title: Смена администратора домена (физлицо → другое лицо)
+    form: regru_transfer_person
+    enabled: true
+    needs_passport: true
+    rules:
+      reject:
+        - when: {flag: old_passport}
+          reason: В заявлении указан прежний (недействительный) паспорт
+        - when: {flag: passport_invalid}
+          reason: Паспорт недействителен по возрасту владельца
+        - when: {check: "Серия и номер паспорта", status: [fail]}
+          reason: Серия и номер паспорта не совпадают с предъявленным паспортом
+        - when: {check: "ФИО в шапке («от …»)", status: [fail]}
+          reason: ФИО заявителя не совпадает с паспортом
+        - when: {check: "Дата рождения", status: [fail]}
+          reason: Дата рождения не совпадает с паспортом
+        - when: {flag: admin_mismatch}
+          reason: Заявитель не является текущим администратором домена
+        - when: {check: "Домен(ы)", status: [fail]}
+          reason: Домен не указан или указан некорректно
+        - when: {check: "Новый администратор указан", status: [fail]}
+          reason: Не указан новый администратор
+        - when: {check: "Новый администратор ≠ заявитель", status: [fail]}
+          reason: Новый администратор совпадает с заявителем
+        - when: {check: "Дата заявления", status: [fail]}
+          reason: Дата заявления в будущем
+      review:
+        - when: {any_status: [review]}
+          reason: Есть поля, которые нужно подтвердить вручную
+        - when: {any_status: [warn, fail]}
+          reason: Есть замечания — см. таблицу проверок
+
+  lk_owner_change:
+    title: Смена владельца личного кабинета
+    form: null
+    enabled: false
+    needs_passport: true
+
+  admin_data_update:
+    title: Изменение паспортных данных администратора
+    form: null
+    enabled: false
+    needs_passport: true
+
+  passport_only:
+    title: Только проверка паспорта
+    form: null
+    enabled: true
+    needs_passport: true
+    rules:
+      reject:
+        - when: {flag: passport_invalid}
+          reason: Паспорт недействителен по возрасту владельца
+        - when: {flag: admin_mismatch}
+          reason: Владелец паспорта не является текущим администратором домена
+      review:
+        - when: {check: "Срок действия паспорта", status: [review]}
+          reason: Срок действия не проверен или даты прочитаны ненадёжно — подтвердите даты
+        - when: {check: "Кем выдан", status: [review, warn]}
+          reason: «Кем выдан» нужно подтвердить по паспорту
+        - when: {check: "Кем выдан ↔ код подразделения", status: [review, warn]}
+          reason: Регион органа выдачи не совпадает с кодом подразделения
+        - when: {check: "Кем выдан ↔ данные системы", status: [review, warn]}
+          reason: «Кем выдан» отличается от данных во внутренней системе
+        - when: {any_status: [review, warn, fail]}
+          reason: Есть поля, которые нужно подтвердить вручную
