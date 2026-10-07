@@ -246,6 +246,23 @@ def remove_lines(gray: np.ndarray) -> np.ndarray:
     return out
 
 
+def remove_lines_soft(gray: np.ndarray) -> np.ndarray:
+    """Как remove_lines, но пиксели линии, через которые проходит штрих буквы (над или под линией есть
+    чернила в том же столбце), остаются. Нужно для подчёркнутого печатного текста: remove_lines обрезает
+    хвосты «g», «р», «у», «ф», и «trading» читается как «tradina»."""
+    if gray.ndim == 3:
+        gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
+    bw = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+    klen = max(40, gray.shape[1] // 12)
+    lines = cv2.morphologyEx(bw, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT, (klen, 1)))
+    lines = cv2.dilate(lines, np.ones((3, 1), np.uint8))
+    ink = ((bw > 0) & (lines == 0)).astype(np.uint8)
+    stroke = cv2.dilate(ink, np.ones((7, 1), np.uint8)) > 0
+    out = gray.copy()
+    out[(lines > 0) & ~stroke] = 255
+    return out
+
+
 # ---------------------------------------------------------------- VLM (Ollama)
 
 class OllamaVLM:

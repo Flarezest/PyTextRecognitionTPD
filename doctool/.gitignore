@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+results/
+export.json
+*.xlsx
+*.png
+*.jpg
+*.pdf
+# значки расширения Chrome нужны в репозитории
+!doctool_extension/icons/*.png

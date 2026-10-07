@@ -6,6 +6,8 @@
   python -m doctool check -a заявление.pdf -p паспорт.pdf
   python -m doctool --vlm qwen3-vl:4b-instruct check -a заявление.jpg -p паспорт.pdf --handwritten
   python -m doctool extract паспорт.pdf --type passport
+  python -m doctool whois example.ru пример.рф             # статус домена в реестре (WHOIS)
+  python -m doctool validate                               # проверить forms/*.yaml и config/case_types.yaml
 """
 from __future__ import annotations
 
@@ -84,6 +86,46 @@ def cmd_web(args):
           ollama=args.ollama, open_browser=not args.no_browser)
 
 
+def cmd_whois(args):
+    from .domains import split_domains
+    from .whois import lookup
+    for d in split_domains(" ".join(args.domains)):
+        w = lookup(d)
+        print(f"{d}: {w.summary}")
+        if args.raw and w.raw:
+            print(w.raw)
+
+
+def cmd_validate(args):
+    from . import checks as checklib
+    from .formspec import ROLES, load_forms, validate_config
+    from .verdict import load_case_types
+    types = load_case_types()
+    if args.list:
+        print("Проверки (id для checks: в config/case_types.yaml):")
+        for cid in checklib.ids_for({"form": "*"}):
+            d = checklib.REGISTRY[cid]
+            extra = (f"; флаги: {', '.join(d.flags)}" if d.flags else "") + \
+                    {"passport": "; нужен паспорт", "domains": "; после загрузки из manager"}.get(d.needs or "", "")
+            print(f"  {cid:24} {d.title}{extra}")
+            for n, rows in d.names.items():
+                print(f"  {'':24}   «{n}» — строка таблицы: {', '.join(rows) or '—'}")
+        print("\nРоли полей заявления (role: в forms/*.yaml):")
+        for r, t in ROLES.items():
+            print(f"  {r:24} {t}")
+        print("\nТипы заявлений:")
+        for tid, ct in types.items():
+            print(f"  {tid:24} бланк: {ct.get('form') or '—'}; проверки: {', '.join(checklib.ids_for(ct))}")
+        print()
+    problems = validate_config(case_types=types)
+    for p in problems:
+        print(f"[!] {p}")
+    if problems:
+        sys.exit(f"Найдено проблем: {len(problems)}")
+    print(f"Конфигурация в порядке: бланков {len(load_forms())}, типов заявлений {len(types)}, "
+          f"проверок {len(checklib.REGISTRY)}.")
+
+
 def cmd_gui(args):
     from .qt_app import main as qt_main
     qt_main(out_root=args.out, model=args.vlm or DEFAULT_MODEL, ollama=args.ollama)
@@ -111,7 +153,7 @@ def main(argv=None):
     c.add_argument("--admin", help="JSON с данными текущего администратора из внутренней системы")
     c.add_argument("-o", "--out", default="results", help="папка для результатов (по умолчанию results)")
     c.add_argument("--case", help="название дела (по умолчанию — имя файла)")
-    c.add_argument("--date", help="дата, на которую проверять срок действия паспорта (ДД.ММ.ГГГГ)")
+    c.add_argument("--date", help=argparse.SUPPRESS)   # с 0.5.0 не используется: срок действия паспорта не проверяется
     c.set_defaults(func=cmd_check)
 
     e = sub.add_parser("extract", help="только извлечь поля из документа")
@@ -132,12 +174,21 @@ def main(argv=None):
     g.add_argument("-o", "--out", default="results")
     g.set_defaults(func=cmd_gui)
 
+    wh = sub.add_parser("whois", help="статус домена в реестре (WHOIS, порт 43)")
+    wh.add_argument("domains", nargs="+", help="домены")
+    wh.add_argument("--raw", action="store_true", help="показать ответ сервера целиком")
+    wh.set_defaults(func=cmd_whois)
+
+    v = sub.add_parser("validate", help="проверить описания бланков (forms/) и типов заявлений (config/)")
+    v.add_argument("--list", action="store_true", help="показать проверки, роли полей и типы заявлений")
+    v.set_defaults(func=cmd_validate)
+
     args = p.parse_args(argv)
     import doctool.progress as _pr
     _pr.quiet = args.quiet
     if args.cmd == "check" and not args.application and not args.passport:
         p.error("укажите -a и/или -p")
-    err = check_tesseract()
+    err = check_tesseract() if args.cmd not in ("whois", "validate") else None
     if err:
         sys.exit("[!] " + err)
     args.func(args)

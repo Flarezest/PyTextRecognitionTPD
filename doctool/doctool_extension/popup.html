@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>doctool — manager</title>
+<style>
+body{font:13px/1.45 "Segoe UI",system-ui,Arial,sans-serif;margin:0;width:340px;color:#1d1f23;background:#fff}
+header{padding:10px 12px;border-bottom:1px solid #dfe3e8;font-weight:600}
+section{padding:10px 12px}
+.st{display:flex;align-items:center;gap:8px;margin:4px 0}
+.dot{width:10px;height:10px;border-radius:50%;background:#bbb;flex:none}
+.ok .dot{background:#2e9d57}.bad .dot{background:#d0453b}
+.hint{color:#667085;font-size:12px}
+button{font:inherit;border:1px solid #dfe3e8;background:#fff;border-radius:6px;padding:5px 10px;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+#events{font:11.5px/1.4 Consolas,monospace;background:#f5f6f8;border:1px solid #dfe3e8;border-radius:6px;padding:6px;
+  max-height:180px;overflow:auto;white-space:pre-wrap;margin:0}
+a{color:#2b6cb0}
+</style>
+</head>
+<body>
+<header>doctool — manager <span class="hint" id="ver"></span></header>
+<section>
+  <div class="st" id="conn"><span class="dot"></span><span id="connText">…</span></div>
+  <div class="st" id="mgr"><span class="dot"></span><span id="mgrText">manager: не проверялся</span></div>
+  <div class="row">
+    <button id="reconnect">Переподключиться</button>
+    <button id="check">Проверить вход в manager</button>
+  </div>
+</section>
+<section>
+  <div class="hint">События</div>
+  <pre id="events"></pre>
+  <p class="hint">Расширение только читает страницы manager (счета, Sd, S) по запросу программы doctool.
+    <a href="options.html" target="_blank">Настройки</a></p>
+</section>
+<script src="popup.js"></script>
+</body>
+</html>

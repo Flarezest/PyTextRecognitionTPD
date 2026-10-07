@@ -3,6 +3,10 @@
 Используется и командной строкой, и обоими интерфейсами (Qt и веб):
     res = run_case(CaseInput(...))         # распознать, сверить, вынести вердикт, сохранить отчёты
     recompute(res, overrides, confirmed)   # применить правки оператора и пересчитать
+
+Какие проверки выполнять, задаёт тип заявления (`checks:` в config/case_types.yaml), сами проверки —
+в реестре checks.py. Строки таблицы — BASE_ROWS + `rows:` бланка; поля заявления берутся по ролям
+(formspec.Fields), поэтому для нового бланка этот модуль менять не нужно.
 """
 from __future__ import annotations
 
@@ -14,9 +18,11 @@ from pathlib import Path
 
 import cv2
 
+from . import checks as checklib
 from . import names, parsers
-from .application import _store, detect_form, extract_application, load_forms
-from .compare import OK, REVIEW, WARN, Check, compare, extra_checks
+from .application import _store, detect_form, extract_application, page_kind
+from .compare import OK, REVIEW, WARN, Check
+from .formspec import Fields, extra_rows, load_forms
 from .integrations import AdminData
 from .models import Extraction, FieldValue
 from .ocr import OllamaVLM, Page, best_orientation, downscale, keyword_score, load_document, tesseract_text
@@ -46,6 +52,7 @@ class CaseInput:
     check_date: str | None = None          # ДД.ММ.ГГГГ — на какую дату проверять срок действия
     case_id: str | None = None
     out_root: str = "results"
+    manager_autoload: bool = False         # после проверки загрузить данные Sd доменов заявления из manager
 
 
 @dataclass
@@ -66,39 +73,46 @@ class CaseResult:
     confirmed: set = field(default_factory=set)
     notes: list = field(default_factory=list)
     admin: AdminData | None = None
+    domains_sd: list = field(default_factory=list)   # domains.DomainInfo — данные доменов из manager
 
 
 # ------------------------------------------------------------------ строки таблицы (общие для GUI и выгрузки)
 
-ROWS = [
+# Стандартные строки. app — роли полей заявления (formspec.ROLES; подполе через точку), первое непустое
+# значение показывается в таблице; pas — поле паспорта («@fio» — фамилия, имя, отчество); edit — куда
+# записывается правка оператора (по умолчанию — первая роль из app; «?» — только если поле есть в заявлении).
+# Проверки строки берутся из реестра (checks.py: names), бланк может добавить свои строки (`rows:` в YAML).
+BASE_ROWS = [
     {"id": "fio", "title": "ФИО", "app": ["applicant_fio", "applicant_header"], "pas": "@fio",
-     "checks": ["ФИО в шапке («от …»)", "ФИО в тексте («Я, …»)", "ФИО у подписи", "ФИО: шапка ↔ «Я, …»",
-                "Заявитель — текущий администратор"]},
-    {"id": "birth_date", "title": "Дата рождения", "app": ["applicant_header.birth_date"], "pas": "birth_date",
-     "checks": ["Дата рождения"]},
-    {"id": "passport", "title": "Серия и номер паспорта", "app": ["passport"], "pas": "series_number",
-     "checks": ["Серия и номер паспорта", "Указан прежний паспорт", "Паспорт в системе устарел"]},
-    {"id": "issue_date", "title": "Дата выдачи паспорта", "app": ["passport.issue_date"], "pas": "issue_date",
-     "checks": ["Дата выдачи паспорта", "Срок действия паспорта", "Серия ↔ год выдачи"]},
-    {"id": "issued_by", "title": "Кем выдан", "app": ["issued_by"], "pas": "issued_by",
-     "checks": ["Кем выдан", "Кем выдан ↔ код подразделения", "Кем выдан ↔ данные системы"]},
-    {"id": "department_code", "title": "Код подразделения", "app": [], "pas": "department_code",
-     "checks": ["Кем выдан ↔ код подразделения"]},
-    {"id": "birth_place", "title": "Место рождения", "app": [], "pas": "birth_place", "checks": []},
-    {"id": "address", "title": "Адрес регистрации", "app": ["address"], "pas": None, "checks": ["Адрес регистрации"]},
-    {"id": "inn", "title": "ИНН ИП", "app": ["inn"], "pas": None, "checks": ["ИНН ИП: контрольные цифры"]},
-    {"id": "domains", "title": "Домен(ы)", "app": ["domains"], "pas": None,
-     "checks": ["Домен(ы)", "Домены администратора"]},
+     "edit": ["applicant_fio", "applicant_header", "signature_fio?", "applicant_header.raw_fio"]},
+    {"id": "birth_date", "title": "Дата рождения", "app": ["applicant_header.birth_date"], "pas": "birth_date"},
+    {"id": "passport", "title": "Серия и номер паспорта", "app": ["passport"], "pas": "series_number"},
+    {"id": "issue_date", "title": "Дата выдачи паспорта", "app": ["passport.issue_date"], "pas": "issue_date"},
+    {"id": "issued_by", "title": "Кем выдан", "app": ["issued_by"], "pas": "issued_by"},
+    {"id": "department_code", "title": "Код подразделения", "app": [], "pas": "department_code"},
+    {"id": "birth_place", "title": "Место рождения", "app": [], "pas": "birth_place"},
+    {"id": "address", "title": "Адрес регистрации", "app": ["address"], "pas": None},
+    {"id": "inn", "title": "ИНН ИП", "app": ["inn"], "pas": None},
+    {"id": "domains", "title": "Домен(ы)", "app": ["domains"], "pas": None},
     {"id": "new_admin", "title": "Новый администратор", "app": ["new_admin_fio", "new_admin_org", "new_admin_inline"],
-     "pas": None, "checks": ["Новый администратор указан", "Новый администратор: текст ↔ таблица",
-                             "Новый администратор ≠ заявитель"]},
+     "pas": None},
     {"id": "new_admin_contact", "title": "Контакты нового администратора",
-     "app": ["new_admin_contact", "new_admin_org_contact"], "pas": None, "checks": ["Контакты нового администратора"]},
-    {"id": "contract", "title": "Договор / аккаунт", "app": ["contract"], "pas": None,
-     "checks": ["Договор/аккаунт нового администратора"]},
-    {"id": "application_date", "title": "Дата заявления", "app": ["application_date"], "pas": None,
-     "checks": ["Дата заявления"]},
+     "app": ["new_admin_contact", "new_admin_org_contact"], "pas": None},
+    {"id": "contract", "title": "Договор / аккаунт", "app": ["contract"], "pas": None},
+    {"id": "application_date", "title": "Дата заявления", "app": ["application_date"], "pas": None},
 ]
+
+
+def rows_for(form: dict | None) -> list[dict]:
+    """Строки таблицы для бланка: стандартные + `rows:` из YAML; у каждой — названия её проверок (checks)."""
+    out = []
+    for r in BASE_ROWS + extra_rows(form):
+        r = {"app": [], "pas": None, **r}
+        r["checks"] = list(dict.fromkeys(checklib.names_for_row(r["id"]) + list(r.get("checks") or [])))
+        out.append(r)
+    return out
+
+
 _STATUS_RANK = {"fail": 4, "review": 3, "warn": 2, "info": 1, "ok": 0}
 
 
@@ -113,10 +127,11 @@ def _pas_value(pas: Extraction | None, key: str | None) -> str:
 def table_rows(res: CaseResult) -> list[dict]:
     """Строки для таблицы интерфейса: значение заявления, паспорта, фрагмент, статус."""
     out = []
-    for r in ROWS:
+    F = Fields(res.app)
+    for r in rows_for(F.form):
         app_val, crop, app_src = "", None, ""
         for k in r["app"]:
-            f = res.app.fields.get(k) if res.app else None
+            f = F.field(k) if res.app else None
             if f is not None:
                 crop = crop or f.crop
                 if f.value:
@@ -125,7 +140,7 @@ def table_rows(res: CaseResult) -> list[dict]:
                     break
         if not crop and res.app is not None:  # фрагмент берём у «родительского» поля
             base = r["app"][0].split(".")[0] if r["app"] else None
-            f = res.app.fields.get(base) if base else None
+            f = F.field(base) if base else None
             crop = f.crop if f is not None else None
         pas_val = _pas_value(res.pas, r["pas"])
         pas_src = ""
@@ -157,9 +172,13 @@ def classify_pages(pages: list[Page], forms: list[dict]) -> dict[int, str]:
         if p.image is None:
             roles[p.index] = "skip"
             continue
-        _, sc_pas = best_orientation(p.image, PASSPORT_KW)
         txt, _ = tesseract_text(downscale(cv2.cvtColor(p.image, cv2.COLOR_BGR2GRAY), 1800), psm=3)
         sc_app = sum(1 for k in form_kw if k.lower() in txt.lower())
+        kind = next((k for f in forms for k in [page_kind(txt, f)] if k), None)   # заголовок бланка / продолжение
+        if kind == "start" or (kind == "cont" and sc_app >= 1):
+            roles[p.index] = "application"
+            continue
+        _, sc_pas = best_orientation(p.image, PASSPORT_KW)
         if sc_app >= 3 and sc_app >= sc_pas:
             roles[p.index] = "application"
         elif sc_pas >= 3:
@@ -236,8 +255,9 @@ def run_case(inp: CaseInput) -> CaseResult:
         res.notes.append("Паспорт не загружен — сверка с паспортом не выполнялась.")
 
     # --- ранее выданные паспорта: ищем, только если номера не совпали
-    if res.pas is not None and res.app.get("passport") and res.pas.get("series_number"):
-        a = re.sub(r"\D", "", res.app.get("passport"))
+    F = Fields(res.app)
+    if res.pas is not None and F.get("passport") and res.pas.get("series_number"):
+        a = re.sub(r"\D", "", F.get("passport"))
         p = re.sub(r"\D", "", res.pas.get("series_number"))
         alts = {re.sub(r"\D", "", x) for x in res.pas.fields["series_number"].alternatives}
         if a != p and a not in alts and len(pas_pages) > 1:
@@ -247,7 +267,7 @@ def run_case(inp: CaseInput) -> CaseResult:
     # --- данные администратора из системы (провайдер выбирает запись по доменам заявления)
     if inp.admin is not None and hasattr(inp.admin, "get_admin"):
         try:
-            res.admin = inp.admin.get_admin(res.app.get("domains.list") or [])
+            res.admin = inp.admin.get_admin(F.get("domains.list") or [])
         except NotImplementedError as e:
             res.notes.append(str(e))
     else:
@@ -264,50 +284,61 @@ def run_case(inp: CaseInput) -> CaseResult:
 def _evaluate(res: CaseResult) -> None:
     inp = res.inp
     on = parsers.parse_date(inp.check_date) if inp.check_date else None
-    checks = compare(res.app, res.pas, on)
-    more, flags = extra_checks(res.app, res.pas, res.previous_passports, res.admin, checks)
-    checks += more
-    if not res.case_type.get("form"):  # тип без бланка — только проверки паспорта и данных из системы
-        keep = {"Срок действия паспорта", "Серия ↔ год выдачи", "MRZ паспорта", "Заявитель — текущий администратор",
-                "Паспорт в системе устарел", "Домены администратора", "Кем выдан", "Кем выдан ↔ код подразделения",
-                "Кем выдан ↔ данные системы"}
-        checks = [c for c in checks if c.name in keep]
+    ctx = checklib.Ctx(res.app, res.pas, on=on, previous=res.previous_passports, admin=res.admin,
+                       domains_sd=res.domains_sd)
+    # проверки типа заявления (checks: в case_types.yaml; тип без бланка — только паспорт и данные из системы)
+    checks, flags = checklib.run(checklib.ids_for(res.case_type), ctx)
     # подтверждения оператора: «нужна ручная проверка»/«проверить» по подтверждённой строке → в порядке
-    for r in ROWS:
+    for r in rows_for(ctx.form):
         if r["id"] in res.confirmed:
             for c in checks:
                 if c.name in r["checks"] and c.status in (REVIEW, WARN):
                     c.status, c.detail = OK, (c.detail + "; " if c.detail else "") + "подтверждено оператором"
     res.checks, res.flags = checks, flags
-    res.decision = decide(res.case_type, checks, flags, res.app.fields)
+    res.decision = decide(res.case_type, checks, flags, ctx.f)
     res.record = build_record(res)
+
+
+def attach_domains(res: CaseResult, items: list) -> CaseResult:
+    """Данные доменов из manager → проверки и вердикт пересчитываются, отчёты перезаписываются."""
+    res.domains_sd = list(items)
+    _evaluate(res)
+    save_outputs(res, registry=False)
+    return res
+
+
+def case_domains(res: CaseResult) -> list[str]:
+    """Домены из заявления (для загрузки данных из manager)."""
+    return list(Fields(res.app).get("domains.list") or []) if res.app is not None else []
 
 
 # ------------------------------------------------------------------ правки оператора
 
-def _form_types() -> dict[str, str]:
+def _field_types(form: dict | None) -> dict[str, str]:
+    """{поле: type} бланка заявления; без бланка — всех бланков."""
     out = {}
-    for f in load_forms():
+    for f in ([form] if form else load_forms()):
         for k, spec in f["fields"].items():
-            out[k] = spec["type"]
+            out[k] = (spec or {}).get("type", "text")
     return out
 
 
 def recompute(res: CaseResult, overrides: dict | None = None, confirmed: set | list | None = None) -> CaseResult:
     """overrides: {row_id: {"app": "...", "passport": "..."}}; confirmed: id строк, подтверждённых оператором."""
-    types = _form_types()
+    F = Fields(res.app)
+    types = _field_types(F.form)
+    rows = {r["id"]: r for r in rows_for(F.form)}
     for row_id, vals in (overrides or {}).items():
-        row = next((r for r in ROWS if r["id"] == row_id), None)
+        row = rows.get(row_id)
         if row is None:
             continue
         res.overrides[row_id] = {**res.overrides.get(row_id, {}), **vals}
         if "app" in vals and row["app"] and res.app is not None:
             v = (vals["app"] or "").strip()
-            keys = ["applicant_fio", "applicant_header"] if row_id == "fio" else row["app"][:1]
-            if row_id == "fio":
-                if "signature_fio" in res.app.fields:
-                    keys.append("signature_fio")
-            for key in keys:
+            for role in row.get("edit") or row["app"][:1]:
+                key = F.key(role.rstrip("?"))
+                if role.endswith("?") and key not in res.app.fields:
+                    continue
                 if "." in key:
                     res.app.fields[key] = FieldValue(v, 1.0, "manual")
                     continue
@@ -315,8 +346,6 @@ def recompute(res: CaseResult, overrides: dict | None = None, confirmed: set | l
                 _store(res.app, key, types.get(key, "text"), v, 1.0, "manual", crop=old.crop if old else None)
                 if key in res.app.fields:
                     res.app.fields[key].needs_review = False
-            if row_id == "fio":
-                res.app.fields["applicant_header.raw_fio"] = FieldValue(v, 1.0, "manual")
         if "passport" in vals and row["pas"] and res.pas is not None:
             v = (vals["passport"] or "").strip()
             if row["pas"] == "@fio":
@@ -342,7 +371,8 @@ def build_record(res: CaseResult) -> dict:
     """Запись для автозаполнения формы во внутренней системе (схема doctool.case.v1).
     Личные данные берутся из паспорта (если он есть), остальное — из заявления."""
     a, p = res.app, res.pas
-    ag = a.get if a is not None else (lambda k, d=None: d)
+    F = Fields(a)
+    ag = F.get if a is not None else (lambda k, d=None: d)
     pg = p.get if p is not None else (lambda k, d=None: d)
     sn = pg("series_number") or ag("passport") or ""
     m = re.match(r"(\d{4})\s?(\d{6})", re.sub(r"[^\d ]", "", sn))
@@ -353,13 +383,13 @@ def build_record(res: CaseResult) -> dict:
         surname, given, patr = (toks + ["", "", ""])[:3]
     doms = ag("domains.list") or []
 
-    def src(row_id):
-        r = next(x for x in ROWS if x["id"] == row_id)
+    def src(r):
         if r["pas"] and p is not None:
             k = "surname" if r["pas"] == "@fio" else r["pas"]
             if k in p.fields:
                 return p.fields[k].source
-        for k in r["app"]:
+        for role in r["app"]:
+            k = F.key(role)
             if a is not None and k in a.fields and a.fields[k].value:
                 return a.fields[k].source
         return ""
@@ -394,10 +424,15 @@ def build_record(res: CaseResult) -> dict:
         },
         "contract": ag("contract"),
         "application_date": ag("application_date"),
+        # все поля бланка как есть (ключи — имена полей из forms/<бланк>.yaml): новый бланк попадает
+        # в выгрузку без изменений кода
+        "application_form": a.doc_type if a is not None else None,
+        "application_fields": {k: f.value for k, f in a.fields.items() if "." not in k} if a is not None else {},
         "confirmed_by_operator": sorted(res.confirmed),
         "manual_edits": res.overrides,
-        "sources": {r["id"]: src(r["id"]) for r in ROWS},
+        "sources": {r["id"]: src(r) for r in rows_for(F.form)},
         "previous_passports": res.previous_passports,
+        "manager_domains": [d.to_dict() for d in res.domains_sd],
         "system_update": _system_update(res),
         "checks": [c.to_dict() for c in res.checks],
         "files": {"application": res.inp.application, "passport": res.inp.passport,
@@ -431,11 +466,17 @@ def save_outputs(res: CaseResult, registry: bool = True) -> None:
     full = {"case_id": res.case_id, "decision": res.decision.to_dict(),
             "application": res.app.to_dict() if res.app else None,
             "passport": res.pas.to_dict() if res.pas else None,
-            "checks": [c.to_dict() for c in res.checks], "notes": res.notes}
+            "checks": [c.to_dict() for c in res.checks], "notes": res.notes,
+            "manager_domains": [x.to_dict() for x in res.domains_sd]}
     (d / "result.json").write_text(json.dumps(full, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     (d / "export.json").write_text(json.dumps(res.record, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     save_html(d / "report.html", res.case_id, res.app, res.pas, res.checks, decision=res.decision,
-              case_title=res.case_type.get("title", ""))
+              case_title=res.case_type.get("title", ""), domains=[x.to_dict() for x in res.domains_sd])
+    if res.domains_sd:
+        from . import domain_report
+        (d / "domains.html").write_text(domain_report.build([x.to_dict() for x in res.domains_sd], case_id=res.case_id,
+                                                            case_title=res.case_type.get("title", ""),
+                                                            checks=res.checks), encoding="utf-8")
     if registry:
         xlsx = Path(res.inp.out_root) / "реестр_проверок.xlsx"
         try:

@@ -67,12 +67,23 @@ tr.edited td{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px;overflow:auto;max-height:380px;font-size:12px}
 .hidden{display:none}
 .msg{padding:8px 12px;border-radius:6px;background:var(--review);color:var(--review-t);margin:8px 0}
+.ext{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.ext .dot{width:9px;height:9px;border-radius:50%;background:#bbb}
+.ext.on .dot{background:#2e9d57}.ext.off .dot{background:#d0453b}
+textarea{font:inherit;color:var(--text);background:var(--input);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;min-height:64px}
+#domLog{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;max-height:150px;overflow:auto;font:12.5px/1.5 Consolas,monospace;white-space:pre-wrap;margin-top:10px}
+#domTable td{font-size:13px}
+#domTable td small{color:var(--muted)}
+#domTable ul{margin:4px 0 0 16px;padding:0}
+#domTable tr.grp td{background:var(--bg);font-weight:600;font-size:12.5px;padding-top:10px}
+.wrap{overflow-x:auto}
 </style>
 </head>
 <body>
 <header>
   <h1>doctool — проверка заявлений</h1>
   <span class="meta" id="meta">загрузка…</span>
+  <span class="ext" id="extState" title="Расширение Chrome «doctool — manager»"><span class="dot"></span><span>manager: …</span></span>
 </header>
 <main>
 <section class="card" id="formCard">
@@ -85,7 +96,6 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:
         <option value="autofill" disabled>Автозаполнение во внутренней системе (позже)</option>
       </select></label>
     <label class="f">Название дела (необязательно) <input type="text" id="caseId" placeholder="напр. Иванов_домен.рф"></label>
-    <label class="f">Срок действия паспорта на дату <input type="text" id="checkDate" placeholder="ДД.ММ.ГГГГ (по умолч. дата заявления)"></label>
   </div>
 
   <label class="chk" style="margin-top:14px"><input type="checkbox" id="combined"> Заявление и паспорт в одном файле</label>
@@ -108,25 +118,31 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:
     </div>
   </div>
 
-  <details>
-    <summary>Данные текущего администратора домена из внутренней системы (пока — вручную или JSON-файлом)</summary>
-    <div class="row" style="margin-top:8px">
-      <label class="f">ФИО <input type="text" id="admFio"></label>
-      <label class="f">Дата рождения <input type="text" id="admBirth" placeholder="ДД.ММ.ГГГГ"></label>
-      <label class="f">Паспорт <input type="text" id="admPas" placeholder="СССС НННННН"></label>
-      <label class="f">Дата выдачи <input type="text" id="admIssue" placeholder="ДД.ММ.ГГГГ"></label>
-      <label class="f">Кем выдан <input type="text" id="admIssuer"></label>
-      <label class="f">Домены <input type="text" id="admDomains" placeholder="через запятую"></label>
-      <label class="f">или JSON-файл <input type="file" id="admFile" accept=".json"></label>
-    </div>
-    <p class="hint">Когда появится подключение к системе, эти данные будут подтягиваться автоматически.</p>
-  </details>
-
+  <label class="chk" style="margin-top:12px"><input type="checkbox" id="mgrAuto">
+    Подгрузить данные Sd доменов из заявления автоматически (после сверки заявления и паспорта)</label>
   <div class="row" style="margin-top:12px">
     <label class="f">Локальная модель <select id="model"></select></label>
     <button class="primary" id="run">Проверить</button>
     <span class="hint" id="runHint"></span>
   </div>
+</section>
+
+<section class="card" id="domCard">
+  <h2>Домены в manager <span class="hint">— данные Sd и S через расширение Chrome</span></h2>
+  <div class="row">
+    <label class="f" style="flex:1;min-width:280px">Домены (через пробел, запятую или с новой строки)
+      <textarea id="domList" placeholder="example.ru&#10;пример.рф"></textarea></label>
+  </div>
+  <div class="actions">
+    <button class="primary" id="domLoad">Загрузить данные из manager</button>
+    <button id="domCancel" disabled>Остановить</button>
+    <button id="domReport" disabled title="Отдельный HTML-файл: итог по группам, администраторы, e-mail, замечания и таблица доменов с фильтром">Выгрузка по доменам (HTML)</button>
+    <span class="hint" id="domHint"></span>
+  </div>
+  <div id="domLog" class="hidden"></div>
+  <div class="wrap"><table id="domTable" class="hidden"><thead><tr>
+    <th>Домен</th><th>manager</th><th>Администратор (Sd)</th><th>Паспорт / ИНН</th><th>Страна</th>
+    <th>Смена админа</th><th>Provider</th><th>Аккаунт</th><th>Сверка с документами</th></tr></thead><tbody></tbody></table></div>
 </section>
 
 <section class="card hidden" id="progressCard">
@@ -208,12 +224,10 @@ $('#combined').addEventListener('change', e => {
 function options(extra={}){
   const v = n => (document.querySelector(`input[name=${n}]:checked`)||{}).value;
   return {
-    case_type: $('#caseType').value, case_id: $('#caseId').value.trim(), check_date: $('#checkDate').value.trim(),
+    case_type: $('#caseType').value, case_id: $('#caseId').value.trim(),
     combined: $('#combined').checked, app_mode: v('appMode'), pas_mode: v('pasMode'),
     handwritten: $('#handwritten').checked, use_vlm: $('#handwritten').checked || $('#pasVlm').checked,
-    model: $('#model').value,
-    admin: {fio: $('#admFio').value, birth_date: $('#admBirth').value, passport: $('#admPas').value,
-            passport_issue_date: $('#admIssue').value, passport_issued_by: $('#admIssuer').value, domains: $('#admDomains').value},
+    model: $('#model').value, manager_autoload: $('#mgrAuto').checked,
     ...extra };
 }
 
@@ -226,11 +240,10 @@ async function start(extra={}){
   fd.append('options', JSON.stringify(opts));
   if (state.appFile) fd.append('application', state.appFile);
   if (state.pasFile && !opts.combined) fd.append('passport', state.pasFile);
-  if ($('#admFile').files[0]) fd.append('admin_file', $('#admFile').files[0]);
   $('#run').disabled = true;
   const r = await fetch('/api/jobs', {method:'POST', body: fd});
   if (!r.ok){ $('#runHint').textContent = (await r.json()).detail || 'Ошибка'; $('#run').disabled = false; return; }
-  state.jobId = (await r.json()).job_id; state.logLen = 0; state.lastOpts = opts;
+  state.jobId = (await r.json()).job_id; state.logLen = 0; state.lastOpts = opts; state.resultJobId = null;
   $('#log').textContent = ''; $('#progressCard').classList.remove('hidden'); $('#resultCard').classList.add('hidden');
   $('#cancel').disabled = false;
   poll();
@@ -243,7 +256,7 @@ async function poll(){
   if (j.log.length){ $('#log').textContent += j.log.join('\n') + '\n'; $('#log').scrollTop = 1e9; }
   state.logLen = j.log_len;
   $('#jobStatus').textContent = {queued:'— в очереди', running:'— выполняется…', done:'— готово', error:'— ошибка', cancelled:'— остановлено'}[j.status];
-  if (j.status === 'done'){ $('#run').disabled = false; $('#cancel').disabled = true; render(j.result); return; }
+  if (j.status === 'done'){ $('#run').disabled = false; $('#cancel').disabled = true; state.resultJobId = state.jobId; render(j.result); return; }
   if (j.status === 'error' || j.status === 'cancelled'){ $('#run').disabled = false; $('#cancel').disabled = true; return; }
   state.timer = setTimeout(poll, 800);
 }
@@ -285,7 +298,91 @@ function render(res){
   $('#caseDir').textContent = 'Файлы дела: ' + res.case_dir;
   $('#openRegions').classList.toggle('hidden', !res.regions_url);
   $('#pushMsg').innerHTML = '';
+  if (!$('#domList').dataset.touched && (res.domains_from_app || []).length) $('#domList').value = res.domains_from_app.join('\n');
+  renderDomains(res.domains || []);
+  setDomReport((res.domains || []).length && state.resultJobId ? `/api/jobs/${state.resultJobId}/domains_report` : null);
 }
+function setDomReport(url){ dom.reportUrl = url; $('#domReport').disabled = !url; }
+
+// ------------------------------------------------------------------ домены в manager
+const MST = {found:'найден', not_found:'не найден', error:'ошибка'};
+function renderDomains(items){
+  $('#domTable').classList.toggle('hidden', !items.length);
+  // сервер присылает домены по проблемности (свободные → данные не сходятся → …); здесь — заголовки групп
+  items = [...items].sort((a, b) => (a.problem_rank ?? 99) - (b.problem_rank ?? 99));
+  const cnt = {};
+  items.forEach(d => cnt[d.problem] = (cnt[d.problem] || 0) + 1);
+  let grp = null;
+  $('#domTable tbody').innerHTML = items.map(d => {
+    const head = d.problem && d.problem !== grp
+      ? (grp = d.problem, `<tr class="grp"><td colspan="9">${esc(d.problem_ru || d.problem)} — ${cnt[d.problem]}</td></tr>`) : '';
+    return head + domainRow(d);
+  }).join('');
+}
+function domainRow(d){
+  const sd = d.sd || {};
+  const link = (u, t) => u ? `<a href="${esc(u)}" target="_blank">${t}</a>` : '';
+  if (d.status !== 'found'){
+    const w = d.whois || {};
+    const wt = w.status === 'free' ? 'WHOIS: домен свободен' : w.status === 'registered'
+      ? `WHOIS: зарегистрирован${w.registrar ? ', регистратор ' + esc(w.registrar) : ''}${w.state ? ', ' + esc(w.state) : ''}${w.paid_till ? ', до ' + esc(w.paid_till.slice(0,10)) : ''}`
+      : w.status === 'error' ? 'WHOIS недоступен: ' + esc(w.error) : '';
+    return `<tr><td><b>${esc(d.domain)}</b></td>
+      <td><span class="badge s-${d.status==='not_found'?'fail':'review'}">${MST[d.status]||d.status}</span></td>
+      <td colspan="7">${esc(d.error)}${wt ? `<br>${wt}` : ''}${w.manual_url ? ` · ${link(w.manual_url,'проверить WHOIS вручную')}` : ''}</td></tr>`;
+  }
+  const person = d.kind === 'person', org = d.kind === 'org';
+  const mail = (d.emails||[]).length ? `<br><small>e-mail: ${d.emails.map(esc).join(', ')}</small>` : '';
+  const who = (person ? `${esc(d.fio)}<br><small>д. р. ${esc(sd.birth_date||'—')}</small>`
+              : org ? `${esc(sd.org_r || sd.org || '—')}<br><small>юрлицо</small>`
+              : `${esc(d.holder || '—')}<br><small>контакты ${esc(d.group || '?')}</small>`) + mail;
+  const doc = person ? `${esc(d.passport||'—')}<br><small>выдан ${esc(sd.passport_date||'—')}<br>${esc(sd.passport_place||'')}</small>`
+              : org ? `ИНН ${esc(sd.code||'—')}` : '—';
+  const cmp = (d.compare||[]).filter(r => r.status !== 'ok');
+  const sv = d.verdict ? `<span class="badge s-${d.verdict}">${ST[d.verdict]}</span>` : '';
+  return `<tr><td><b>${esc(d.domain)}</b><br><small>${link((d.urls||{}).sd,'Sd')} ${link((d.urls||{}).s,'S')}</small></td>
+    <td><span class="badge s-ok">найден</span><br><small>${esc(d.service_status||'')}</small></td>
+    <td>${who}</td><td>${doc}</td><td>${esc(sd.country||sd.o_country_code||'—')}</td><td>${esc(d.last_admin_change||'—')}</td>
+    <td>${esc(d.provider||'—')}</td><td>${esc(d.account||'—')}</td>
+    <td>${d.verdict ? '' : '<small>сверка — после проверки заявления и паспорта</small>'}${sv}${cmp.length ? '<ul>' + cmp.map(r => `<li>${esc(r.title)}: ${ST[r.status]}${r.detail ? ' — ' + esc(r.detail) : ''}${r.status==='fail' ? `<br><small>Sd: ${esc(r.sd)} · документы: ${esc(r.doc)}</small>` : ''}</li>`).join('') + '</ul>' : ''}</td></tr>`;
+}
+
+const dom = {taskId:null, logLen:0, timer:null};
+$('#domList').addEventListener('input', () => $('#domList').dataset.touched = '1');
+$('#domLoad').addEventListener('click', async () => {
+  $('#domHint').textContent = '';
+  const body = {domains: $('#domList').value};
+  if (state.resultJobId) body.job_id = state.resultJobId;
+  const r = await fetch('/api/manager/lookup', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const j = await r.json();
+  if (!r.ok){ $('#domHint').textContent = j.detail || 'Ошибка'; return; }
+  dom.taskId = j.task_id; dom.logLen = 0;
+  $('#domLog').textContent = ''; $('#domLog').classList.remove('hidden');
+  $('#domLoad').disabled = true; $('#domCancel').disabled = false;
+  pollDomains();
+});
+$('#domCancel').addEventListener('click', () => dom.taskId && fetch(`/api/manager/tasks/${dom.taskId}/cancel`, {method:'POST'}));
+async function pollDomains(){
+  clearTimeout(dom.timer);
+  const j = await (await fetch(`/api/manager/tasks/${dom.taskId}?since=${dom.logLen}`)).json();
+  if (j.log.length){ $('#domLog').textContent += j.log.join('\n') + '\n'; $('#domLog').scrollTop = 1e9; }
+  dom.logLen = j.log_len;
+  if (j.status === 'running'){ dom.timer = setTimeout(pollDomains, 800); return; }
+  $('#domLoad').disabled = false; $('#domCancel').disabled = true;
+  if (j.status === 'error'){ $('#domHint').textContent = 'Ошибка: ' + j.error; return; }
+  if (j.result) render(j.result); else { renderDomains(j.items); setDomReport(j.items.length ? `/api/manager/tasks/${dom.taskId}/report` : null); }
+}
+$('#domReport').addEventListener('click', () => { if (dom.reportUrl) location.href = dom.reportUrl; });
+async function extState(){
+  try {
+    const s = await (await fetch('/api/manager/status')).json();
+    $('#extState').className = 'ext ' + (s.connected ? 'on' : 'off');
+    $('#extState span:last-child').textContent = s.connected ? `manager: расширение подключено${s.version ? ' (v' + s.version + ')' : ''}` : 'manager: расширение не подключено';
+  } catch (e) { $('#extState').className = 'ext off'; }
+}
+try { $('#mgrAuto').checked = localStorage.getItem('doctool.mgrAuto') === '1'; } catch (e) {}
+$('#mgrAuto').addEventListener('change', e => { try { localStorage.setItem('doctool.mgrAuto', e.target.checked ? '1' : '0'); } catch (x) {} });
+extState(); setInterval(extState, 3000);
 
 $('#recompute').addEventListener('click', async () => {
   const overrides = {}, confirmed = [];

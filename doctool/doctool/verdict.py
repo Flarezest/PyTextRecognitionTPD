@@ -42,7 +42,8 @@ def _match(cond: dict, checks: list[Check], flags: set[str], app_fields: dict) -
     if "any_status" in cond and not any(c.status in cond["any_status"] for c in checks):
         return False
     if "missing" in cond:
-        f = app_fields.get(cond["missing"])
+        # app_fields — словарь полей заявления или formspec.Fields (тогда можно указать роль поля)
+        f = app_fields.field(cond["missing"]) if hasattr(app_fields, "field") else app_fields.get(cond["missing"])
         if f is not None and f.value:
             return False
     return True

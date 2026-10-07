@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>doctool — manager: настройки</title>
+<style>
+body{font:14px/1.5 "Segoe UI",system-ui,Arial,sans-serif;margin:24px;max-width:640px;color:#1d1f23}
+label{display:block;margin:12px 0 4px;font-weight:600}
+input{font:inherit;padding:6px 8px;border:1px solid #dfe3e8;border-radius:6px;width:120px}
+.hint{color:#667085;font-size:13px;margin:2px 0}
+button{font:inherit;margin-top:16px;padding:7px 14px;border-radius:6px;border:1px solid #2b6cb0;background:#2b6cb0;color:#fff;cursor:pointer}
+#saved{margin-left:10px;color:#1e6b3a}
+</style>
+</head>
+<body>
+<h2>doctool — manager: настройки</h2>
+<label for="port">Порт doctool</label>
+<input id="port" type="number" min="1" max="65535">
+<p class="hint">Тот же порт, что у веб-интерфейса doctool (по умолчанию 8765: http://127.0.0.1:8765).</p>
+<label for="authWaitSec">Сколько ждать входа в manager, секунд</label>
+<input id="authWaitSec" type="number" min="10" max="900">
+<p class="hint">Если manager покажет окно «Войти», расширение откроет вкладку manager и подождёт, пока вы войдёте.</p>
+<label for="pauseMs">Пауза между доменами, мс</label>
+<input id="pauseMs" type="number" min="0" max="10000">
+<p class="hint">Чтобы не нагружать manager при проверке многих доменов.</p>
+<label for="closeTabAfterSec">Закрывать вкладку manager через, секунд (0 — не закрывать)</label>
+<input id="closeTabAfterSec" type="number" min="0" max="3600">
+<p class="hint">Закрывается только вкладка, которую открыло расширение, и только если вы на неё не смотрите.</p>
+<button id="save">Сохранить</button><span id="saved"></span>
+<script src="options.js"></script>
+</body>
+</html>

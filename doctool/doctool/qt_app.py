@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QButtonGroup, QC
 
 from . import progress
 from .compare import STATUS_RU
-from .integrations import AdminData, JsonFileAdminData, push_to_system
+from .integrations import push_to_system
 from .service import APP_MODES, PAS_MODES, CaseInput, CaseResult, recompute, run_case, table_rows
 from .verdict import load_case_types
 
@@ -192,12 +192,9 @@ class MainWindow(QMainWindow):
         self.operation.model().item(1).setEnabled(False)
         self.case_id = QLineEdit()
         self.case_id.setPlaceholderText("необязательно, напр. Иванов_домен.рф")
-        self.check_date = QLineEdit()
-        self.check_date.setPlaceholderText("ДД.ММ.ГГГГ (по умолчанию — дата заявления)")
         form.addRow("Тип заявления", self.case_type)
         form.addRow("Операция", self.operation)
         form.addRow("Название дела", self.case_id)
-        form.addRow("Срок паспорта на дату", self.check_date)
         lay.addLayout(form)
 
         self.combined = QCheckBox("Заявление и паспорт в одном файле")
@@ -207,21 +204,6 @@ class MainWindow(QMainWindow):
         self.pas_box = DropBox("Паспорт", PAS_MODES, "Дочитывать плохо распознанные поля моделью")
         lay.addWidget(self.app_box)
         lay.addWidget(self.pas_box)
-
-        self.admin_box = QGroupBox("Данные администратора из внутренней системы")
-        self.admin_box.setCheckable(True)
-        self.admin_box.setChecked(False)
-        af = QFormLayout(self.admin_box)
-        self.adm = {k: QLineEdit() for k in ("fio", "birth_date", "passport", "passport_issue_date",
-                                             "passport_issued_by", "domains")}
-        for k, t in (("fio", "ФИО"), ("birth_date", "Дата рождения"), ("passport", "Паспорт"),
-                     ("passport_issue_date", "Дата выдачи"), ("passport_issued_by", "Кем выдан"),
-                     ("domains", "Домены (через запятую)")):
-            af.addRow(t, self.adm[k])
-        load_btn = QPushButton("Загрузить из JSON…")
-        load_btn.clicked.connect(self._load_admin_json)
-        af.addRow("", load_btn)
-        lay.addWidget(self.admin_box)
 
         mrow = QHBoxLayout()
         mrow.addWidget(QLabel("Локальная модель"))
@@ -355,37 +337,6 @@ class MainWindow(QMainWindow):
         self.pas_box.set_file_enabled(not on, "Паспорт — в общем файле выше. Флаги ниже относятся к его страницам.")
         self.app_box.setTitle("Общий файл: заявление + паспорт" if on else "Заявление")
 
-    def _load_admin_json(self):
-        p, _ = QFileDialog.getOpenFileName(self, "Данные администратора", "", "JSON (*.json)")
-        if not p:
-            return
-        prov = JsonFileAdminData(p)
-        a = prov.get_admin([])
-        self.admin_box.setChecked(True)
-        if a:
-            self.admin_provider = None
-            for k in ("fio", "birth_date", "passport", "passport_issue_date", "passport_issued_by"):
-                self.adm[k].setText(getattr(a, k))
-            self.adm["domains"].setText(", ".join(a.domains))
-        else:  # файл вида {домен: данные} — запись выберется по домену из заявления
-            self.admin_provider = prov
-            for e in self.adm.values():
-                e.clear()
-            self.statusBar().showMessage(f"Загружен справочник администраторов ({len(prov.raw)} доменов): "
-                                         "запись выберется по домену из заявления", 8000)
-
-    def _admin(self):
-        if not self.admin_box.isChecked():
-            return None
-        if getattr(self, "admin_provider", None) is not None and not any(e.text().strip() for e in self.adm.values()):
-            return self.admin_provider
-        v = {k: e.text().strip() for k, e in self.adm.items()}
-        a = AdminData(fio=v["fio"], birth_date=v["birth_date"], passport=v["passport"],
-                      passport_issue_date=v["passport_issue_date"], passport_issued_by=v["passport_issued_by"],
-                      domains=[d.strip().lower() for d in v["domains"].replace(";", ",").split(",") if d.strip()],
-                      source="введено вручную")
-        return None if a.is_empty() else a
-
     # ---------------- запуск
     def _input(self, page_roles=None) -> CaseInput | None:
         combined = self.combined.isChecked()
@@ -398,7 +349,7 @@ class MainWindow(QMainWindow):
         return CaseInput(case_type=self.case_type.currentData(), application=app, passport=pas, combined=combined,
                          page_roles=page_roles, app_mode=self.app_box.mode(), app_handwritten=hand,
                          pas_mode=self.pas_box.mode(), vlm_model=self.model.currentText() if use_vlm else None,
-                         ollama=self.ollama, admin=self._admin(), check_date=self.check_date.text().strip() or None,
+                         ollama=self.ollama,
                          case_id=self.case_id.text().strip() or None, out_root=self.out_root)
 
     def start(self, _=None, page_roles=None):

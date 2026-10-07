@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from doctool import mrz, names, parsers  # noqa: E402
-from doctool.compare import issuer_similarity, passport_validity  # noqa: E402
+from doctool.compare import issuer_similarity  # noqa: E402
 
 
 def test_mrz_ru_internal():
@@ -47,11 +47,10 @@ def test_issuer_abbreviations():
                              "ОТДЕЛОМ ВНУТРЕННИХ ДЕЛ МОСКОВСКОГО ОКРУГА ГОРОДА КАЛУГИ") >= 85
 
 
-def test_passport_validity():
-    st, _ = passport_validity(date(1982, 4, 20), date(2005, 7, 12), date(2026, 10, 3))
-    assert st in ("ok", "info")
-    st, _ = passport_validity(date(1982, 4, 20), date(2005, 7, 12), date(2027, 8, 1))
-    assert st == "fail"
+def test_no_passport_validity_check():
+    # с 0.5.0 срок действия паспорта по возрасту (20/45 лет) не проверяется — только сходство данных
+    from doctool import checks as checklib
+    assert "passport_validity" not in checklib.REGISTRY
 
 
 def test_handwriting_tolerance():
@@ -114,7 +113,7 @@ def test_handwritten_passport_vlm_values_do_not_reject():
     checks = compare(app, pas)
     by = {c.name: c for c in checks}
     assert by["Дата выдачи паспорта"].status == "review"
-    assert by["Срок действия паспорта"].status == "ok"      # бессрочный (выдан после 45 лет)
+    assert "Срок действия паспорта" not in by
     more, flags = extra_checks(app, pas, [], None, checks)
     assert decide(load_case_types()["admin_change_person"], checks + more, flags, app.fields).code == "review"
 
@@ -178,7 +177,6 @@ def test_passport_only_issued_by_accept(tmp_path):
     res, ch = _passport_only(_oprya(), tmp_path=tmp_path)
     assert ch["Кем выдан"].status == "ok"
     assert ch["Кем выдан ↔ код подразделения"].status == "ok"
-    assert ch["Срок действия паспорта"].status == "ok"          # выдан после 45 лет — бессрочный
     assert ch["Серия ↔ год выдачи"].status == "info"
     assert res.decision.code == "accept"
     row = next(r for r in __import__("doctool.service", fromlist=["x"]).table_rows(res) if r["id"] == "issued_by")
@@ -204,8 +202,9 @@ def test_passport_only_issued_by_review(tmp_path):
     assert ch["Кем выдан ↔ данные системы"].status == "ok" and res.decision.code == "accept"
 
 
-def test_passport_only_without_issue_date_is_not_accepted(tmp_path):
+def test_passport_only_without_issue_date(tmp_path):
+    # срок действия по возрасту больше не проверяется: без даты выдачи нет и проверки «Срок действия»
     pas = _oprya()
     del pas.fields["issue_date"]
     res, ch = _passport_only(pas, tmp_path=tmp_path)
-    assert ch["Срок действия паспорта"].status == "review" and res.decision.code == "review"
+    assert "Срок действия паспорта" not in ch

@@ -12,7 +12,8 @@ from pathlib import Path
 
 from . import progress
 from .compare import STATUS_RU
-from .service import CaseInput, CaseResult, recompute, run_case, table_rows
+from .domains import PROBLEMS, sort_by_problem
+from .service import CaseInput, CaseResult, attach_domains, case_domains, recompute, run_case, table_rows
 
 
 @dataclass
@@ -29,7 +30,9 @@ class Job:
 
 
 class JobManager:
-    def __init__(self):
+    def __init__(self, manager=None):
+        """manager — manager_bridge.ManagerTasks (веб-интерфейс): загрузка данных Sd доменов из manager."""
+        self.manager = manager
         self.jobs: dict[str, Job] = {}
         self.pool = ThreadPoolExecutor(max_workers=1)
         self.lock = threading.Lock()
@@ -55,6 +58,8 @@ class JobManager:
         progress.set_sink(sink, job.cancel)
         try:
             job.result = run_case(job.inp)
+            if job.inp.manager_autoload:
+                self._autoload(job)
             job.status = "done"
         except progress.Cancelled:
             job.status = "cancelled"
@@ -68,6 +73,33 @@ class JobManager:
             job.finished = datetime.now()
             if on_update:
                 on_update(job)
+
+    def _autoload(self, job: Job) -> None:
+        """Флажок «подгрузить данные Sd доменов из заявления»: после сверки — данные доменов из manager."""
+        res = job.result
+        doms = case_domains(res)
+        if not doms:
+            progress.log("[!] В заявлении не найдены домены — данные из manager не загружались")
+            return
+        if self.manager is None or not self.manager.bridge.connected():
+            msg = ("Данные Sd не загружены: расширение «doctool — manager» не подключено "
+                   "(Chrome с расширением должен быть открыт). Можно загрузить позже кнопкой.")
+            progress.log("[!] " + msg)
+            res.notes.append(msg)
+            return
+        progress.log(f"Загружаю данные доменов из manager: {', '.join(doms)}")
+        items = self.manager.lookup(doms, log=progress.log, cancel=job.cancel)
+        attach_domains(res, items)
+        progress.log(f"Данные доменов загружены. Итог: {res.decision.title}")
+
+    def attach_domains(self, job_id: str, items: list) -> Job:
+        job = self.jobs[job_id]
+        progress.set_sink(lambda m: None, None)
+        try:
+            attach_domains(job.result, items)
+        finally:
+            progress.set_sink(None, None)
+        return job
 
     def get(self, job_id: str) -> Job | None:
         return self.jobs.get(job_id)
@@ -102,6 +134,10 @@ def result_payload(res: CaseResult, file_url) -> dict:
         "notes": notes,
         "page_roles": {str(k): v for k, v in res.page_roles.items()},
         "previous_passports": res.previous_passports,
+        # по проблемности: свободные по WHOIS → данные не сходятся → … → в порядке (domains.PROBLEMS)
+        "domains": [d.to_dict() for d in sort_by_problem(res.domains_sd)],
+        "domain_groups": dict(PROBLEMS),
+        "domains_from_app": case_domains(res),
         "record": res.record,
         "status_ru": STATUS_RU,
         "case_dir": str(Path(res.case_dir).resolve()),

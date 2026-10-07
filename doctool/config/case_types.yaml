@@ -5,6 +5,9 @@
 #   form     — id бланка из forms/*.yaml (null — бланк ещё не настроен);
 #   enabled  — показывать ли тип как доступный;
 #   needs_passport — нужен ли паспорт для проверки;
+#   checks   — какие проверки выполнять (id из реестра doctool/checks.py; список с описаниями:
+#              python -m doctool validate --list). Порядок в отчёте — порядок реестра, не этого списка.
+#              Без списка: тип с бланком — все проверки, тип без бланка — только паспорт и данные из системы;
 #   rules    — правила вердикта, проверяются сверху вниз:
 #     reject — любое сработавшее правило → «Отклонить» (причины собираются все);
 #     review — любое сработавшее правило → «Ручная проверка»;
@@ -14,9 +17,13 @@
 #   check: <название проверки> + status: [fail, warn, review, ok, info] — статус конкретной проверки
 #   any_status: [...]          — у любой проверки такой статус
 #   missing: <ключ поля>       — поле заявления пустое
-#   flag: <имя>                — служебный признак (old_passport, admin_mismatch, passport_invalid)
+#   flag: <имя>                — служебный признак (old_passport, admin_mismatch)
+#                                admin_mismatch ставится и по данным Sd доменов из manager (ФИО/дата рождения
+#                                администратора в Sd не совпадают с паспортом заявителя)
 #
 # Списки условий в when — все должны выполниться (И). Несколько правил — ИЛИ.
+# Правило check: срабатывает, только если проверка включена в checks этого типа; опечатки в названиях
+# проверок, флагов и статусов находит python -m doctool validate.
 # ВНИМАНИЕ: правила ниже — стартовый вариант, их нужно сверить с регламентом.
 
 case_types:
@@ -25,12 +32,38 @@ case_types:
     form: regru_transfer_person
     enabled: true
     needs_passport: true
+    checks:
+      # сверка с паспортом
+      - fio_header               # ФИО в шапке («от …»)
+      - fio_text                 # ФИО в тексте («Я, …»)
+      - fio_signature            # ФИО у подписи
+      - birth_date               # Дата рождения
+      - passport_number          # Серия и номер паспорта
+      - passport_issue_date      # Дата выдачи паспорта
+      - issued_by                # Кем выдан
+      - issuer_region            # Кем выдан ↔ код подразделения
+      - series_year              # Серия ↔ год выдачи
+      - mrz                      # MRZ паспорта
+      - passport_loaded          # Паспорт приложен (без паспорта — ручная проверка)
+      - address                  # Адрес регистрации
+      # само заявление
+      - fio_header_vs_text       # ФИО: шапка ↔ «Я, …»
+      - inn                      # ИНН ИП: контрольные цифры
+      - domains                  # Домен(ы)
+      - new_admin                # Новый администратор указан
+      - new_admin_text_vs_table  # Новый администратор: текст ↔ таблица
+      - new_admin_not_applicant  # Новый администратор ≠ заявитель
+      - new_admin_contact        # Контакты нового администратора
+      - contract                 # Договор/аккаунт нового администратора
+      - application_date         # Дата заявления
+      # прежний паспорт, данные из системы и manager
+      - old_passport             # Указан прежний паспорт (флаг old_passport)
+      - system_admin             # Заявитель — текущий администратор и др. (флаг admin_mismatch)
+      - manager_domains          # Домены в manager, администратор в Sd (флаг admin_mismatch)
     rules:
       reject:
         - when: {flag: old_passport}
           reason: В заявлении указан прежний (недействительный) паспорт
-        - when: {flag: passport_invalid}
-          reason: Паспорт недействителен по возрасту владельца
         - when: {check: "Серия и номер паспорта", status: [fail]}
           reason: Серия и номер паспорта не совпадают с предъявленным паспортом
         - when: {check: "ФИО в шапке («от …»)", status: [fail]}
@@ -48,6 +81,18 @@ case_types:
         - when: {check: "Дата заявления", status: [fail]}
           reason: Дата заявления в будущем
       review:
+        - when: {check: "Паспорт приложен", status: [review]}
+          reason: Паспорт не загружен — сверка с паспортом не выполнялась
+        - when: {check: "Домен(ы)", status: [review]}
+          reason: Список доменов нужно сверить с заявлением — не сошлось число доменов, есть обрывки имён или разночтения
+        - when: {check: "Домены в manager", status: [fail]}
+          reason: Домен из заявления не найден в manager — см. WHOIS в таблице доменов
+        - when: {check: "Домены в manager", status: [review]}
+          reason: Данные доменов из manager получены не полностью
+        - when: {check: "Заявитель — администратор доменов (Sd)", status: [review]}
+          reason: Данные администратора в Sd нужно сверить вручную
+        - when: {check: "Администратор у доменов один", status: [warn]}
+          reason: У доменов из заявления разные администраторы
         - when: {any_status: [review]}
           reason: Есть поля, которые нужно подтвердить вручную
         - when: {any_status: [warn, fail]}
@@ -70,20 +115,25 @@ case_types:
     form: null
     enabled: true
     needs_passport: true
+    checks: [issued_by, issuer_region, series_year, mrz, system_admin, manager_domains]
     rules:
       reject:
-        - when: {flag: passport_invalid}
-          reason: Паспорт недействителен по возрасту владельца
         - when: {flag: admin_mismatch}
           reason: Владелец паспорта не является текущим администратором домена
       review:
-        - when: {check: "Срок действия паспорта", status: [review]}
-          reason: Срок действия не проверен или даты прочитаны ненадёжно — подтвердите даты
         - when: {check: "Кем выдан", status: [review, warn]}
           reason: «Кем выдан» нужно подтвердить по паспорту
         - when: {check: "Кем выдан ↔ код подразделения", status: [review, warn]}
           reason: Регион органа выдачи не совпадает с кодом подразделения
         - when: {check: "Кем выдан ↔ данные системы", status: [review, warn]}
           reason: «Кем выдан» отличается от данных во внутренней системе
+        - when: {check: "Домены в manager", status: [fail]}
+          reason: Домен из заявления не найден в manager — см. WHOIS в таблице доменов
+        - when: {check: "Домены в manager", status: [review]}
+          reason: Данные доменов из manager получены не полностью
+        - when: {check: "Заявитель — администратор доменов (Sd)", status: [review]}
+          reason: Данные администратора в Sd нужно сверить вручную
+        - when: {check: "Администратор у доменов один", status: [warn]}
+          reason: У доменов из заявления разные администраторы
         - when: {any_status: [review, warn, fail]}
           reason: Есть поля, которые нужно подтвердить вручную
