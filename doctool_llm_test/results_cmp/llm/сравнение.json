@@ -1,0 +1,994 @@
+[
+ {
+  "set": "set1",
+  "decision_regex": "Принять",
+  "decision_llm": "Принять",
+  "seconds_regex": 25,
+  "seconds_llm": 91,
+  "llm_seconds": 65.0,
+  "llm_calls": 1,
+  "output_tokens": 1291,
+  "thinking_chars": 2419,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.98,
+    "llm_source": "llm-text"
+   },
+   {
+    "field": "Новый адм. (в строке)",
+    "key": "new_admin_inline",
+    "regex": "ПЫХАЛОВА НАТАЛЬЯ ЕВГЕНЬЕВНА",
+    "llm": null,
+    "llm_conf": null,
+    "llm_source": null
+   }
+  ],
+  "check_diffs": []
+ },
+ {
+  "set": "set2",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 39,
+  "seconds_llm": 156,
+  "llm_seconds": 114.7,
+  "llm_calls": 2,
+  "output_tokens": 2925,
+  "thinking_chars": 7438,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "ИНН",
+    "key": "inn",
+    "regex": null,
+    "llm": "5304116645",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Кем выдан",
+    "key": "issued_by",
+    "regex": "is 202. (серия, номе паспорта, когда ) Om OL DLW oe Lue f OCs no Wey",
+    "llm": null,
+    "llm_conf": 0.0,
+    "llm_source": "ocr+рукопись"
+   },
+   {
+    "field": "Адрес регистрации",
+    "key": "address",
+    "regex": "PR 1- Fe pie tad ld Deghobeucene 2-4",
+    "llm": "зарегистрированного по адресу PR 1- Fe pie tad ld Deghobeucene 2-4",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Новый адм. — юрлицо",
+    "key": "new_admin_org",
+    "regex": null,
+    "llm": "ОИ",
+    "llm_conf": 0.8,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Новый адм. — физлицо/ИП",
+    "key": "new_admin_fio",
+    "regex": "КЛЕЕ ИОАН",
+    "llm": "ИОАН",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Контакты нового администратора",
+    "regex": "review",
+    "llm": "ok"
+   },
+   {
+    "check": "ИНН ИП: контрольные цифры",
+    "regex": null,
+    "llm": "fail"
+   }
+  ]
+ },
+ {
+  "set": "set3",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 5,
+  "seconds_llm": 60,
+  "llm_seconds": 54.1,
+  "llm_calls": 1,
+  "output_tokens": 1405,
+  "thinking_chars": 2837,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": "и предоставляемых по этому домену всех дополнительных услуг",
+    "llm": "все",
+    "llm_conf": 0.98,
+    "llm_source": "llm-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Семичев Дмитрий Викторович",
+    "llm_conf": 0.98,
+    "llm_source": "llm-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "ФИО у подписи",
+    "regex": null,
+    "llm": "ok"
+   }
+  ]
+ },
+ {
+  "set": "set4",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 7,
+  "seconds_llm": 77,
+  "llm_seconds": 69.2,
+  "llm_calls": 1,
+  "output_tokens": 1760,
+  "thinking_chars": 3687,
+  "llm_error": null,
+  "not_in_text": [
+   "domains"
+  ],
+  "field_diffs": [
+   {
+    "field": "Кем выдан",
+    "key": "issued_by",
+    "regex": null,
+    "llm": "Kapareéceom р",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Договор / аккаунт",
+    "key": "contract",
+    "regex": "_ (3566004",
+    "llm": "3566004",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Дата заявления",
+    "key": "application_date",
+    "regex": "29.09.2026",
+    "llm": null,
+    "llm_conf": 0.0,
+    "llm_source": "ocr+рукопись"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Контакты нового администратора",
+    "regex": "review",
+    "llm": "ok"
+   },
+   {
+    "check": "Дата заявления",
+    "regex": "ok",
+    "llm": "review"
+   }
+  ]
+ },
+ {
+  "set": "set5",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 1,
+  "seconds_llm": 47,
+  "llm_seconds": 46.4,
+  "llm_calls": 1,
+  "output_tokens": 1075,
+  "thinking_chars": 1921,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.98,
+    "llm_source": "llm-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Хлебников Николай Александрович",
+    "llm_conf": 0.98,
+    "llm_source": "llm-text"
+   },
+   {
+    "field": "Дата заявления",
+    "key": "application_date",
+    "regex": null,
+    "llm": "01.09.2026",
+    "llm_conf": 0.98,
+    "llm_source": "llm-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Дата заявления",
+    "regex": "warn",
+    "llm": "ok"
+   }
+  ]
+ },
+ {
+  "set": "set6",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 15,
+  "seconds_llm": 198,
+  "llm_seconds": 183.8,
+  "llm_calls": 1,
+  "output_tokens": 382,
+  "thinking_chars": 0,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "ИНН",
+    "key": "inn",
+    "regex": null,
+    "llm": "4600818840",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Новый адм. — физлицо/ИП",
+    "key": "new_admin_fio",
+    "regex": null,
+    "llm": "АВЕРИН ВЯЧЕСЛАВ ВЛАДИМИРОВИЧ",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "ИНН ИП: контрольные цифры",
+    "regex": null,
+    "llm": "fail"
+   }
+  ]
+ },
+ {
+  "set": "set7",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 9,
+  "seconds_llm": 9,
+  "llm_seconds": 0,
+  "llm_calls": 0,
+  "output_tokens": 0,
+  "thinking_chars": 0,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [],
+  "check_diffs": []
+ },
+ {
+  "set": "set8",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 9,
+  "seconds_llm": 77,
+  "llm_seconds": 68.3,
+  "llm_calls": 1,
+  "output_tokens": 1782,
+  "thinking_chars": 3683,
+  "llm_error": null,
+  "not_in_text": [
+   "domains"
+  ],
+  "field_diffs": [
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "все услуги, которые есть в текущем аккаунте владельца ГРУ ‚ Secondary D S)",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Ан Виктор Дмитриевич",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": []
+ },
+ {
+  "set": "set9",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 7,
+  "seconds_llm": 81,
+  "llm_seconds": 74.2,
+  "llm_calls": 1,
+  "output_tokens": 1868,
+  "thinking_chars": 3747,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Договор / аккаунт",
+    "key": "contract",
+    "regex": "Договор №5734725 от 22.01 .2020/000 \"Бьюти технолоджи\" (2020-07-06",
+    "llm": "Договор №5734725 от 22.01 .2020/000 \"Бьюти технолоджи\" (2020-07-06 13:17:33)",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Тарасова Инесса Александровна",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": []
+ },
+ {
+  "set": "set10",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 5,
+  "seconds_llm": 68,
+  "llm_seconds": 62.1,
+  "llm_calls": 1,
+  "output_tokens": 1542,
+  "thinking_chars": 3307,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Кем выдан",
+    "key": "issued_by",
+    "regex": "Отделением УФМС России по Забайкальскому краю в Железнодорожном районе гор. Читы",
+    "llm": "Отделением УФМС России по Забайкальскому краю",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "дополнительных услуг",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Новый адм. — юрлицо",
+    "key": "new_admin_org",
+    "regex": "ООО «Шанхай Спецтехника», ИНН 7536167149, ОГРН 1177536004942, юридический адрес: 672038, Забайкальский край, г. Чита, ш. Объездное, д. 26, стр.",
+    "llm": "ООО «Шанхай Спецтехника»",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Новый адм. — физлицо/ИП",
+    "key": "new_admin_fio",
+    "regex": "СОЗИНОВ СЕРГЕЙ ВАЛЕНТИНОВИЧ",
+    "llm": null,
+    "llm_conf": 0.0,
+    "llm_source": "ocr+рукопись"
+   }
+  ],
+  "check_diffs": []
+ },
+ {
+  "set": "set11",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 7,
+  "seconds_llm": 69,
+  "llm_seconds": 62.6,
+  "llm_calls": 1,
+  "output_tokens": 1730,
+  "thinking_chars": 3648,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "ИНН",
+    "key": "inn",
+    "regex": null,
+    "llm": "4511500159",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "ИНН ИП: контрольные цифры",
+    "regex": null,
+    "llm": "fail"
+   }
+  ]
+ },
+ {
+  "set": "set12",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 7,
+  "seconds_llm": 86,
+  "llm_seconds": 80.9,
+  "llm_calls": 1,
+  "output_tokens": 1845,
+  "thinking_chars": 3642,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "ИНН",
+    "key": "inn",
+    "regex": null,
+    "llm": "4610966611",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Кем выдан",
+    "key": "issued_by",
+    "regex": "ТП в пос.Белоомуте О-НИЯ УФМС России по Московской обл. в Луховицком р-не",
+    "llm": "УФМС России по Московской обл. в Луховицком р-не",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Домены",
+    "key": "domains.list",
+    "regex": [
+     "waww.dr-sergeev.ru"
+    ],
+    "llm": [
+     "dr-sergeev.ru"
+    ],
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Новый адм. (в строке)",
+    "key": "new_admin_inline",
+    "regex": null,
+    "llm": "СЕРГЕЕВ ПЕТР СЕРГЕЕВИЧ",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Дымова Кристина Михайловна",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Домен(ы)",
+    "regex": "review",
+    "llm": "ok"
+   },
+   {
+    "check": "ИНН ИП: контрольные цифры",
+    "regex": null,
+    "llm": "fail"
+   }
+  ]
+ },
+ {
+  "set": "set13",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 7,
+  "seconds_llm": 97,
+  "llm_seconds": 89.9,
+  "llm_calls": 2,
+  "output_tokens": 2480,
+  "thinking_chars": 5668,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Кем выдан",
+    "key": "issued_by",
+    "regex": "ТИ № 35 Отдела УФМС России по Санкт-Петербургу и Ленинградской обл. В Красногвардейском р-не гор. Санкт-Петербурга",
+    "llm": "Отдела УФМС России по Санкт-Петербургу и Ленинградской обл",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "E-mail нового адм.",
+    "key": "new_admin_contact.emails",
+    "regex": [
+     "info@m-rocket.ru"
+    ],
+    "llm": null,
+    "llm_conf": null,
+    "llm_source": null
+   },
+   {
+    "field": "Телефон нового адм.",
+    "key": "new_admin_contact.phones",
+    "regex": [
+     "+79215506262"
+    ],
+    "llm": null,
+    "llm_conf": null,
+    "llm_source": null
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Шейко Юрий Борисович",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Дата заявления",
+    "key": "application_date",
+    "regex": null,
+    "llm": "03.08.2026",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Дата заявления",
+    "regex": "warn",
+    "llm": "ok"
+   }
+  ]
+ },
+ {
+  "set": "set14",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 6,
+  "seconds_llm": 80,
+  "llm_seconds": 73.3,
+  "llm_calls": 1,
+  "output_tokens": 1958,
+  "thinking_chars": 4322,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "ИНН",
+    "key": "inn",
+    "regex": null,
+    "llm": "9207369673",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": null,
+    "llm": "Primary, Secondary DNS",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Малюгин Сергей Алексеевич",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "ИНН ИП: контрольные цифры",
+    "regex": null,
+    "llm": "fail"
+   }
+  ]
+ },
+ {
+  "set": "set15",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 11,
+  "seconds_llm": 147,
+  "llm_seconds": 135.4,
+  "llm_calls": 3,
+  "output_tokens": 3653,
+  "thinking_chars": 9945,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "ФИО заявителя (шапка)",
+    "key": "applicant_header",
+    "regex": "ИРИ",
+    "llm": null,
+    "llm_conf": 0.0,
+    "llm_source": "ocr+рукопись"
+   }
+  ],
+  "check_diffs": []
+ },
+ {
+  "set": "set16",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 5,
+  "seconds_llm": 68,
+  "llm_seconds": 62.6,
+  "llm_calls": 1,
+  "output_tokens": 1745,
+  "thinking_chars": 3749,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Новый адм. (в строке)",
+    "key": "new_admin_inline",
+    "regex": null,
+    "llm": "ОВСЯНКОВ ДМИТРИЙ ВАСИЛЬЕВИЧ",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Илюхин Евгений Леонидович",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Дата заявления",
+    "key": "application_date",
+    "regex": null,
+    "llm": "29.09.2026",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Дата заявления",
+    "regex": "warn",
+    "llm": "ok"
+   }
+  ]
+ },
+ {
+  "set": "set17",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 8,
+  "seconds_llm": 169,
+  "llm_seconds": 160.3,
+  "llm_calls": 2,
+  "output_tokens": 3612,
+  "thinking_chars": 6538,
+  "llm_error": null,
+  "not_in_text": [
+   "domains"
+  ],
+  "field_diffs": [
+   {
+    "field": "Кем выдан",
+    "key": "issued_by",
+    "regex": "отд. по р-ну Пресненский ОУФМС России по г. Москвев ЦАО",
+    "llm": "ОУФМС России по г. Москвев ЦАО",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Домены",
+    "key": "domains.list",
+    "regex": [
+     "alosan-revit.com",
+     "alosan-revit.ru",
+     "alosan.ru",
+     "alosan.ru.com",
+     "alosanrevit.com",
+     "alosanrevit.ru",
+     "hepaveran.com",
+     "hepaveran.ru",
+     "ipe-con.com",
+     "ipe-con.ru",
+     "ipecan.ru",
+     "ipecon.ru.com",
+     "ipekon.ru",
+     "nefroveran.com",
+     "nefroveran.ru",
+     "nobitrin.com",
+     "nobitrin.ru",
+     "pancreveran.com",
+     "pancreveran.ru",
+     "pancroveran.com",
+     "pancroveran.ru",
+     "progeveran.com",
+     "progeveran.ru",
+     "reacorin.com",
+     "reacorin.ru",
+     "reanevrin.com",
+     "reanevrin.ru",
+     "saniran.com",
+     "saniran.ru",
+     "tomevedin.com",
+     "tomevedin.ru",
+     "vecartis.com",
+     "vecartis.ru",
+     "veproscon.com",
+     "veproscon.ru",
+     "verevit.com",
+     "verevit.ru",
+     "vezotil.com",
+     "vezotil.ru",
+     "алосан-ревит.рф",
+     "алосан.рф",
+     "везотил.рф",
+     "векартис.рф",
+     "вепроскон.рф",
+     "веревит.рф",
+     "гепаверан.рф",
+     "ипекон.рф",
+     "нефроверан.рф",
+     "нобитрин.рф",
+     "панкреверан.рф",
+     "панкроверан.рф",
+     "прогеверан.рф",
+     "реакорин.рф",
+     "реаневрин.рф",
+     "саниран.рф",
+     "томеведин.рф"
+    ],
+    "llm": [
+     "alosan-revit.com",
+     "alosan-revit.ru",
+     "alosan.ru",
+     "alosan.ru.com",
+     "alosanrevit.com",
+     "alosanrevit.ru",
+     "hepaveran.com",
+     "hepaveran.ru",
+     "ipe-con.com",
+     "ipe-con.ru",
+     "ipecan.ru",
+     "ipecon.ru.com",
+     "ipekon.ru",
+     "nefroveran.com",
+     "nefroveran.ru",
+     "nobitrin.com",
+     "pancreveran.com",
+     "pancreveran.ru",
+     "pancroveran.com",
+     "pancroveran.ru",
+     "progeveran.com",
+     "progeveran.ru",
+     "reacorin.com",
+     "reacorin.ru",
+     "reanevrin.com",
+     "reanevrin.ru",
+     "saniran.com",
+     "saniran.ru",
+     "tomevedin.com",
+     "tomevedin.ru",
+     "vecartis.com",
+     "vecartis.ru",
+     "veproscon.com",
+     "verevit.com",
+     "verevit.ru",
+     "vezotil.com",
+     "vezotil.ru",
+     "алосан-ревит.рф",
+     "алосан.рф",
+     "везотил.рф",
+     "векартис.рф",
+     "вепроскон.ru",
+     "вепроскон.рф",
+     "веревит.рф",
+     "гепаверан.рф",
+     "ипекон.рф",
+     "нефроверан.рф",
+     "нобитрин.рф",
+     "панкреверан.рф",
+     "панкроверан.рф",
+     "прогеверан.рф",
+     "реакорин.рф",
+     "реаневрин.рф",
+     "саниран.рф",
+     "томеведин.рф"
+    ],
+    "llm_conf": 0.85,
+    "llm_source": "ocr-text"
+   },
+   {
+    "field": "Доп. услуги",
+    "key": "services",
+    "regex": "и предоставляемых по этим доменам всех дополнительных услуг: DNS, переадресация",
+    "llm": "DNS, переадресация",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Колесников Никита Валентинович",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Дата заявления",
+    "key": "application_date",
+    "regex": null,
+    "llm": "06.08.2026",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Домен(ы)",
+    "regex": "ok",
+    "llm": "review"
+   },
+   {
+    "check": "Дата заявления",
+    "regex": "warn",
+    "llm": "ok"
+   }
+  ]
+ },
+ {
+  "set": "set18",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 6,
+  "seconds_llm": 98,
+  "llm_seconds": 91.9,
+  "llm_calls": 1,
+  "output_tokens": 2041,
+  "thinking_chars": 3937,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Договор / аккаунт",
+    "key": "contract",
+    "regex": "_ Договор №691313 от 30.01.2014",
+    "llm": "Договор №691313 от 30.01.2014",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "ФИО у подписи",
+    "key": "signature_fio",
+    "regex": null,
+    "llm": "Бердюгин Антон Владимирович",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   },
+   {
+    "field": "Дата заявления",
+    "key": "application_date",
+    "regex": null,
+    "llm": "24.07.2026",
+    "llm_conf": 0.55,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Дата заявления",
+    "regex": "review",
+    "llm": "ok"
+   }
+  ]
+ },
+ {
+  "set": "set19",
+  "decision_regex": "Ручная проверка",
+  "decision_llm": "Ручная проверка",
+  "seconds_regex": 6,
+  "seconds_llm": 70,
+  "llm_seconds": 64.2,
+  "llm_calls": 1,
+  "output_tokens": 1603,
+  "thinking_chars": 3308,
+  "llm_error": null,
+  "not_in_text": [],
+  "field_diffs": [
+   {
+    "field": "Дата заявления",
+    "key": "application_date",
+    "regex": null,
+    "llm": "28.07.2026",
+    "llm_conf": 0.85,
+    "llm_source": "llm-ocr-text"
+   }
+  ],
+  "check_diffs": [
+   {
+    "check": "Дата заявления",
+    "regex": "warn",
+    "llm": "ok"
+   }
+  ]
+ }
+]

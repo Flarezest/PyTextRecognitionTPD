@@ -1,0 +1,341 @@
+{
+  "case_id": "set12",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Паспорт не загружен — сверка с паспортом не выполнялась",
+      "Есть поля, которые нужно подтвердить вручную",
+      "Есть замечания — см. таблицу проверок"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "dr-sergeev.ru.pdf",
+    "fields": {
+      "applicant_fio": {
+        "value": "Дымова Кристина Михайловна",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Дымова Кристина Михайловна",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_applicant_fio.png",
+        "alternatives": []
+      },
+      "domains": {
+        "value": "dr-sergeev.ru",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "www.dr-sergeev.ru",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_domains.png",
+        "alternatives": []
+      },
+      "domains.list": {
+        "value": [
+          "dr-sergeev.ru"
+        ],
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "www.dr-sergeev.ru",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.punycode": {
+        "value": [
+          "dr-sergeev.ru"
+        ],
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "www.dr-sergeev.ru",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "services": {
+        "value": "Primary, Secondary DNS",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Primary, Secondary DNS",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_services.png",
+        "alternatives": []
+      },
+      "contract": {
+        "value": "13-74669 46111845 ей 9 L006",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "13-74669 46111845 ей 9 L006",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_contract.png",
+        "alternatives": []
+      },
+      "signature_fio": {
+        "value": "Дымова Кристина Михайловна",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "Дымова Кристина Михайловна",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_signature_fio.png",
+        "alternatives": []
+      },
+      "application_date": {
+        "value": "20.09.2026",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "Двадцать + тое сентября\" 2026 г.",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_application_date.png",
+        "alternatives": []
+      },
+      "application_date.raw": {
+        "value": "Двадцать + тое сентября\" 2026 г.",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "Двадцать + тое сентября\" 2026 г.",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header": {
+        "value": "ДЫМОВА КРИСТИНА МИХАЙЛОВНА",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Дымовой Кристины Михайловны 21.06.1990",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.raw_fio": {
+        "value": "Дымовой Кристины Михайловны",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Дымовой Кристины Михайловны 21.06.1990",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.birth_date": {
+        "value": "21.06.1990",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Дымовой Кристины Михайловны 21.06.1990",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "inn": {
+        "value": "4610966611",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "4610 966611",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "passport": {
+        "value": "4610 966611",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "4610 966611 выдан 09.07.2010 ТП в пос.Белоомуте О-НИЯ УФМС России по Московской обл. в Луховицком р-не",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "passport.issue_date": {
+        "value": "09.07.2010",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "4610 966611 выдан 09.07.2010 ТП в пос.Белоомуте О-НИЯ УФМС России по Московской обл. в Луховицком р-не",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "УФМС России по Московской обл. в Луховицком р-не",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "УФМС России по Московской обл. в Луховицком р-не",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "address": {
+        "value": "Московская обл. Луховицкий р-н с.Дединово ул.Октябрьская д.1 кв.9",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Московская обл. Луховицкий р-н с.Дединово ул.Октябрьская д.1 кв.9",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_inline": {
+        "value": "СЕРГЕЕВ ПЕТР СЕРГЕЕВИЧ",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Сергееву Петру Сергеевичу",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_inline.kind": {
+        "value": "person",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Сергееву Петру Сергеевичу",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_inline.raw_fio": {
+        "value": "Сергееву Петру Сергеевичу",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Сергееву Петру Сергеевичу",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "СЕРГЕЕВ ПЕТР СЕРГЕЕВИЧ",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Сергееву Петру Сергеевичу",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.kind": {
+        "value": "person",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Сергееву Петру Сергеевичу",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.raw_fio": {
+        "value": "Сергееву Петру Сергеевичу",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Сергееву Петру Сергеевичу",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "8-926-359-71-13 Ps_sergeev@list.ru",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "8-926-359-71-13 Ps_sergeev@list.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact.emails": {
+        "value": [
+          "Ps_sergeev@list.ru"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "8-926-359-71-13 Ps_sergeev@list.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact.phones": {
+        "value": [
+          "89263597113"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "8-926-359-71-13 Ps_sergeev@list.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      }
+    },
+    "notes": [
+      "Не найдена подпись поля «ФИО заявителя (шапка) и дата рождения» на скане.",
+      "Не найдена подпись поля «ИНН ИП» на скане.",
+      "Не найдена подпись поля «Серия, номер паспорта, дата выдачи» на скане.",
+      "Не найдена подпись поля «Кем выдан паспорт» на скане.",
+      "Не найдена подпись поля «Адрес регистрации» на скане.",
+      "Не найдена подпись поля «Новый администратор — юрлицо» на скане.",
+      "Не найдена подпись поля «Новый администратор — физлицо/ИП» на скане.",
+      "Не найдена подпись поля «Контакты нового администратора» на скане.",
+      "Рукописных полей: 4. VLM не включена: значения нужно подтвердить по фрагментам в отчёте."
+    ]
+  },
+  "passport": null,
+  "checks": [
+    {
+      "name": "Паспорт приложен",
+      "status": "review",
+      "application": "4610 966611",
+      "passport": "",
+      "detail": "паспорт не загружен — сверка заявления с паспортом не выполнялась",
+      "crop": null,
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "ИНН ИП: контрольные цифры",
+      "status": "fail",
+      "application": "4610966611",
+      "passport": "",
+      "detail": "контрольные разряды не сходятся",
+      "crop": null,
+      "status_ru": "расхождение"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "ok",
+      "application": "dr-sergeev.ru",
+      "passport": "",
+      "detail": "punycode: dr-sergeev.ru",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_domains.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "СЕРГЕЕВ ПЕТР СЕРГЕЕВИЧ",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "ok",
+      "application": "8-926-359-71-13 Ps_sergeev@list.ru",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "review",
+      "application": "13-74669 46111845 ей 9 L006",
+      "passport": "",
+      "detail": "прочитано ненадёжно — сверьте фрагмент",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_contract.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "ok",
+      "application": "20.09.2026",
+      "passport": "",
+      "detail": "19 дн. назад",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set12\\20261009_000215_set12\\crops\\dr-sergeev.ru_application_date.png",
+      "status_ru": "в порядке"
+    }
+  ],
+  "notes": [
+    "Паспорт не загружен — сверка с паспортом не выполнялась."
+  ],
+  "manager_domains": []
+}

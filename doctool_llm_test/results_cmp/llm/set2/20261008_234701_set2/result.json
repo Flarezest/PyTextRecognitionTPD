@@ -1,0 +1,394 @@
+{
+  "case_id": "set2",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Есть поля, которые нужно подтвердить вручную",
+      "Есть замечания — см. таблицу проверок"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "ApplicationSet2.jpg",
+    "fields": {
+      "applicant_header": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_applicant_header.png",
+        "alternatives": []
+      },
+      "inn": {
+        "value": "5304116645",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "5304 116645",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_inn.png",
+        "alternatives": []
+      },
+      "passport": {
+        "value": "5304 116645",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "5304 116645 is 202.",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_passport.png",
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_issued_by.png",
+        "alternatives": []
+      },
+      "address": {
+        "value": "зарегистрированного по адресу PR 1- Fe pie tad ld Deghobeucene 2-4",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "зарегистрированного по адресу PR 1- Fe pie tad ld Deghobeucene 2-4",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_address.png",
+        "alternatives": []
+      },
+      "applicant_fio": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_applicant_fio.png",
+        "alternatives": []
+      },
+      "domains": {
+        "value": "istoor.ru",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "}\nd ISTOOR- RU... —",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_domains_list.png",
+        "alternatives": []
+      },
+      "domains.list": {
+        "value": [
+          "istoor.ru"
+        ],
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "}\nd ISTOOR- RU... —",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.punycode": {
+        "value": [
+          "istoor.ru"
+        ],
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "}\nd ISTOOR- RU... —",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "services": {
+        "value": "Primary, Secondary DNS",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "Primary, Secondary DNS",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_services.png",
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "ИОАН",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "Иоан вис",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_new_admin_fio.png",
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "е-пай/тел. [BABU ty LE epg GS PAGS toad if oe",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "е-пай/тел. [BABU ty LE epg GS PAGS toad if oe",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_new_admin_contact.png",
+        "alternatives": []
+      },
+      "contract": {
+        "value": "_{$ NpoOVA Se@€SSiAC Mail py",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "_{$ NpoOVA Se@€SSiAC Mail py",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_contract.png",
+        "alternatives": []
+      },
+      "application_date": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_application_date.png",
+        "alternatives": []
+      },
+      "new_admin_org": {
+        "value": "ОИ",
+        "confidence": 0.8,
+        "source": "llm-ocr-text",
+        "raw": "ОИ",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact": {
+        "value": "e-mail/ten. В |]",
+        "confidence": 0.8,
+        "source": "llm-ocr-text",
+        "raw": "e-mail/ten. В |]",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      }
+    },
+    "notes": [
+      "Не найдена подпись поля «ФИО у подписи» на скане.",
+      "Рукописных полей: 12. VLM не включена: значения нужно подтвердить по фрагментам в отчёте.",
+      "Раздел «новому Администратору» перечитан отдельно (на странице целиком его не видно)."
+    ]
+  },
+  "passport": {
+    "doc_type": "passport_rf",
+    "source_file": "PassportSet2.pdf",
+    "fields": {
+      "birth_date": {
+        "value": "28.06.1987",
+        "confidence": 0.69,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "department_code": {
+        "value": "590-039",
+        "confidence": 0.5,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "sex": {
+        "value": "МУЖ",
+        "confidence": 0.57,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "patronymic": {
+        "value": "ВИКТОРОВИЧ",
+        "confidence": 0.91,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "given_name": {
+        "value": "ВЛАДИМИР",
+        "confidence": 0.77,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "surname": {
+        "value": "РУДАКОВ",
+        "confidence": 0.76,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "birth_place": {
+        "value": "ГОР. ПЕРМЬ",
+        "confidence": 0.6,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "ОТДЕЛЕНИЕМ УФМС РОССИИ ПО ПЕРМСКОМУ. КРАЮ В ОСИНСКОМ РАЙОНЕ",
+        "confidence": 0.54,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "series_number": {
+        "value": "4707 118675",
+        "confidence": 0.45,
+        "source": "red-ocr",
+        "raw": "4707 118675; 5707 116675",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": [
+          "4707 118675",
+          "5707 116675"
+        ]
+      }
+    },
+    "notes": [
+      "MRZ не найдена (у паспортов, выданных примерно до 2011 г., её нет).",
+      "Поле «issue_date» не распознано."
+    ]
+  },
+  "checks": [
+    {
+      "name": "ФИО в шапке («от …»)",
+      "status": "review",
+      "application": "",
+      "passport": "РУДАКОВ ВЛАДИМИР ВИКТОРОВИЧ",
+      "detail": "рукописное поле — сверьте фрагмент с паспортом",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_applicant_header.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "ФИО в тексте («Я, …»)",
+      "status": "review",
+      "application": "",
+      "passport": "РУДАКОВ ВЛАДИМИР ВИКТОРОВИЧ",
+      "detail": "рукописное поле — сверьте фрагмент с паспортом",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_applicant_fio.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Дата рождения",
+      "status": "review",
+      "application": "",
+      "passport": "28.06.1987",
+      "detail": "рукописное поле — сверьте фрагмент с паспортом",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_applicant_header.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Серия и номер паспорта",
+      "status": "review",
+      "application": "5304 116645",
+      "passport": "4707 118675",
+      "detail": "различается символов: 5",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_passport.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Дата выдачи паспорта",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "рукописное поле — сверьте фрагмент с паспортом",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_passport.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Кем выдан",
+      "status": "review",
+      "application": "",
+      "passport": "ОТДЕЛЕНИЕМ УФМС РОССИИ ПО ПЕРМСКОМУ. КРАЮ В ОСИНСКОМ РАЙОНЕ",
+      "detail": "нет значения для сравнения",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_issued_by.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Кем выдан ↔ код подразделения",
+      "status": "ok",
+      "application": "",
+      "passport": "ОТДЕЛЕНИЕМ УФМС РОССИИ ПО ПЕРМСКОМУ. КРАЮ В ОСИНСКОМ РАЙОНЕ / 590-039",
+      "detail": "регион совпадает: Пермский край (59)",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Адрес регистрации",
+      "status": "info",
+      "application": "зарегистрированного по адресу PR 1- Fe pie tad ld Deghobeucene 2-4",
+      "passport": "",
+      "detail": "с отметкой о регистрации в паспорте автоматически не сверяется",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_address.png",
+      "status_ru": "к сведению"
+    },
+    {
+      "name": "ИНН ИП: контрольные цифры",
+      "status": "fail",
+      "application": "5304116645",
+      "passport": "",
+      "detail": "контрольные разряды не сходятся",
+      "crop": null,
+      "status_ru": "расхождение"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "ok",
+      "application": "istoor.ru",
+      "passport": "",
+      "detail": "punycode: istoor.ru",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_domains_list.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "ИОАН",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_new_admin_fio.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "ok",
+      "application": "е-пай/тел. [BABU ty LE epg GS PAGS toad if oe",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_new_admin_contact.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "review",
+      "application": "_{$ NpoOVA Se@€SSiAC Mail py",
+      "passport": "",
+      "detail": "прочитано ненадёжно — сверьте фрагмент",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_contract.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "не заполнена/не распознана",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set2\\20261008_234701_set2\\crops\\ApplicationSet2_application_date.png",
+      "status_ru": "нужна ручная проверка"
+    }
+  ],
+  "notes": [],
+  "manager_domains": []
+}

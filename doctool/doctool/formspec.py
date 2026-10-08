@@ -204,6 +204,14 @@ def validate_config(forms_dir: Path | str | None = None, case_types: dict | None
             roles_seen[role] = key
             for pat in spec.get("text") or []:
                 rx(where, pat, need_group=True)
+            # (0.7.0) нейросеть: llm — описание поля (строка) или false; digits — допустимое число цифр
+            if "llm" in spec and not (isinstance(spec["llm"], str) and spec["llm"].strip() or spec["llm"] is False):
+                problems.append(f"{where}: llm — описание поля строкой или false")
+            dg = spec.get("digits")
+            if dg is not None and not all(isinstance(x, int) and x > 0 for x in (dg if isinstance(dg, list) else [dg])):
+                problems.append(f"{where}: digits — число или список чисел (сколько цифр в значении)")
+            if not spec.get("text") and spec.get("llm") is False and not spec.get("scan"):
+                problems.append(f"{where}: поле нечем читать — нет text:, scan:, а llm: false")
             sc = spec.get("scan")
             if sc:
                 if not sc.get("anchor"):

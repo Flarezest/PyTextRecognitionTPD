@@ -31,7 +31,9 @@ STATIC = Path(__file__).resolve().parent / "static"
 
 
 def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-instruct",
-               ollama: str = "http://127.0.0.1:11434") -> FastAPI:
+               ollama: str = "http://127.0.0.1:11434", llm_model: str | None = None) -> FastAPI:
+    from .llm_extract import DEFAULT_MODEL as LLM_DEFAULT
+    llm_model = llm_model or LLM_DEFAULT
     app = FastAPI(title="doctool", docs_url=None, redoc_url=None)
     bridge = ExtensionBridge()
     manager = ManagerTasks(bridge)
@@ -60,7 +62,8 @@ def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-inst
         except Exception:  # noqa: BLE001
             pass
         return {"case_types": types, "app_modes": APP_MODES, "pas_modes": PAS_MODES,
-                "default_model": default_model, "ollama": ollama, "ollama_models": models}
+                "default_model": default_model, "ollama": ollama, "ollama_models": models,
+                "default_llm_model": llm_model}
 
     def _save(f: UploadFile | None, folder: Path) -> str | None:
         if f is None or not f.filename:
@@ -91,7 +94,8 @@ def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-inst
             vlm_model=(opt.get("model") or default_model) if opt.get("use_vlm") else None,
             ollama=ollama,
             case_id=opt.get("case_id") or None, out_root=out_root,
-            manager_autoload=bool(opt.get("manager_autoload")))
+            manager_autoload=bool(opt.get("manager_autoload")),
+            llm_fields=bool(opt.get("llm_fields")), llm_model=opt.get("llm_model") or llm_model)
         job = jobs.submit(inp)
         return {"job_id": job.id}
 
@@ -315,7 +319,8 @@ def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-inst
 
 
 def serve(host: str = "127.0.0.1", port: int = 8765, out_root: str = "results",
-          model: str = "qwen3-vl:4b-instruct", ollama: str = "http://127.0.0.1:11434", open_browser: bool = True):
+          model: str = "qwen3-vl:4b-instruct", ollama: str = "http://127.0.0.1:11434", open_browser: bool = True,
+          llm_model: str | None = None):
     import threading
     import webbrowser
 
@@ -326,4 +331,4 @@ def serve(host: str = "127.0.0.1", port: int = 8765, out_root: str = "results",
         print("[!] Интерфейс доступен другим компьютерам сети. Документы будут обрабатываться на этом компьютере.")
     if open_browser:
         threading.Timer(1.5, lambda: webbrowser.open(url)).start()
-    uvicorn.run(create_app(out_root, model, ollama), host=host, port=port, log_level="warning")
+    uvicorn.run(create_app(out_root, model, ollama, llm_model), host=host, port=port, log_level="warning")

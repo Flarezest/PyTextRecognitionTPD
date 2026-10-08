@@ -1,0 +1,302 @@
+{
+  "case_id": "set10",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Паспорт не загружен — сверка с паспортом не выполнялась",
+      "Есть поля, которые нужно подтвердить вручную"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "sany-sse.ru.pdf",
+    "fields": {
+      "address": {
+        "value": "143405, обл. Московская, г. Красногорск, ш. Ильинское, д. 4, кв. 94",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "143405, обл. Московская,\nг. Красногорск, ш. Ильинское, д. 4, кв. 94",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_address.png",
+        "alternatives": []
+      },
+      "domains": {
+        "value": "sany-sse.ru",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "__ Sany-sse.ru",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_domains.png",
+        "alternatives": []
+      },
+      "domains.list": {
+        "value": [
+          "sany-sse.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "__ Sany-sse.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.punycode": {
+        "value": [
+          "sany-sse.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "__ Sany-sse.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org": {
+        "value": "ООО «Шанхай Спецтехника», ИНН 7536167149, ОГРН 1177536004942, юридический адрес: 672038, Забайкальский край, г. Чита, ш. Объездное, д. 26, стр.",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "ООО «Шанхай Спецтехника», ИНН 7536167149, ОГРН\n1177536004942, юридический адрес: 672038, Забайкальский край, г.\nЧита, ш. Объездное, д. 26, стр. |",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_new_admin_org.png",
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "СОЗИНОВ СЕРГЕЙ ВАЛЕНТИНОВИЧ",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Созинов Сергей Валентинович",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_new_admin_fio.png",
+        "alternatives": []
+      },
+      "new_admin_fio.kind": {
+        "value": "person",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Созинов Сергей Валентинович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.raw_fio": {
+        "value": "Созинов Сергей Валентинович",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Созинов Сергей Валентинович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_new_admin_contact.png",
+        "alternatives": []
+      },
+      "contract": {
+        "value": "_№6151495",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "_№6151495",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_contract.png",
+        "alternatives": []
+      },
+      "signature_fio": {
+        "value": "Созинов С В",
+        "confidence": 0.94,
+        "source": "ocr",
+        "raw": "Созинов С.В. |",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_signature_fio.png",
+        "alternatives": []
+      },
+      "application_date": {
+        "value": "21.07.2026",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "\" двадцать первое \" июля 2026 г.",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_application_date.png",
+        "alternatives": []
+      },
+      "application_date.raw": {
+        "value": "\" двадцать первое \" июля 2026 г.",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "\" двадцать первое \" июля 2026 г.",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header": {
+        "value": "СОЗИНОВ СЕРГЕЙ ВАЛЕНТИНОВИЧ",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Созинова Сергея Валентиновича,\n01.05.1964 г.\nИНН: 753500005229",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.raw_fio": {
+        "value": "Созинова Сергея Валентиновича",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Созинова Сергея Валентиновича,\n01.05.1964 г.\nИНН: 753500005229",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.birth_date": {
+        "value": "01.05.1964",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Созинова Сергея Валентиновича,\n01.05.1964 г.\nИНН: 753500005229",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "inn": {
+        "value": "753500005229",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "753500005229",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "Отделением УФМС России по Забайкальскому краю в Железнодорожном районе гор. Читы",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Отделением УФМС России\nпо Забайкальскому краю\nв Железнодорожном районе гор. Читы",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_fio": {
+        "value": "Созинов Сергей Валентинович",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Созинов Сергей Валентинович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact": {
+        "value": "sany-sse.site@yandex.ru / тел 89246219888",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "sany-sse.site@yandex.ru / тел 89246219888",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact.emails": {
+        "value": [
+          "sany-sse.site@yandex.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "sany-sse.site@yandex.ru / тел 89246219888",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact.phones": {
+        "value": [
+          "89246219888"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "sany-sse.site@yandex.ru / тел 89246219888",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      }
+    },
+    "notes": [
+      "Не найдена подпись поля «ФИО заявителя (шапка) и дата рождения» на скане.",
+      "Не найдена подпись поля «ИНН ИП» на скане.",
+      "Не найдена подпись поля «Серия, номер паспорта, дата выдачи» на скане.",
+      "Не найдена подпись поля «Кем выдан паспорт» на скане.",
+      "Не найдена подпись поля «ФИО заявителя («Я, …»)» на скане.",
+      "Не найдена подпись поля «Дополнительные услуги» на скане.",
+      "Рукописных полей: 2. VLM не включена: значения нужно подтвердить по фрагментам в отчёте."
+    ]
+  },
+  "passport": null,
+  "checks": [
+    {
+      "name": "Паспорт приложен",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "паспорт не загружен — сверка заявления с паспортом не выполнялась",
+      "crop": null,
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "ИНН ИП: контрольные цифры",
+      "status": "ok",
+      "application": "753500005229",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "ok",
+      "application": "sany-sse.ru",
+      "passport": "",
+      "detail": "punycode: sany-sse.ru",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_domains.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "СОЗИНОВ СЕРГЕЙ ВАЛЕНТИНОВИЧ",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_new_admin_fio.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "ok",
+      "application": "sany-sse.site@yandex.ru / тел 89246219888",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_new_admin_contact.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "ok",
+      "application": "_№6151495",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_contract.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "ok",
+      "application": "21.07.2026",
+      "passport": "",
+      "detail": "79 дн. назад",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set10\\20261008_235939_set10\\crops\\sany-sse.ru_application_date.png",
+      "status_ru": "в порядке"
+    }
+  ],
+  "notes": [
+    "Паспорт не загружен — сверка с паспортом не выполнялась."
+  ],
+  "manager_domains": []
+}

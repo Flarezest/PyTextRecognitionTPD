@@ -5,6 +5,7 @@
   python -m doctool web                                    # веб-интерфейс в браузере
   python -m doctool check -a заявление.pdf -p паспорт.pdf
   python -m doctool --vlm qwen3-vl:4b-instruct check -a заявление.jpg -p паспорт.pdf --handwritten
+  python -m doctool --llm-fields qwen3:8b check -a заявление.pdf   # поля заявления читает нейросеть (0.7.0)
   python -m doctool extract паспорт.pdf --type passport
   python -m doctool whois example.ru пример.рф             # статус домена в реестре (WHOIS)
   python -m doctool validate                               # проверить forms/*.yaml и config/case_types.yaml
@@ -52,7 +53,9 @@ def cmd_check(args):
     inp = CaseInput(case_type=args.case_type, application=args.application, passport=args.passport,
                     combined=args.combined, app_mode=args.app_mode, app_handwritten=args.handwritten,
                     pas_mode=args.passport_mode, vlm_model=args.vlm, ollama=args.ollama, admin=admin,
-                    check_date=args.date, case_id=args.case, out_root=args.out)
+                    check_date=args.date, case_id=args.case, out_root=args.out,
+                    llm_fields=bool(args.llm_fields), llm_model=args.llm_fields or None,
+                    llm_think=args.llm_think != "off")
     res = run_case(inp)
     d = res.decision
     print(f"\nВЕРДИКТ: {d.title.upper()}")
@@ -76,14 +79,18 @@ def cmd_extract(args):
     if args.type == "passport":
         ex = extract_passport(pages, vlm)
     else:
-        ex = extract_application(pages, Path(args.out), vlm)
+        from . import llm_extract
+        cfg = llm_extract.make_config(args.llm_fields, host=args.ollama, think=args.llm_think != "off") \
+            if args.llm_fields else None
+        with llm_extract.session(cfg):
+            ex = extract_application(pages, Path(args.out), vlm)
     print(json.dumps(ex.to_dict(), ensure_ascii=False, indent=2, default=str))
 
 
 def cmd_web(args):
     from .web import serve
     serve(host=args.host, port=args.port, out_root=args.out, model=args.vlm or DEFAULT_MODEL,
-          ollama=args.ollama, open_browser=not args.no_browser)
+          ollama=args.ollama, open_browser=not args.no_browser, llm_model=args.llm_fields or None)
 
 
 def cmd_whois(args):
@@ -128,7 +135,7 @@ def cmd_validate(args):
 
 def cmd_gui(args):
     from .qt_app import main as qt_main
-    qt_main(out_root=args.out, model=args.vlm or DEFAULT_MODEL, ollama=args.ollama)
+    qt_main(out_root=args.out, model=args.vlm or DEFAULT_MODEL, ollama=args.ollama, llm_model=args.llm_fields or None)
 
 
 def main(argv=None):
@@ -139,6 +146,11 @@ def main(argv=None):
     p.add_argument("--vlm", default=None, help=f"модель Ollama для рукописного текста, напр. {DEFAULT_MODEL}")
     p.add_argument("--ollama", default="http://127.0.0.1:11434", help="адрес Ollama")
     p.add_argument("-q", "--quiet", action="store_true", help="не показывать ход работы")
+    p.add_argument("--llm-fields", metavar="МОДЕЛЬ", default=None,
+                   help="поля заявления читает нейросеть (модель Ollama, напр. qwen3:8b) вместо регулярок бланка; "
+                        "для web/gui — модель по умолчанию для галки «Поля заявления — нейросетью»")
+    p.add_argument("--llm-think", choices=["on", "off"], default="on",
+                   help="нейросеть для полей рассуждает перед ответом (qwen3): on — точнее, off — быстрее")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     c = sub.add_parser("check", help="проверить заявление (и паспорт), вынести вердикт")

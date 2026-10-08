@@ -1,0 +1,131 @@
+<!doctype html><meta charset='utf-8'><title>Регулярки и модель</title><style>body{font:14px system-ui,sans-serif;margin:16px;max-width:1300px}table{border-collapse:collapse;width:100%;margin:8px 0 20px}td,th{border:1px solid #ccc;padding:4px 6px;vertical-align:top;text-align:left}th{background:#f3f3f3}.d{background:#fff4d6}.q{color:#a00}h2{margin-top:28px}</style>
+<h1>Поля заявления: регулярки бланка ↔ модель</h1>
+<p>Регулярки: <code>F:\Programming\Python\PyTextRecognition\doctool_v0.2.1_gui\doctool_llm_test\results_cmp\regex</code><br>Модель: <code>F:\Programming\Python\PyTextRecognition\doctool_v0.2.1_gui\doctool_llm_test\results_cmp\llm</code></p>
+<table><tr><th>Набор</th><th>Вердикт (регулярки)</th><th>Вердикт (модель)</th><th>Время модели, с</th><th>Токенов ответа</th><th>Полей отличается</th><th>Нет в тексте</th></tr>
+<tr><td><a href='#set1'>set1</a></td><td>Принять</td><td>Принять</td><td>65.0</td><td>1291</td><td>2</td><td>—</td></tr>
+<tr><td><a href='#set2'>set2</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>114.7</td><td>2925</td><td>6</td><td>—</td></tr>
+<tr><td><a href='#set3'>set3</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>54.1</td><td>1405</td><td>2</td><td>—</td></tr>
+<tr><td><a href='#set4'>set4</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>69.2</td><td>1760</td><td>4</td><td>domains</td></tr>
+<tr><td><a href='#set5'>set5</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>46.4</td><td>1075</td><td>3</td><td>—</td></tr>
+<tr><td><a href='#set6'>set6</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>183.8</td><td>382</td><td>3</td><td>—</td></tr>
+<tr><td><a href='#set7'>set7</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>0</td><td>0</td><td>0</td><td>—</td></tr>
+<tr><td><a href='#set8'>set8</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>68.3</td><td>1782</td><td>2</td><td>domains</td></tr>
+<tr><td><a href='#set9'>set9</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>74.2</td><td>1868</td><td>3</td><td>—</td></tr>
+<tr><td><a href='#set10'>set10</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>62.1</td><td>1542</td><td>4</td><td>—</td></tr>
+<tr><td><a href='#set11'>set11</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>62.6</td><td>1730</td><td>2</td><td>—</td></tr>
+<tr><td><a href='#set12'>set12</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>80.9</td><td>1845</td><td>6</td><td>—</td></tr>
+<tr><td><a href='#set13'>set13</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>89.9</td><td>2480</td><td>5</td><td>—</td></tr>
+<tr><td><a href='#set14'>set14</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>73.3</td><td>1958</td><td>3</td><td>—</td></tr>
+<tr><td><a href='#set15'>set15</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>135.4</td><td>3653</td><td>1</td><td>—</td></tr>
+<tr><td><a href='#set16'>set16</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>62.6</td><td>1745</td><td>3</td><td>—</td></tr>
+<tr><td><a href='#set17'>set17</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>160.3</td><td>3612</td><td>5</td><td>domains</td></tr>
+<tr><td><a href='#set18'>set18</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>91.9</td><td>2041</td><td>3</td><td>—</td></tr>
+<tr><td><a href='#set19'>set19</a></td><td>Ручная проверка</td><td>Ручная проверка</td><td>64.2</td><td>1603</td><td>1</td><td>—</td></tr>
+</table>
+<h2 id='set1'>set1</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-text 0.98</td></tr>
+<tr><td>Новый адм. (в строке)</td><td>ПЫХАЛОВА НАТАЛЬЯ ЕВГЕНЬЕВНА</td><td></td><td> </td></tr>
+</table>
+<h2 id='set2'>set2</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>ИНН</td><td></td><td>5304116645</td><td>llm-ocr-text 0.55</td></tr>
+<tr><td>Кем выдан</td><td>is 202. (серия, номе паспорта, когда ) Om OL DLW oe Lue f OCs no Wey</td><td></td><td>ocr+рукопись 0.0</td></tr>
+<tr><td>Адрес регистрации</td><td>PR 1- Fe pie tad ld Deghobeucene 2-4</td><td>зарегистрированного по адресу PR 1- Fe pie tad ld Deghobeucene 2-4</td><td>llm-ocr-text 0.55</td></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-ocr-text 0.55</td></tr>
+<tr><td>Новый адм. — юрлицо</td><td></td><td>ОИ</td><td>llm-ocr-text 0.8</td></tr>
+<tr><td>Новый адм. — физлицо/ИП</td><td>КЛЕЕ ИОАН</td><td>ИОАН</td><td>llm-ocr-text 0.55</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Контакты нового администратора</td><td>review</td><td>ok</td></tr><tr><td>ИНН ИП: контрольные цифры</td><td></td><td>fail</td></tr></table>
+<h2 id='set3'>set3</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Доп. услуги</td><td>и предоставляемых по этому домену всех дополнительных услуг</td><td>все</td><td>llm-text 0.98</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Семичев Дмитрий Викторович</td><td>llm-text 0.98</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>ФИО у подписи</td><td></td><td>ok</td></tr></table>
+<h2 id='set4'>set4</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Кем выдан</td><td></td><td>Kapareéceom р</td><td>llm-ocr-text 0.55</td></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Договор / аккаунт</td><td>_ (3566004</td><td>3566004</td><td>llm-ocr-text 0.55</td></tr>
+<tr><td>Дата заявления</td><td>29.09.2026</td><td></td><td>ocr+рукопись 0.0</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Контакты нового администратора</td><td>review</td><td>ok</td></tr><tr><td>Дата заявления</td><td>ok</td><td>review</td></tr></table>
+<h2 id='set5'>set5</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-text 0.98</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Хлебников Николай Александрович</td><td>llm-text 0.98</td></tr>
+<tr><td>Дата заявления</td><td></td><td>01.09.2026</td><td>llm-text 0.98</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Дата заявления</td><td>warn</td><td>ok</td></tr></table>
+<h2 id='set6'>set6</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>ИНН</td><td></td><td>4600818840</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Новый адм. — физлицо/ИП</td><td></td><td>АВЕРИН ВЯЧЕСЛАВ ВЛАДИМИРОВИЧ</td><td>llm-ocr-text 0.85</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>ИНН ИП: контрольные цифры</td><td></td><td>fail</td></tr></table>
+<h2 id='set8'>set8</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Доп. услуги</td><td></td><td>все услуги, которые есть в текущем аккаунте владельца ГРУ ‚ Secondary D S)</td><td>llm-ocr-text 0.55</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Ан Виктор Дмитриевич</td><td>llm-ocr-text 0.85</td></tr>
+</table>
+<h2 id='set9'>set9</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Договор / аккаунт</td><td>Договор №5734725 от 22.01 .2020/000 &quot;Бьюти технолоджи&quot; (2020-07-06</td><td>Договор №5734725 от 22.01 .2020/000 &quot;Бьюти технолоджи&quot; (2020-07-06 13:17:33)</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Тарасова Инесса Александровна</td><td>llm-ocr-text 0.55</td></tr>
+</table>
+<h2 id='set10'>set10</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Кем выдан</td><td>Отделением УФМС России по Забайкальскому краю в Железнодорожном районе гор. Читы</td><td>Отделением УФМС России по Забайкальскому краю</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Доп. услуги</td><td></td><td>дополнительных услуг</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Новый адм. — юрлицо</td><td>ООО «Шанхай Спецтехника», ИНН 7536167149, ОГРН 1177536004942, юридический адрес: 672038, Забайкальский край, г. Чита, ш. Объездное, д. 26, стр.</td><td>ООО «Шанхай Спецтехника»</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Новый адм. — физлицо/ИП</td><td>СОЗИНОВ СЕРГЕЙ ВАЛЕНТИНОВИЧ</td><td></td><td>ocr+рукопись 0.0</td></tr>
+</table>
+<h2 id='set11'>set11</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>ИНН</td><td></td><td>4511500159</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-ocr-text 0.85</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>ИНН ИП: контрольные цифры</td><td></td><td>fail</td></tr></table>
+<h2 id='set12'>set12</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>ИНН</td><td></td><td>4610966611</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Кем выдан</td><td>ТП в пос.Белоомуте О-НИЯ УФМС России по Московской обл. в Луховицком р-не</td><td>УФМС России по Московской обл. в Луховицком р-не</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Домены</td><td>waww.dr-sergeev.ru</td><td>dr-sergeev.ru</td><td>llm-ocr-text 0.55</td></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Новый адм. (в строке)</td><td></td><td>СЕРГЕЕВ ПЕТР СЕРГЕЕВИЧ</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Дымова Кристина Михайловна</td><td>llm-ocr-text 0.55</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Домен(ы)</td><td>review</td><td>ok</td></tr><tr><td>ИНН ИП: контрольные цифры</td><td></td><td>fail</td></tr></table>
+<h2 id='set13'>set13</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Кем выдан</td><td>ТИ № 35 Отдела УФМС России по Санкт-Петербургу и Ленинградской обл. В Красногвардейском р-не гор. Санкт-Петербурга</td><td>Отдела УФМС России по Санкт-Петербургу и Ленинградской обл</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>E-mail нового адм.</td><td>info@m-rocket.ru</td><td></td><td> </td></tr>
+<tr><td>Телефон нового адм.</td><td>+79215506262</td><td></td><td> </td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Шейко Юрий Борисович</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Дата заявления</td><td></td><td>03.08.2026</td><td>llm-ocr-text 0.85</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Дата заявления</td><td>warn</td><td>ok</td></tr></table>
+<h2 id='set14'>set14</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>ИНН</td><td></td><td>9207369673</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Доп. услуги</td><td></td><td>Primary, Secondary DNS</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Малюгин Сергей Алексеевич</td><td>llm-ocr-text 0.55</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>ИНН ИП: контрольные цифры</td><td></td><td>fail</td></tr></table>
+<h2 id='set15'>set15</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>ФИО заявителя (шапка)</td><td>ИРИ</td><td></td><td>ocr+рукопись 0.0</td></tr>
+</table>
+<h2 id='set16'>set16</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Новый адм. (в строке)</td><td></td><td>ОВСЯНКОВ ДМИТРИЙ ВАСИЛЬЕВИЧ</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Илюхин Евгений Леонидович</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Дата заявления</td><td></td><td>29.09.2026</td><td>llm-ocr-text 0.85</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Дата заявления</td><td>warn</td><td>ok</td></tr></table>
+<h2 id='set17'>set17</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Кем выдан</td><td>отд. по р-ну Пресненский ОУФМС России по г. Москвев ЦАО</td><td>ОУФМС России по г. Москвев ЦАО</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Домены</td><td>alosan-revit.com, alosan-revit.ru, alosan.ru, alosan.ru.com, alosanrevit.com, alosanrevit.ru, hepaveran.com, hepaveran.ru, ipe-con.com, ipe-con.ru, ipecan.ru, ipecon.ru.com, ipekon.ru, nefroveran.com, nefroveran.ru, nobitrin.com, nobitrin.ru, pancreveran.com, pancreveran.ru, pancroveran.com, pancroveran.ru, progeveran.com, progeveran.ru, reacorin.com, reacorin.ru, reanevrin.com, reanevrin.ru, saniran.com, saniran.ru, tomevedin.com, tomevedin.ru, vecartis.com, vecartis.ru, veproscon.com, veproscon.ru, verevit.com, verevit.ru, vezotil.com, vezotil.ru, алосан-ревит.рф, алосан.рф, везотил.рф, векартис.рф, вепроскон.рф, веревит.рф, гепаверан.рф, ипекон.рф, нефроверан.рф, нобитрин.рф, панкреверан.рф, панкроверан.рф, прогеверан.рф, реакорин.рф, реаневрин.рф, саниран.рф, томеведин.рф</td><td>alosan-revit.com, alosan-revit.ru, alosan.ru, alosan.ru.com, alosanrevit.com, alosanrevit.ru, hepaveran.com, hepaveran.ru, ipe-con.com, ipe-con.ru, ipecan.ru, ipecon.ru.com, ipekon.ru, nefroveran.com, nefroveran.ru, nobitrin.com, pancreveran.com, pancreveran.ru, pancroveran.com, pancroveran.ru, progeveran.com, progeveran.ru, reacorin.com, reacorin.ru, reanevrin.com, reanevrin.ru, saniran.com, saniran.ru, tomevedin.com, tomevedin.ru, vecartis.com, vecartis.ru, veproscon.com, verevit.com, verevit.ru, vezotil.com, vezotil.ru, алосан-ревит.рф, алосан.рф, везотил.рф, векартис.рф, вепроскон.ru, вепроскон.рф, веревит.рф, гепаверан.рф, ипекон.рф, нефроверан.рф, нобитрин.рф, панкреверан.рф, панкроверан.рф, прогеверан.рф, реакорин.рф, реаневрин.рф, саниран.рф, томеведин.рф</td><td>ocr-text 0.85</td></tr>
+<tr><td>Доп. услуги</td><td>и предоставляемых по этим доменам всех дополнительных услуг: DNS, переадресация</td><td>DNS, переадресация</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Колесников Никита Валентинович</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>Дата заявления</td><td></td><td>06.08.2026</td><td>llm-ocr-text 0.85</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Домен(ы)</td><td>ok</td><td>review</td></tr><tr><td>Дата заявления</td><td>warn</td><td>ok</td></tr></table>
+<h2 id='set18'>set18</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Договор / аккаунт</td><td>_ Договор №691313 от 30.01.2014</td><td>Договор №691313 от 30.01.2014</td><td>llm-ocr-text 0.85</td></tr>
+<tr><td>ФИО у подписи</td><td></td><td>Бердюгин Антон Владимирович</td><td>llm-ocr-text 0.55</td></tr>
+<tr><td>Дата заявления</td><td></td><td>24.07.2026</td><td>llm-ocr-text 0.55</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Дата заявления</td><td>review</td><td>ok</td></tr></table>
+<h2 id='set19'>set19</h2><table><tr><th>Поле</th><th>Регулярки</th><th>Модель</th><th>Источник / уверенность</th></tr>
+<tr><td>Дата заявления</td><td></td><td>28.07.2026</td><td>llm-ocr-text 0.85</td></tr>
+</table>
+<table><tr><th>Проверка</th><th>Регулярки</th><th>Модель</th></tr><tr><td>Дата заявления</td><td>warn</td><td>ok</td></tr></table>

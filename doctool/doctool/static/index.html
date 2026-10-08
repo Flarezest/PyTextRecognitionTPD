@@ -134,6 +134,7 @@ dialog .bd{padding:14px 18px;max-height:75vh;overflow:auto}
       <input type="file" id="appInput" class="hidden" accept=".pdf,.docx,.jpg,.jpeg,.png,.tif,.tiff,.bmp,.webp">
       <div class="radios" id="appModes"></div>
       <label class="chk"><input type="checkbox" id="handwritten"> Рукописное — читать локальной моделью (qwen)</label>
+      <label class="chk" title="Без галки поля читаются по шаблону бланка (регулярками) — для типовых печатных заявлений. С галкой — нейросетью: для свободной формы, бланка нотариуса, новых типов заявлений."><input type="checkbox" id="llmFields"> Поля заявления — нейросетью (вместо шаблона бланка)</label>
     </div>
     <div class="drop" id="dropPas">
       <h3>Паспорт</h3>
@@ -148,7 +149,8 @@ dialog .bd{padding:14px 18px;max-height:75vh;overflow:auto}
   <label class="chk" style="margin-top:12px"><input type="checkbox" id="mgrAuto">
     Подгрузить данные Sd доменов из заявления автоматически (после сверки заявления и паспорта)</label>
   <div class="row" style="margin-top:12px">
-    <label class="f">Локальная модель <select id="model"></select></label>
+    <label class="f">Модель для рукописи <select id="model"></select></label>
+    <label class="f">Модель для полей <select id="llmModel"></select></label>
     <button class="primary" id="run">Проверить</button>
     <span class="hint" id="runHint"></span>
   </div>
@@ -289,6 +291,9 @@ async function loadMeta(){
   radios($('#pasModes'), 'pasMode', m.pas_modes);
   const models = m.ollama_models.length ? m.ollama_models : [m.default_model];
   $('#model').innerHTML = models.map(x => `<option ${x===m.default_model?'selected':''}>${esc(x)}</option>`).join('');
+  const llmModels = m.ollama_models.includes(m.default_llm_model) ? m.ollama_models
+                    : [m.default_llm_model + (m.ollama_models.length ? ' (не скачана)' : ''), ...m.ollama_models];
+  $('#llmModel').innerHTML = llmModels.map(x => `<option value="${esc(x.replace(' (не скачана)',''))}" ${x.startsWith(m.default_llm_model)?'selected':''}>${esc(x)}</option>`).join('');
   $('#meta').textContent = m.ollama_models.length
     ? `Ollama: доступно моделей ${m.ollama_models.length}` : 'Ollama не найдена — рукопись будет только во фрагментах';
 }
@@ -320,6 +325,7 @@ function options(extra={}){
     combined: $('#combined').checked, app_mode: v('appMode'), pas_mode: v('pasMode'),
     handwritten: $('#handwritten').checked, use_vlm: $('#handwritten').checked || $('#pasVlm').checked,
     model: $('#model').value, manager_autoload: $('#mgrAuto').checked,
+    llm_fields: $('#llmFields').checked, llm_model: $('#llmModel').value,
     ...extra };
 }
 

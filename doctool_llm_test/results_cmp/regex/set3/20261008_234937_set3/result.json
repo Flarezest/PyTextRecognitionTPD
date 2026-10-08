@@ -1,0 +1,430 @@
+{
+  "case_id": "set3",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Есть поля, которые нужно подтвердить вручную",
+      "Есть замечания — см. таблицу проверок"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "ApplicationSet3.pdf",
+    "fields": {
+      "applicant_header": {
+        "value": "СЕМИЧЕВ ДМИТРИЙ ВИКТОРОВИЧ",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "Семичева Дмитрия Викторовича 20.04.1982\nИНН ИП 402810466845\n2905052737 выдан ОВД Московского округа",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.raw_fio": {
+        "value": "Семичева Дмитрия Викторовича",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "Семичева Дмитрия Викторовича 20.04.1982\nИНН ИП 402810466845\n2905052737 выдан ОВД Московского округа",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.birth_date": {
+        "value": "20.04.1982",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "Семичева Дмитрия Викторовича 20.04.1982\nИНН ИП 402810466845\n2905052737 выдан ОВД Московского округа",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "inn": {
+        "value": "402810466845",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "402810466845",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "passport": {
+        "value": "2905 052737",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "2905052737 выдан ОВД Московского округа\nг.Калуга, 12.07.2005\nзарегистрированного по адресу 248029,\nКалужская обл, г Калуга, ул Гурьянова, 59, 105\nЗаявление\nЯ, Семичев Дмитрий Викторович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "passport.issue_date": {
+        "value": "12.07.2005",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "2905052737 выдан ОВД Московского округа\nг.Калуга, 12.07.2005\nзарегистрированного по адресу 248029,\nКалужская обл, г Калуга, ул Гурьянова, 59, 105\nЗаявление\nЯ, Семичев Дмитрий Викторович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "ОВД Московского округа г.Калуга",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "выдан ОВД Московского округа\nг.Калуга, 12.07.2005",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "address": {
+        "value": "248029, Калужская обл, г Калуга, ул Гурьянова, 59, 105",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "248029,\nКалужская обл, г Калуга, ул Гурьянова, 59, 105",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_fio": {
+        "value": "Семичев Дмитрий Викторович",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "Семичев Дмитрий Викторович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains": {
+        "value": "спортопт.рф",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "спортопт.рф",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.list": {
+        "value": [
+          "спортопт.рф"
+        ],
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "спортопт.рф",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.punycode": {
+        "value": [
+          "xn--n1aabcddkc.xn--p1ai"
+        ],
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "спортопт.рф",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "services": {
+        "value": "и предоставляемых по этому домену всех дополнительных услуг",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "и предоставляемых по этому домену всех дополнительных услуг",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "АНТОНОВ ГРИГОРИЙ ВЛАДИМИРОВИЧ",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "Антонов Григорий Владимирович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.kind": {
+        "value": "person",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "Антонов Григорий Владимирович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.raw_fio": {
+        "value": "Антонов Григорий Владимирович",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "Антонов Григорий Владимирович",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "+79997350200 greguar009@gmail.com",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "+79997350200 greguar009@gmail.com",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact.emails": {
+        "value": [
+          "greguar009@gmail.com"
+        ],
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "+79997350200 greguar009@gmail.com",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact.phones": {
+        "value": [
+          "+79997350200"
+        ],
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "+79997350200 greguar009@gmail.com",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "contract": {
+        "value": "13356517",
+        "confidence": 0.98,
+        "source": "text",
+        "raw": "13356517",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      }
+    },
+    "notes": []
+  },
+  "passport": {
+    "doc_type": "passport_rf",
+    "source_file": "PassportSet3.jpg",
+    "fields": {
+      "birth_date": {
+        "value": "20.04.1982",
+        "confidence": 0.8,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "department_code": {
+        "value": "402-002",
+        "confidence": 0.67,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "sex": {
+        "value": "МУЖ",
+        "confidence": 0.59,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "patronymic": {
+        "value": "ВИКТОРОВИЧ",
+        "confidence": 0.88,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "given_name": {
+        "value": "ДМИТРИЙ",
+        "confidence": 0.95,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "surname": {
+        "value": "СЕМИЧЕВ",
+        "confidence": 0.92,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "birth_place": {
+        "value": "ГОР. МИРНЫЙ АРХАНГЕЛЬСКОЙ ОБЛ.",
+        "confidence": 0.71,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "ОТДЕЛОМ ВНУТРЕННИХ МОСКОВСКОГО ОКРУГА ГОРОДА",
+        "confidence": 0.66,
+        "source": "ocr",
+        "raw": "",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "series_number": {
+        "value": "2905 052737",
+        "confidence": 0.45,
+        "source": "red-ocr",
+        "raw": "2905 052737; 2805 052737",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": [
+          "2905 052737",
+          "2805 052737"
+        ]
+      }
+    },
+    "notes": [
+      "MRZ не найдена (у паспортов, выданных примерно до 2011 г., её нет).",
+      "Поле «issue_date» не распознано."
+    ]
+  },
+  "checks": [
+    {
+      "name": "ФИО в шапке («от …»)",
+      "status": "ok",
+      "application": "Семичева Дмитрия Викторовича",
+      "passport": "СЕМИЧЕВ ДМИТРИЙ ВИКТОРОВИЧ",
+      "detail": "сходство 100%",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "ФИО в тексте («Я, …»)",
+      "status": "ok",
+      "application": "Семичев Дмитрий Викторович",
+      "passport": "СЕМИЧЕВ ДМИТРИЙ ВИКТОРОВИЧ",
+      "detail": "сходство 100%",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Дата рождения",
+      "status": "ok",
+      "application": "20.04.1982",
+      "passport": "20.04.1982",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Серия и номер паспорта",
+      "status": "ok",
+      "application": "2905 052737",
+      "passport": "2905 052737",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Дата выдачи паспорта",
+      "status": "review",
+      "application": "12.07.2005",
+      "passport": "",
+      "detail": "в паспорте не распознано — сверьте вручную",
+      "crop": null,
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Кем выдан",
+      "status": "ok",
+      "application": "ОВД Московского округа г.Калуга",
+      "passport": "ОТДЕЛОМ ВНУТРЕННИХ МОСКОВСКОГО ОКРУГА ГОРОДА",
+      "detail": "сходство 100% (с учётом сокращений)",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Кем выдан ↔ код подразделения",
+      "status": "info",
+      "application": "",
+      "passport": "ОТДЕЛОМ ВНУТРЕННИХ МОСКОВСКОГО ОКРУГА ГОРОДА / 402-002",
+      "detail": "регион в названии органа не указан; по коду — Калужская обл. (40)",
+      "crop": null,
+      "status_ru": "к сведению"
+    },
+    {
+      "name": "Адрес регистрации",
+      "status": "info",
+      "application": "248029, Калужская обл, г Калуга, ул Гурьянова, 59, 105",
+      "passport": "",
+      "detail": "с отметкой о регистрации в паспорте автоматически не сверяется",
+      "crop": null,
+      "status_ru": "к сведению"
+    },
+    {
+      "name": "ИНН ИП: контрольные цифры",
+      "status": "ok",
+      "application": "402810466845",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "ok",
+      "application": "спортопт.рф",
+      "passport": "",
+      "detail": "punycode: xn--n1aabcddkc.xn--p1ai",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "АНТОНОВ ГРИГОРИЙ ВЛАДИМИРОВИЧ",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "ok",
+      "application": "+79997350200 greguar009@gmail.com",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "ok",
+      "application": "13356517",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "warn",
+      "application": "",
+      "passport": "",
+      "detail": "не заполнена/не распознана",
+      "crop": null,
+      "status_ru": "проверить"
+    }
+  ],
+  "notes": [],
+  "manager_domains": []
+}

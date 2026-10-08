@@ -1,0 +1,293 @@
+{
+  "case_id": "set9",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Паспорт не загружен — сверка с паспортом не выполнялась",
+      "Есть поля, которые нужно подтвердить вручную"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "feelspainternational.ru_и_др.pdf",
+    "fields": {
+      "applicant_fio": {
+        "value": "Тарасова Инесса Александровна",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Тарасова Инесса\nАлександровна",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_applicant_fio.png",
+        "alternatives": []
+      },
+      "domains": {
+        "value": "labrezult.ru, ifeelspainternational.ru, spasmart.ru, gift-corp.ru, лабораториярезультата.рф, medispatechnology.ru",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "labrezult.ru,\nifeelspainternational.ru, spasmart.ru, gift-corp.ru, лабораториярезультата.рф,\nmedispatechnology.ru",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_domains_list.png",
+        "alternatives": []
+      },
+      "domains.list": {
+        "value": [
+          "labrezult.ru",
+          "ifeelspainternational.ru",
+          "spasmart.ru",
+          "gift-corp.ru",
+          "лабораториярезультата.рф",
+          "medispatechnology.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "labrezult.ru,\nifeelspainternational.ru, spasmart.ru, gift-corp.ru, лабораториярезультата.рф,\nmedispatechnology.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.punycode": {
+        "value": [
+          "labrezult.ru",
+          "ifeelspainternational.ru",
+          "spasmart.ru",
+          "gift-corp.ru",
+          "xn--80aaaaczogxg2abycb2ahbp5p6b.xn--p1ai",
+          "medispatechnology.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "labrezult.ru,\nifeelspainternational.ru, spasmart.ru, gift-corp.ru, лабораториярезультата.рф,\nmedispatechnology.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "services": {
+        "value": "",
+        "confidence": 0.8,
+        "source": "scan",
+        "raw": "(пусто)",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_services.png",
+        "alternatives": []
+      },
+      "new_admin_org": {
+        "value": "ООО \"Бьюти технолоджи\"",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "ООО \"Бьюти технолоджи\"",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_new_admin_org.png",
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "",
+        "confidence": 0.8,
+        "source": "scan",
+        "raw": "(пусто)",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_new_admin_fio.png",
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "",
+        "confidence": 0.8,
+        "source": "scan",
+        "raw": "(пусто)",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_new_admin_contact.png",
+        "alternatives": []
+      },
+      "contract": {
+        "value": "Договор №5734725 от 22.01 .2020/000 \"Бьюти технолоджи\" (2020-07-06",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Договор №5734725 от 22.01 .2020/000 \"Бьюти технолоджи\" (2020-07-06",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_contract.png",
+        "alternatives": []
+      },
+      "signature_fio": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_signature_fio.png",
+        "alternatives": []
+      },
+      "application_date": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_application_date.png",
+        "alternatives": []
+      },
+      "applicant_header": {
+        "value": "ТАРАСОВА ИНЕССА АЛЕКСАНДРОВНА",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Тарасова Инесса Александровна, 28.03.1991\nПаспорт:\n36 17 458188,",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.raw_fio": {
+        "value": "Тарасова Инесса Александровна",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Тарасова Инесса Александровна, 28.03.1991\nПаспорт:\n36 17 458188,",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.birth_date": {
+        "value": "28.03.1991",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Тарасова Инесса Александровна, 28.03.1991\nПаспорт:\n36 17 458188,",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "passport": {
+        "value": "3617 458188",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "36 17 458188,\nГУ МВД РОССИИ ПО САМАРСКОЙ ОБЛАСТИ,\n20.01:2018\nЗарегистрированного по адресу:\n443091, обл. Самарская,\nг. Самара, ул. Ташкентская, дом 102a, кв. 6",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "passport.issue_date": {
+        "value": "20.01.2018",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "36 17 458188,\nГУ МВД РОССИИ ПО САМАРСКОЙ ОБЛАСТИ,\n20.01:2018\nЗарегистрированного по адресу:\n443091, обл. Самарская,\nг. Самара, ул. Ташкентская, дом 102a, кв. 6",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "ГУ МВД РОССИИ ПО САМАРСКОЙ ОБЛАСТИ",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": ",\nГУ МВД РОССИИ ПО САМАРСКОЙ ОБЛАСТИ,\n20.01:2018",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "address": {
+        "value": "443091, обл. Самарская, г. Самара, ул. Ташкентская, дом 102a, кв. 6",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "443091, обл. Самарская,\nг. Самара, ул. Ташкентская, дом 102a, кв. 6",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact": {
+        "value": "shop@medispatechnology.ru / +79646308591",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "shop@medispatechnology.ru / +79646308591",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact.emails": {
+        "value": [
+          "shop@medispatechnology.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "shop@medispatechnology.ru / +79646308591",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact.phones": {
+        "value": [
+          "+79646308591"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "shop@medispatechnology.ru / +79646308591",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      }
+    },
+    "notes": [
+      "Не найдена подпись поля «ФИО заявителя (шапка) и дата рождения» на скане.",
+      "Не найдена подпись поля «ИНН ИП» на скане.",
+      "Не найдена подпись поля «Серия, номер паспорта, дата выдачи» на скане.",
+      "Не найдена подпись поля «Кем выдан паспорт» на скане.",
+      "Не найдена подпись поля «Адрес регистрации» на скане.",
+      "Рукописных полей: 2. VLM не включена: значения нужно подтвердить по фрагментам в отчёте."
+    ]
+  },
+  "passport": null,
+  "checks": [
+    {
+      "name": "Паспорт приложен",
+      "status": "review",
+      "application": "3617 458188",
+      "passport": "",
+      "detail": "паспорт не загружен — сверка заявления с паспортом не выполнялась",
+      "crop": null,
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "ok",
+      "application": "labrezult.ru, ifeelspainternational.ru, spasmart.ru, gift-corp.ru, лабораториярезультата.рф, medispatechnology.ru",
+      "passport": "",
+      "detail": "доменов: 6; punycode: лабораториярезультата.рф → xn--80aaaaczogxg2abycb2ahbp5p6b.xn--p1ai",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_domains_list.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "ООО \"Бьюти технолоджи\"",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_new_admin_fio.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "ok",
+      "application": "shop@medispatechnology.ru / +79646308591",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_new_admin_contact.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "ok",
+      "application": "Договор №5734725 от 22.01 .2020/000 \"Бьюти технолоджи\" (2020-07-06",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_contract.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "не заполнена/не распознана",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set9\\20261008_235810_set9\\crops\\feelspainternational.ru_и_др_application_date.png",
+      "status_ru": "нужна ручная проверка"
+    }
+  ],
+  "notes": [
+    "Паспорт не загружен — сверка с паспортом не выполнялась."
+  ],
+  "manager_domains": []
+}

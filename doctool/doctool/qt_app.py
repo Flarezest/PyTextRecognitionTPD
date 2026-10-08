@@ -161,9 +161,11 @@ class ClickLabel(QLabel):
 # ------------------------------------------------------------------ главное окно
 
 class MainWindow(QMainWindow):
-    def __init__(self, out_root: str, model: str, ollama: str):
+    def __init__(self, out_root: str, model: str, ollama: str, llm_model: str | None = None):
         super().__init__()
         self.out_root, self.default_model, self.ollama = out_root, model, ollama
+        from .llm_extract import DEFAULT_MODEL as LLM_DEFAULT
+        self.default_llm_model = llm_model or LLM_DEFAULT
         self.res: CaseResult | None = None
         self.thread: QThread | None = None
         self.worker: Worker | None = None
@@ -202,11 +204,15 @@ class MainWindow(QMainWindow):
         lay.addWidget(self.combined)
         self.app_box = DropBox("Заявление", APP_MODES, "Рукописное — читать локальной моделью (qwen)")
         self.pas_box = DropBox("Паспорт", PAS_MODES, "Дочитывать плохо распознанные поля моделью")
+        self.llm_fields = QCheckBox("Поля заявления — нейросетью (вместо шаблона бланка)")
+        self.llm_fields.setToolTip("Без галки поля читаются по шаблону бланка (регулярками) — для типовых печатных "
+                                   "заявлений. С галкой — нейросетью: свободная форма, бланк нотариуса, новые типы.")
+        self.app_box.layout().addWidget(self.llm_fields)
         lay.addWidget(self.app_box)
         lay.addWidget(self.pas_box)
 
         mrow = QHBoxLayout()
-        mrow.addWidget(QLabel("Локальная модель"))
+        mrow.addWidget(QLabel("Модель для рукописи"))
         self.model = QComboBox()
         self.model.setEditable(True)
         models = self._ollama_models() or [self.default_model]
@@ -214,6 +220,15 @@ class MainWindow(QMainWindow):
         if self.default_model in models:
             self.model.setCurrentText(self.default_model)
         mrow.addWidget(self.model, 1)
+        lay.addLayout(mrow)
+        mrow = QHBoxLayout()
+        mrow.addWidget(QLabel("Модель для полей"))
+        self.llm_model = QComboBox()
+        self.llm_model.setEditable(True)
+        lm = self._ollama_models()
+        self.llm_model.addItems(lm if self.default_llm_model in lm else [self.default_llm_model] + lm)
+        self.llm_model.setCurrentText(self.default_llm_model)
+        mrow.addWidget(self.llm_model, 1)
         lay.addLayout(mrow)
 
         brow = QHBoxLayout()
@@ -350,7 +365,8 @@ class MainWindow(QMainWindow):
                          page_roles=page_roles, app_mode=self.app_box.mode(), app_handwritten=hand,
                          pas_mode=self.pas_box.mode(), vlm_model=self.model.currentText() if use_vlm else None,
                          ollama=self.ollama,
-                         case_id=self.case_id.text().strip() or None, out_root=self.out_root)
+                         case_id=self.case_id.text().strip() or None, out_root=self.out_root,
+                         llm_fields=self.llm_fields.isChecked(), llm_model=self.llm_model.currentText().strip() or None)
 
     def start(self, _=None, page_roles=None):
         inp = self._input(page_roles)
@@ -533,10 +549,11 @@ class MainWindow(QMainWindow):
         self.start(page_roles={i: cb.currentData() for i, cb in self.page_role_boxes.items()})
 
 
-def main(out_root: str = "results", model: str = "qwen3-vl:4b-instruct", ollama: str = "http://127.0.0.1:11434"):
+def main(out_root: str = "results", model: str = "qwen3-vl:4b-instruct", ollama: str = "http://127.0.0.1:11434",
+         llm_model: str | None = None):
     app = QApplication.instance() or QApplication(sys.argv)
     app.setApplicationName("doctool")
-    w = MainWindow(out_root, model, ollama)
+    w = MainWindow(out_root, model, ollama, llm_model)
     w.show()
     sys.exit(app.exec())
 

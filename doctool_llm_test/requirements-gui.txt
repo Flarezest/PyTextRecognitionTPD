@@ -1,0 +1,6 @@
+# Для интерфейсов (дополнительно к requirements.txt)
+PySide6>=6.6            # окно приложения: python -m doctool gui
+fastapi>=0.110          # веб-интерфейс:  python -m doctool web
+uvicorn>=0.29
+python-multipart>=0.0.9
+websockets>=12          # связь с расширением Chrome «doctool — manager» (данные Sd доменов)

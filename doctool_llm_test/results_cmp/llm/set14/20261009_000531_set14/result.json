@@ -1,0 +1,299 @@
+{
+  "case_id": "set14",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Паспорт не загружен — сверка с паспортом не выполнялась",
+      "Есть поля, которые нужно подтвердить вручную",
+      "Есть замечания — см. таблицу проверок"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "фондржд.рф, fondrzd.ru.pdf",
+    "fields": {
+      "applicant_header": {
+        "value": "МАЛЮГИН СЕРГЕЙ АЛЕКСЕЕВИЧ",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Малюгина Сергея Алексеевича, 15.07.1988 г.р.",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_applicant_header.png",
+        "alternatives": []
+      },
+      "applicant_header.raw_fio": {
+        "value": "Малюгина Сергея Алексеевича",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Малюгина Сергея Алексеевича, 15.07.1988 г.р.",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.birth_date": {
+        "value": "15.07.1988",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Малюгина Сергея Алексеевича, 15.07.1988 г.р.",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "inn": {
+        "value": "9207369673",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "9207 369673",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_inn.png",
+        "alternatives": []
+      },
+      "passport": {
+        "value": "9207 369673",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "9207 369673, 16.07.2008, Отделением в Вахитовском районе отдела УФМС России по РТ в г.Казани",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_passport.png",
+        "alternatives": []
+      },
+      "passport.issue_date": {
+        "value": "16.07.2008",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "9207 369673, 16.07.2008, Отделением в Вахитовском районе отдела УФМС России по РТ в г.Казани",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "Отделением в Вахитовском районе отдела УФМС России по РТ в г.Казани",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Отделением в Вахитовском районе отдела УФМС России по РТ в г.Казани",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_issued_by.png",
+        "alternatives": []
+      },
+      "address": {
+        "value": "г. Москва, Ленинградский проспект д. 34 кв. 100",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "г. Москва, Ленинградский проспект д. 34 кв. 100",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_address.png",
+        "alternatives": []
+      },
+      "applicant_fio": {
+        "value": "Малюгин Сергей Алексеевич",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Малюгин Сергей Алексеевич",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_applicant_fio.png",
+        "alternatives": []
+      },
+      "domains": {
+        "value": "фондржд.рф, fondrzd.ru",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "фондржд.рф\nfondrzd.ru",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_domains_list.png",
+        "alternatives": []
+      },
+      "domains.list": {
+        "value": [
+          "фондржд.рф",
+          "fondrzd.ru"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "фондржд.рф\nfondrzd.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.punycode": {
+        "value": [
+          "xn--d1aaf0aeoy.xn--p1ai",
+          "fondrzd.ru"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "фондржд.рф\nfondrzd.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org": {
+        "value": "Общество с ограниченной ответственностью \"Фонд реновации РЖД\"",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Общество с ограниченной ответственностью \"Фонд реновации РЖД\"",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_new_admin_org.png",
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "",
+        "confidence": 0.8,
+        "source": "scan",
+        "raw": "(пусто)",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_new_admin_fio.png",
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "",
+        "confidence": 0.8,
+        "source": "scan",
+        "raw": "(пусто)",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_new_admin_contact.png",
+        "alternatives": []
+      },
+      "contract": {
+        "value": "Договор №16087523",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Договор №16087523",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_contract.png",
+        "alternatives": []
+      },
+      "signature_fio": {
+        "value": "Малюгин Сергей Алексеевич",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "Малюгин Сергей Алексеевич",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_signature_fio.png",
+        "alternatives": []
+      },
+      "application_date": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_application_date.png",
+        "alternatives": []
+      },
+      "services": {
+        "value": "Primary, Secondary DNS",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Primary, Secondary DNS",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact": {
+        "value": "Кае sh@mail.ru / +7 (985) 211-10-21",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Кае sh@mail.ru / +7 (985) 211-10-21",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact.emails": {
+        "value": [
+          "sh@mail.ru"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Кае sh@mail.ru / +7 (985) 211-10-21",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_org_contact.phones": {
+        "value": [
+          "+79852111021"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Кае sh@mail.ru / +7 (985) 211-10-21",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      }
+    },
+    "notes": [
+      "Рукописных полей: 2. VLM не включена: значения нужно подтвердить по фрагментам в отчёте."
+    ]
+  },
+  "passport": null,
+  "checks": [
+    {
+      "name": "Паспорт приложен",
+      "status": "review",
+      "application": "9207 369673",
+      "passport": "",
+      "detail": "паспорт не загружен — сверка заявления с паспортом не выполнялась",
+      "crop": null,
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "ИНН ИП: контрольные цифры",
+      "status": "fail",
+      "application": "9207369673",
+      "passport": "",
+      "detail": "контрольные разряды не сходятся",
+      "crop": null,
+      "status_ru": "расхождение"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "ok",
+      "application": "фондржд.рф, fondrzd.ru",
+      "passport": "",
+      "detail": "punycode: xn--d1aaf0aeoy.xn--p1ai, fondrzd.ru",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_domains_list.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "Общество с ограниченной ответственностью \"Фонд реновации РЖД\"",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_new_admin_fio.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "ok",
+      "application": "Кае sh@mail.ru / +7 (985) 211-10-21",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_new_admin_contact.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "ok",
+      "application": "Договор №16087523",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_contract.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "не заполнена/не распознана",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set14\\20261009_000531_set14\\crops\\фондржд.рф, fondrzd.ru_application_date.png",
+      "status_ru": "нужна ручная проверка"
+    }
+  ],
+  "notes": [
+    "Паспорт не загружен — сверка с паспортом не выполнялась."
+  ],
+  "manager_domains": []
+}

@@ -1,0 +1,306 @@
+{
+  "case_id": "set11",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Паспорт не загружен — сверка с паспортом не выполнялась",
+      "Есть поля, которые нужно подтвердить вручную",
+      "Есть замечания — см. таблицу проверок"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "fix-tool.ru.pdf",
+    "fields": {
+      "applicant_header": {
+        "value": "КРАЙНЕВ ВИКТОР НИКОЛАЕВИЧ",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Крайнева Виктора Николаевича, 23.04.1985 г.",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_applicant_header.png",
+        "alternatives": []
+      },
+      "applicant_header.raw_fio": {
+        "value": "Крайнева Виктора Николаевича",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Крайнева Виктора Николаевича, 23.04.1985 г.",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.birth_date": {
+        "value": "23.04.1985",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Крайнева Виктора Николаевича, 23.04.1985 г.",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "inn": {
+        "value": "4511500159",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "45 11 500159",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_inn.png",
+        "alternatives": []
+      },
+      "passport": {
+        "value": "4511 500159",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "45 11 500159 29.02.2012",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_passport.png",
+        "alternatives": []
+      },
+      "passport.issue_date": {
+        "value": "29.02.2012",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "45 11 500159 29.02.2012",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "Отделом УФМС России по гор. Москве по району Хорошево-Мневники",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Отделом УФМС России по гор. Москве по району Хорошево-Мневники",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_issued_by.png",
+        "alternatives": []
+      },
+      "address": {
+        "value": "127486, Город Москва, ул Дегунинская, д. 12, K. 1, KB. 68",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "127486, Город Москва, ул Дегунинская, д. 12, K. 1, KB. 68",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_address.png",
+        "alternatives": []
+      },
+      "applicant_fio": {
+        "value": "Крайнев Виктор Николаевич",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Крайнев Виктор Николаевич",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_applicant_fio.png",
+        "alternatives": []
+      },
+      "domains": {
+        "value": "fix-tool.ru",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "fix-tool.ru",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_domains.png",
+        "alternatives": []
+      },
+      "domains.list": {
+        "value": [
+          "fix-tool.ru"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "fix-tool.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.punycode": {
+        "value": [
+          "fix-tool.ru"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "fix-tool.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "services": {
+        "value": "Primary, Secondary DNS",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Primary, Secondary DNS",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_services.png",
+        "alternatives": []
+      },
+      "new_admin_org": {
+        "value": "",
+        "confidence": 0.8,
+        "source": "scan",
+        "raw": "(пусто)",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_new_admin_org.png",
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "АНТОНОВА ЕЛЕНА АЛЕКСАНДРОВНА",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Антонова Елена Александровна",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_new_admin_fio.png",
+        "alternatives": []
+      },
+      "new_admin_fio.kind": {
+        "value": "person",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Антонова Елена Александровна",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.raw_fio": {
+        "value": "Антонова Елена Александровна",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "Антонова Елена Александровна",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "antonova.elena77@amail.com / 8(985) 282-11-30",
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "antonova.elena77@amail.com / 8(985) 282-11-30",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_new_admin_contact.png",
+        "alternatives": []
+      },
+      "new_admin_contact.emails": {
+        "value": [
+          "antonova.elena77@amail.com"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "antonova.elena77@amail.com / 8(985) 282-11-30",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact.phones": {
+        "value": [
+          "89852821130"
+        ],
+        "confidence": 0.85,
+        "source": "llm-ocr-text",
+        "raw": "antonova.elena77@amail.com / 8(985) 282-11-30",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "contract": {
+        "value": "1 © >",
+        "confidence": 0.55,
+        "source": "llm-ocr-text",
+        "raw": "1 © >",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_contract.png",
+        "alternatives": []
+      },
+      "signature_fio": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_signature_fio.png",
+        "alternatives": []
+      },
+      "application_date": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_application_date.png",
+        "alternatives": []
+      }
+    },
+    "notes": [
+      "Рукописных полей: 3. VLM не включена: значения нужно подтвердить по фрагментам в отчёте."
+    ]
+  },
+  "passport": null,
+  "checks": [
+    {
+      "name": "Паспорт приложен",
+      "status": "review",
+      "application": "4511 500159",
+      "passport": "",
+      "detail": "паспорт не загружен — сверка заявления с паспортом не выполнялась",
+      "crop": null,
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "ИНН ИП: контрольные цифры",
+      "status": "fail",
+      "application": "4511500159",
+      "passport": "",
+      "detail": "контрольные разряды не сходятся",
+      "crop": null,
+      "status_ru": "расхождение"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "ok",
+      "application": "fix-tool.ru",
+      "passport": "",
+      "detail": "punycode: fix-tool.ru",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_domains.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "АНТОНОВА ЕЛЕНА АЛЕКСАНДРОВНА",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_new_admin_fio.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "ok",
+      "application": "antonova.elena77@amail.com / 8(985) 282-11-30",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_new_admin_contact.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "review",
+      "application": "1 © >",
+      "passport": "",
+      "detail": "прочитано неразборчиво — сверьте фрагмент",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_contract.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "не заполнена/не распознана",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\llm\\set11\\20261009_000059_set11\\crops\\fix-tool.ru_application_date.png",
+      "status_ru": "нужна ручная проверка"
+    }
+  ],
+  "notes": [
+    "Паспорт не загружен — сверка с паспортом не выполнялась."
+  ],
+  "manager_domains": []
+}

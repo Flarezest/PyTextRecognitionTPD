@@ -1,0 +1,271 @@
+{
+  "case_id": "set16",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Паспорт не загружен — сверка с паспортом не выполнялась",
+      "Есть поля, которые нужно подтвердить вручную",
+      "Есть замечания — см. таблицу проверок"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "Pro100sto.ru.pdf",
+    "fields": {
+      "applicant_header": {
+        "value": "ДЖОЛДАСОВА АНАСТАСИЯ БОРИСОВНА",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "гражданки Российской Федерации, Джолдасовой\nАнастасии Борисовны, пол женский, 22 февраля 1987 года\nрождения, место рождения: гор. Десногорск Смоленская обл.,",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.raw_fio": {
+        "value": "Джолдасовой Анастасии Борисовны",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "гражданки Российской Федерации, Джолдасовой\nАнастасии Борисовны, пол женский, 22 февраля 1987 года\nрождения, место рождения: гор. Десногорск Смоленская обл.,",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_header.birth_date": {
+        "value": "22.02.1987",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "гражданки Российской Федерации, Джолдасовой\nАнастасии Борисовны, пол женский, 22 февраля 1987 года\nрождения, место рождения: гор. Десногорск Смоленская обл.,",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "inn": {
+        "value": "672403040674",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "672403040674",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "passport": {
+        "value": "4018 304191",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "4018 304191 выдан ГУ МВД России по г Санкт-\nПетербургу и Ленинградской области 10 апреля 2019 года, код\nподразделения: 780-040, зарегистрированной по месту\nжительства по адресу: Санкт- етербург, поселок Шушары,\nпроспект Старорусский, дом 5, корпус 2, строение 1, квартира\n382. ИНН 672403040674.",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "passport.issue_date": {
+        "value": "10.04.2019",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "4018 304191 выдан ГУ МВД России по г Санкт-\nПетербургу и Ленинградской области 10 апреля 2019 года, код\nподразделения: 780-040, зарегистрированной по месту\nжительства по адресу: Санкт- етербург, поселок Шушары,\nпроспект Старорусский, дом 5, корпус 2, строение 1, квартира\n382. ИНН 672403040674.",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "ГУ МВД России по г Санкт- Петербургу и Ленинградской области",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "выдан ГУ МВД России по г Санкт-\nПетербургу и Ленинградской области 10 апреля 2019 года, код\nподразделения: 780-040,",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "address": {
+        "value": "Санкт- етербург, поселок Шушары, проспект Старорусский, дом 5, корпус 2, строение 1, квартира 382",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Санкт- етербург, поселок Шушары,\nпроспект Старорусский, дом 5, корпус 2, строение 1, квартира\n382",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "applicant_fio": {
+        "value": "Джолдасова Анастасия Борисовна",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Джолдасова Анастасия Борисовна, прошу передать права по администрированию домена",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains": {
+        "value": "pro100sto.ru",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Pro100sto.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.list": {
+        "value": [
+          "pro100sto.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Pro100sto.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "domains.punycode": {
+        "value": [
+          "pro100sto.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "Pro100sto.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "contract": {
+        "value": "16103009",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "16103009",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "ОВСЯНКОВ ДМИТРИЙ ВАСИЛЬЕВИЧ",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "ИП Овсянков Дмитрий Васильевич",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.kind": {
+        "value": "ip",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "ИП Овсянков Дмитрий Васильевич",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.raw_fio": {
+        "value": "Овсянков Дмитрий Васильевич",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "ИП Овсянков Дмитрий Васильевич",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "ovsankovd@yandex.ru",
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "ovsankovd@yandex.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact.emails": {
+        "value": [
+          "ovsankovd@yandex.ru"
+        ],
+        "confidence": 0.85,
+        "source": "ocr-text",
+        "raw": "ovsankovd@yandex.ru",
+        "needs_review": false,
+        "crop": null,
+        "alternatives": []
+      }
+    },
+    "notes": [
+      "Не найдена подпись поля «ФИО заявителя (шапка) и дата рождения» на скане.",
+      "Не найдена подпись поля «ИНН ИП» на скане.",
+      "Не найдена подпись поля «Серия, номер паспорта, дата выдачи» на скане.",
+      "Не найдена подпись поля «Кем выдан паспорт» на скане.",
+      "Не найдена подпись поля «Адрес регистрации» на скане.",
+      "Не найдена подпись поля «ФИО заявителя («Я, …»)» на скане.",
+      "Не найдена подпись поля «Дополнительные услуги» на скане.",
+      "Не найдена подпись поля «Новый администратор — юрлицо» на скане.",
+      "Не найдена подпись поля «Новый администратор — физлицо/ИП» на скане.",
+      "Не найдена подпись поля «Контакты нового администратора» на скане.",
+      "Не найдена подпись поля «Номер договора / аккаунт нового администратора» на скане.",
+      "Не найдена подпись поля «ФИО у подписи» на скане.",
+      "Не найдена подпись поля «Дата заявления» на скане."
+    ]
+  },
+  "passport": null,
+  "checks": [
+    {
+      "name": "Паспорт приложен",
+      "status": "review",
+      "application": "4018 304191",
+      "passport": "",
+      "detail": "паспорт не загружен — сверка заявления с паспортом не выполнялась",
+      "crop": null,
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "ИНН ИП: контрольные цифры",
+      "status": "ok",
+      "application": "672403040674",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "ok",
+      "application": "pro100sto.ru",
+      "passport": "",
+      "detail": "punycode: pro100sto.ru",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "ОВСЯНКОВ ДМИТРИЙ ВАСИЛЬЕВИЧ",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "ok",
+      "application": "ovsankovd@yandex.ru",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "ok",
+      "application": "16103009",
+      "passport": "",
+      "detail": "",
+      "crop": null,
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "warn",
+      "application": "",
+      "passport": "",
+      "detail": "не заполнена/не распознана",
+      "crop": null,
+      "status_ru": "проверить"
+    }
+  ],
+  "notes": [
+    "Паспорт не загружен — сверка с паспортом не выполнялась."
+  ],
+  "manager_domains": []
+}

@@ -19,7 +19,7 @@ from pathlib import Path
 import cv2
 
 from . import checks as checklib
-from . import names, parsers
+from . import llm_extract, names, parsers
 from .application import _store, detect_form, extract_application, page_kind
 from .compare import OK, REVIEW, WARN, Check
 from .formspec import Fields, extra_rows, load_forms
@@ -53,6 +53,9 @@ class CaseInput:
     case_id: str | None = None
     out_root: str = "results"
     manager_autoload: bool = False         # после проверки загрузить данные Sd доменов заявления из manager
+    llm_fields: bool = False               # (0.7.0) поля заявления читает нейросеть, а не регулярки бланка
+    llm_model: str | None = None           # модель Ollama для полей (по умолчанию llm_extract.DEFAULT_MODEL, qwen3:8b)
+    llm_think: bool | None = True          # модель «рассуждает» перед ответом (qwen3); None — как у модели
 
 
 @dataclass
@@ -208,6 +211,39 @@ def _vlm(inp: CaseInput) -> OllamaVLM | None:
     return v
 
 
+def _llm(inp: CaseInput, res: "CaseResult") -> llm_extract.LLMConfig | None:
+    """Галка «Поля заявления — нейросетью»: настройки модели для этого дела (None — регулярки бланка)."""
+    if not inp.llm_fields:
+        return None
+    cfg = llm_extract.make_config(inp.llm_model, host=inp.ollama, think=inp.llm_think,
+                                  cache_dir=str(Path(inp.out_root) / ".llm_cache"))
+    log(f"Поля заявления читает нейросеть {cfg.model}" + (" (с рассуждением)" if cfg.think else ""))
+    why = llm_extract.available(cfg)
+    if why:
+        log(f"[!] {why} — поля заявления будут прочитаны регулярками бланка")
+        res.notes.append(f"Поля заявления: нейросеть недоступна ({why}) — прочитаны регулярками бланка.")
+        return None
+    return cfg
+
+
+def _llm_notes(res: "CaseResult", cfg: llm_extract.LLMConfig | None) -> None:
+    calls = (res.app.debug.get("llm") or []) if res.app is not None else []
+    if cfg is None or not calls:
+        return
+    sec = sum((c.get("meta") or {}).get("seconds") or 0 for c in calls)
+    res.notes.append(f"Поля заявления прочитаны нейросетью {cfg.model} ({round(sec)} с).")
+
+
+def _fields_reader(res: "CaseResult") -> str:
+    a = res.app
+    if a is None or not a.fields:
+        return ""
+    calls = a.debug.get("llm") or []
+    if calls:
+        return "llm:" + str((calls[0].get("meta") or {}).get("model") or "")
+    return "regex"
+
+
 def _safe_name(s: str) -> str:
     return re.sub(r'[\\/:*?"<>|\s]+', "_", s).strip("_")[:60] or "дело"
 
@@ -241,9 +277,12 @@ def run_case(inp: CaseInput) -> CaseResult:
 
     # --- заявление
     if app_pages and ct.get("form"):
-        res.app = extract_application(app_pages, case_dir, vlm if inp.app_handwritten else None, forms=forms,
-                                      mode=inp.app_mode, handwritten=True if inp.app_handwritten else None,
-                                      form_id=ct.get("form"))
+        llm_cfg = _llm(inp, res)
+        with llm_extract.session(llm_cfg):
+            res.app = extract_application(app_pages, case_dir, vlm if inp.app_handwritten else None, forms=forms,
+                                          mode=inp.app_mode, handwritten=True if inp.app_handwritten else None,
+                                          form_id=ct.get("form"))
+        _llm_notes(res, llm_cfg)
     else:
         res.app = Extraction(doc_type="none", source_file=inp.application or "")
         if app_pages and not ct.get("form"):
@@ -427,6 +466,7 @@ def build_record(res: CaseResult) -> dict:
         # все поля бланка как есть (ключи — имена полей из forms/<бланк>.yaml): новый бланк попадает
         # в выгрузку без изменений кода
         "application_form": a.doc_type if a is not None else None,
+        "application_fields_reader": _fields_reader(res),      # (0.7.0) regex | llm:<модель>
         "application_fields": {k: f.value for k, f in a.fields.items() if "." not in k} if a is not None else {},
         "confirmed_by_operator": sorted(res.confirmed),
         "manual_edits": res.overrides,
@@ -470,6 +510,11 @@ def save_outputs(res: CaseResult, registry: bool = True) -> None:
             "manager_domains": [x.to_dict() for x in res.domains_sd]}
     (d / "result.json").write_text(json.dumps(full, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     (d / "export.json").write_text(json.dumps(res.record, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+    if res.app is not None and any(k in res.app.debug for k in ("llm", "llm_error")):
+        # (0.7.0-dev) режим модели: что модель получила и ответила, время — для разбора и сравнения с регулярками
+        dbg = {k: res.app.debug[k] for k in ("mode", "llm", "llm_error", "page_text", "application_pages")
+               if k in res.app.debug}
+        (d / "llm_debug.json").write_text(json.dumps(dbg, ensure_ascii=False, indent=1, default=str), encoding="utf-8")
     save_html(d / "report.html", res.case_id, res.app, res.pas, res.checks, decision=res.decision,
               case_title=res.case_type.get("title", ""), domains=[x.to_dict() for x in res.domains_sd])
     if res.domains_sd:

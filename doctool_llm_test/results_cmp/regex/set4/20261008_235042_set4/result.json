@@ -1,0 +1,217 @@
+{
+  "case_id": "set4",
+  "decision": {
+    "code": "review",
+    "title": "Ручная проверка",
+    "reasons": [
+      "Паспорт не загружен — сверка с паспортом не выполнялась",
+      "Список доменов нужно сверить с заявлением — не сошлось число доменов, есть обрывки имён или разночтения",
+      "Есть поля, которые нужно подтвердить вручную"
+    ]
+  },
+  "application": {
+    "doc_type": "regru_transfer_person",
+    "source_file": "Заявление.pdf",
+    "fields": {
+      "applicant_header": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_applicant_header.png",
+        "alternatives": []
+      },
+      "inn": {
+        "value": "",
+        "confidence": 0.8,
+        "source": "scan",
+        "raw": "(пусто)",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_inn.png",
+        "alternatives": []
+      },
+      "issued_by": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_issued_by.png",
+        "alternatives": []
+      },
+      "address": {
+        "value": "с. Брянем. чи. Ep. Партазви ‚8.9, ©.",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "с. Брянем. чи. Ep. Партазви ‚8.9, ©.",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_address.png",
+        "alternatives": []
+      },
+      "applicant_fio": {
+        "value": "Козлоба",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "Козлоба Era цна _ борисовиа",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_applicant_fio.png",
+        "alternatives": []
+      },
+      "domains": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_domains.png",
+        "alternatives": []
+      },
+      "services": {
+        "value": "",
+        "confidence": 0.8,
+        "source": "scan",
+        "raw": "(пусто)",
+        "needs_review": false,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_services.png",
+        "alternatives": []
+      },
+      "new_admin_fio": {
+        "value": "АННИ АЛЕКСАНДРОВНА",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "о Hecota Анни Александровна",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_new_admin_fio.png",
+        "alternatives": []
+      },
+      "new_admin_fio.kind": {
+        "value": "person",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "о Hecota Анни Александровна",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_fio.raw_fio": {
+        "value": "Анни Александровна",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "о Hecota Анни Александровна",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      },
+      "new_admin_contact": {
+        "value": "",
+        "confidence": 0.0,
+        "source": "ocr+рукопись",
+        "raw": "",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_new_admin_contact.png",
+        "alternatives": []
+      },
+      "contract": {
+        "value": "_ (3566004",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "_ (3566004",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_contract.png",
+        "alternatives": []
+      },
+      "signature_fio": {
+        "value": "Коъкова Е Б",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "Коъкова Е.Б.",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_signature_fio.png",
+        "alternatives": []
+      },
+      "application_date": {
+        "value": "29.09.2026",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "\"29 сентября \" 2026 г.",
+        "needs_review": true,
+        "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_application_date.png",
+        "alternatives": []
+      },
+      "application_date.raw": {
+        "value": "\"29 сентября \" 2026 г.",
+        "confidence": 0.55,
+        "source": "ocr-text",
+        "raw": "\"29 сентября \" 2026 г.",
+        "needs_review": true,
+        "crop": null,
+        "alternatives": []
+      }
+    },
+    "notes": [
+      "Рукописных полей: 10. VLM не включена: значения нужно подтвердить по фрагментам в отчёте."
+    ]
+  },
+  "passport": null,
+  "checks": [
+    {
+      "name": "Паспорт приложен",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "паспорт не загружен — сверка заявления с паспортом не выполнялась",
+      "crop": null,
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Домен(ы)",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "домен не указан/не распознан",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_domains.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Новый администратор указан",
+      "status": "ok",
+      "application": "АННИ АЛЕКСАНДРОВНА",
+      "passport": "",
+      "detail": "",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_new_admin_fio.png",
+      "status_ru": "в порядке"
+    },
+    {
+      "name": "Контакты нового администратора",
+      "status": "review",
+      "application": "",
+      "passport": "",
+      "detail": "не указаны/не распознаны",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_new_admin_contact.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Договор/аккаунт нового администратора",
+      "status": "review",
+      "application": "_ (3566004",
+      "passport": "",
+      "detail": "прочитано ненадёжно — сверьте фрагмент",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_contract.png",
+      "status_ru": "нужна ручная проверка"
+    },
+    {
+      "name": "Дата заявления",
+      "status": "ok",
+      "application": "29.09.2026",
+      "passport": "",
+      "detail": "9 дн. назад",
+      "crop": "F:\\Programming\\Python\\PyTextRecognition\\doctool_v0.2.1_gui\\doctool_llm_test\\results_cmp\\regex\\set4\\20261008_235042_set4\\crops\\Заявление_application_date.png",
+      "status_ru": "в порядке"
+    }
+  ],
+  "notes": [
+    "Паспорт не загружен — сверка с паспортом не выполнялась."
+  ],
+  "manager_domains": []
+}

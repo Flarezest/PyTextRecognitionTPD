@@ -22,7 +22,7 @@ import cv2
 import numpy as np
 from rapidfuzz import fuzz
 
-from . import formspec, names, parsers
+from . import formspec, llm_extract, names, parsers
 from .formspec import FORMS_DIR, load_forms  # noqa: F401  (load_forms — прежний адрес, им пользуются скрипты)
 from .models import Extraction
 from .models import FieldValue
@@ -332,6 +332,30 @@ def extract_from_text(text: str, form: dict, source_file: str, conf: float = 0.9
     return ex
 
 
+def text_fields(text: str, form: dict, source_file: str, conf: float = 0.98, source: str = "text",
+                only: list[str] | None = None) -> Extraction:
+    """Поля из текста заявления: регулярками бланка или — если для дела включена галка «Поля заявления —
+    нейросетью» (llm_extract.session) — локальной моделью. Модель не ответила → регулярки, с пометкой в замечаниях."""
+    if llm_extract.enabled() and len(re.sub(r"\W", "", text or "")) >= 40:
+        try:
+            return llm_extract.extract(text, form, source_file, conf=conf, source=source, only=only)
+        except llm_extract.LLMError as e:
+            log(f"   модель не ответила: {e} — читаю поля регулярками бланка")
+            ex = extract_from_text(text, form, source_file, conf, source)
+            ex.notes.append(f"Модель для полей заявления не ответила ({e}) — поля прочитаны регулярками бланка.")
+            ex.debug["llm_error"] = str(e)
+            return ex
+    ex = extract_from_text(text, form, source_file, conf, source)
+    if not any(sp.get("text") for sp in form["fields"].values()):
+        ex.notes.append("У бланка нет регулярок для полей (`text:`) — включите «Поля заявления — нейросетью».")
+    return ex
+
+
+def _keep_src(f: FieldValue, default: str = "ocr-text") -> str:
+    """Источник значения из текста страницы: «llm-…» сохраняем (видно, что поле читала модель)."""
+    return f.source if f.source.startswith("llm") else default
+
+
 # ------------------------------------------------------------------ скан
 
 @dataclass
@@ -469,11 +493,13 @@ def extract_from_scan(page: Page, form: dict, out_dir: Path, vlm: OllamaVLM | No
         else:
             # флаг «рукописное»: печатные поля (без синих чернил и с уверенным OCR) всё равно читаем OCR
             handwritten = handwritten_mode and not (blue <= 0.004 and conf >= 75 and pv is not None and pv.value)
+        if not handwritten and pv is not None and pv.value and conf >= 70 and _region_extends(pv.raw or str(pv.value), txt):
+            pv = None          # в тексте страницы значение оборвано посреди слова, а в области прочитано целиком
         if not handwritten and pv is not None and pv.value:
             # значение из распознанного текста всей страницы (там строки целиком, без обрезки по областям)
             for k, f in prefer.fields.items():
                 if k == key or k.startswith(key + "."):
-                    ex.fields[k] = FieldValue(f.value, f.confidence, "ocr-text", f.raw, f.needs_review,
+                    ex.fields[k] = FieldValue(f.value, f.confidence, _keep_src(f), f.raw, f.needs_review,
                                               str(crop_path) if k == key else None)
             continue
         if handwritten and vlm is None and pv is not None and pv.value:
@@ -482,7 +508,7 @@ def extract_from_scan(page: Page, form: dict, out_dir: Path, vlm: OllamaVLM | No
             handwritten_fields += 1
             for k, f in prefer.fields.items():
                 if k == key or k.startswith(key + "."):
-                    ex.fields[k] = FieldValue(f.value, min(f.confidence, 0.55), "ocr-text", f.raw, True,
+                    ex.fields[k] = FieldValue(f.value, min(f.confidence, 0.55), _keep_src(f), f.raw, True,
                                               str(crop_path) if k == key else None)
             continue
         if not handwritten and _form_text_only(txt, label_words):
@@ -525,6 +551,17 @@ def extract_from_scan(page: Page, form: dict, out_dir: Path, vlm: OllamaVLM | No
                 " VLM не включена: значения нужно подтвердить по фрагментам в отчёте.")
         ex.notes.append(msg)
     return ex
+
+
+def _region_extends(page_value: str, region_txt: str) -> bool:
+    """Значение из текста страницы оборвано посреди слова, а OCR области читает его же дальше:
+    «Виктор Дмитриевич Ан» (страница) и «Виктор Дмитриевич Андреев» (область)."""
+    norm = lambda x: re.sub(r"\s+", " ", re.sub(r"_{2,}", " ", x or "")).strip().lower().replace("ё", "е")  # noqa: E731
+    a, b = norm(page_value), norm(region_txt)
+    if len(a) < 4:
+        return False
+    i = b.find(a)
+    return i >= 0 and i + len(a) < len(b) and b[i + len(a)].isalpha() and a[-1].isalpha()
 
 
 def _form_text_only(txt: str, label_words: set[str]) -> bool:
@@ -696,7 +733,7 @@ def extract_application(pages: list[Page], out_dir: Path, vlm: OllamaVLM | None 
         form = detect_form(text, forms) or (forms[0] if form_id else None)
         if form:
             log("Заявление: есть текстовый слой, читаю поля из текста")
-            ex = extract_from_text(text, form, page.source)
+            ex = text_fields(text, form, page.source)
             # текстовый слой есть, но поля пустые — возможно, заполнено от руки поверх PDF
             filled = sum(1 for k, f in ex.fields.items() if "." not in k and f.value)
             if filled >= 4 or page.image is None:
@@ -739,9 +776,11 @@ def extract_application(pages: list[Page], out_dir: Path, vlm: OllamaVLM | None 
         ex = Extraction(doc_type="unknown", source_file=page.source)
         ex.notes.append("Тип формы не определён — добавьте YAML-конфиг в папку forms/.")
         return ex
-    prefer = extract_from_text(page_text, form, page.source, conf=0.85, source="ocr-text")
+    prefer = text_fields(page_text, form, page.source, conf=0.85, source="ocr-text")
     reread = _reread_domain_list(page, lines, form, prefer, out_dir) if len(groups[0]) == 1 else None
-    if not apply_new_admin_block(prefer, page_text, form, 0.85, "ocr-text"):
+    if prefer.debug.get("mode") == "llm":
+        _llm_new_admin(page, lines, form, prefer)
+    elif not apply_new_admin_block(prefer, page_text, form, 0.85, "ocr-text"):
         _reread_new_admin(page, lines, form, prefer)
     ex = extract_from_scan(page, form, out_dir, vlm, handwritten_mode=handwritten, prefer=prefer)
     # поля без области на скане (например, «новому Администратору: …») — из текста страницы.
@@ -749,10 +788,10 @@ def extract_application(pages: list[Page], out_dir: Path, vlm: OllamaVLM | None 
     present = {k.split(".")[0] for k in ex.fields}
     for k, f in prefer.fields.items():
         if k.split(".")[0] not in present:
-            ex.fields[k] = FieldValue(f.value, f.confidence, "ocr-text", f.raw)
+            ex.fields[k] = FieldValue(f.value, f.confidence, _keep_src(f), f.raw)
     if reread:
         f = ex.fields.get(reread["key"])
-        if f is not None and f.source == "ocr-text":
+        if f is not None and f.source in ("ocr-text", "llm-ocr-text"):
             f.crop = reread["crop"]          # фрагмент — весь абзац со списком, а не последняя строка
         ex.debug["domains_reread"] = reread["info"]
         if reread["note"]:
@@ -761,6 +800,9 @@ def extract_application(pages: list[Page], out_dir: Path, vlm: OllamaVLM | None 
         _merge_more_applications(ex, groups[1:], form)
     ex.notes.extend(n for n in prefer.notes if n not in ex.notes)
     ex.notes.extend(notes)
+    for k in ("llm", "llm_error"):
+        if k in prefer.debug:
+            ex.debug[k] = prefer.debug[k] + ex.debug.get(k, []) if k == "llm" else prefer.debug[k]
     ex.debug["page_text"] = page_text
     ex.debug["application_pages"] = [[p.index + 1 for p in g] for g in groups]
     return ex
@@ -776,7 +818,8 @@ def _merge_more_applications(ex: Extraction, groups: list[list[Page]], form: dic
     for g in groups:
         log(f"Заявление: ещё одно заявление — стр. {', '.join(str(p.index + 1) for p in g)}")
         txt = "\n".join("\n".join(l.text for l in _full_lines(p)) for p in g)
-        other = extract_from_text(txt, form, g[0].source, conf=0.85, source="ocr-text")
+        other = text_fields(txt, form, g[0].source, conf=0.85, source="ocr-text")
+        ex.debug.setdefault("llm", []).extend(other.debug.get("llm", []))
         doms = [d for d in (other.get(f"{key}.list") or []) if d not in first and d not in added]
         parts.append(len(other.get(f"{key}.list") or []))
         added += doms
@@ -796,20 +839,57 @@ def _merge_more_applications(ex: Extraction, groups: list[list[Page]], form: dic
                     f"всего {len(ex.get(f'{key}.list') or [])}).")
 
 
-def _reread_new_admin(page: Page, lines: list[Line], form: dict, prefer: Extraction) -> None:
-    """Таблица нового администратора, которую OCR всей страницы (psm 4) пропустил: полоса от «новому
-    Администратору» до «Номер договора» распознаётся ещё раз как блок (psm 6)."""
+def _new_admin_band_text(page: Page, lines: list[Line]) -> str | None:
+    """Полоса от «новому Администратору» до «Номер договора», распознанная отдельно как блок (psm 6)."""
     start = _find_line(lines, ["новому Администратору"])
     if start is None:
-        return
+        return None
     end = _find_line(lines, ["Номер договора", "(номер договора", "профиля):", "(подпись)"], below=start.box[3])
     H = page.image.shape[0]
     y1 = end.box[1] if end is not None else min(H, start.box[3] + 12 * (start.box[3] - start.box[1]))
     if y1 - start.box[3] < 10:
-        return
+        return None
     band = page.image[max(0, start.box[1] - 4):min(H, y1 + 4)]
     log("Заявление: перечитываю раздел «новому Администратору» отдельно…")
-    txt = "\n".join(l.text for l in tesseract_lines(remove_lines_soft(cv2.cvtColor(band, cv2.COLOR_BGR2GRAY)),
-                                                     lang="rus+eng", psm=6))
+    return "\n".join(l.text for l in tesseract_lines(remove_lines_soft(cv2.cvtColor(band, cv2.COLOR_BGR2GRAY)),
+                                                      lang="rus+eng", psm=6))
+
+
+NEW_ADMIN_KEYS = ("new_admin_inline", "new_admin_org", "new_admin_org_contact", "new_admin_fio", "new_admin_contact")
+
+
+def _llm_new_admin(page: Page, lines: list[Line], form: dict, prefer: Extraction) -> None:
+    """Режим модели: нового администратора не нашли в тексте страницы — полоса раздела перечитывается отдельно
+    (psm 6), и модель читает только поля нового администратора."""
+    keys = [k for k in NEW_ADMIN_KEYS if k in form["fields"]]
+    if not keys or any(prefer.get(k) for k in ("new_admin_org", "new_admin_fio") if k in keys):
+        return
+    txt = _new_admin_band_text(page, lines)
+    if not txt:
+        return
+    try:
+        sub = llm_extract.extract("новому Администратору:\n" + txt, form, page.source, conf=0.8, source="ocr-text",
+                                  only=keys)
+    except llm_extract.LLMError as e:
+        prefer.notes.append(f"Раздел «новому Администратору»: модель не ответила ({e}).")
+        return
+    got = False
+    empty = {k for k in keys if not prefer.get(k)}           # до копирования: иначе подполя (.emails …) пропадут
+    for k, f in sub.fields.items():
+        if k.split(".")[0] in empty:
+            prefer.fields[k] = f
+            got = got or ("." not in k and bool(f.value))
+    prefer.notes.extend(n for n in sub.notes if n not in prefer.notes)
+    prefer.debug.setdefault("llm", []).extend(sub.debug.get("llm", []))
+    if got:
+        prefer.notes.append("Раздел «новому Администратору» перечитан отдельно (на странице целиком его не видно).")
+
+
+def _reread_new_admin(page: Page, lines: list[Line], form: dict, prefer: Extraction) -> None:
+    """Таблица нового администратора, которую OCR всей страницы (psm 4) пропустил: полоса от «новому
+    Администратору» до «Номер договора» распознаётся ещё раз как блок (psm 6)."""
+    txt = _new_admin_band_text(page, lines)
+    if not txt:
+        return
     if apply_new_admin_block(prefer, txt, form, 0.8, "ocr-text"):
         prefer.notes.append("Раздел «новому Администратору» перечитан отдельно (на странице целиком его не видно).")
