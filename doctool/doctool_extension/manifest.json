@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
   "name": "doctool — manager",
-  "version": "0.5.0",
-  "description": "Читает данные доменов (Sd, S) из manager.reg.ru для программы doctool. Ничего не меняет в manager.",
+  "version": "0.6.0",
+  "description": "Читает данные доменов и аккаунтов из manager.reg.ru для doctool. По кнопке в doctool заполняет поля базовой анкеты, но не сохраняет её.",
   "minimum_chrome_version": "116",
   "permissions": ["tabs", "scripting", "storage", "alarms", "webRequest"],
-  "host_permissions": ["https://manager.reg.ru/*"],
+  "host_permissions": ["https://manager.reg.ru/*", "https://identity.reg.ru/*"],
   "background": {"service_worker": "background.js"},
   "action": {
     "default_title": "doctool — manager",

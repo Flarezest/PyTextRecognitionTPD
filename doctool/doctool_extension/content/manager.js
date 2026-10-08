@@ -1,16 +1,27 @@
-/* doctool — чтение данных домена из manager.reg.ru.
+/* doctool — чтение данных из manager.reg.ru и заполнение базовой анкеты.
  *
  * Скрипт внедряется расширением во вкладку https://manager.reg.ru/ (изолированный мир расширения).
  * Страницы manager загружаются отсюда обычными GET-запросами того же сайта — с входом оператора,
  * как при открытии ссылок вручную. Скрипт ничего не нажимает и ничего не отправляет в manager.
  *
- * Порядок для одного домена:
+ * Порядок для одного домена (lookup):
  *   1) /bill/bills?searchstring=<домен>&from_head=1&_csrf=<токен>  — строка домена, service_id;
  *   2) /tech/srv_details?service_id=<id>                           — Sd: данные администратора;
- *   3) /tech/service_details?service_id=<id>                       — S: provider, user_id, dname.
+ *   3) /tech/service_details?service_id=<id>                       — S: provider, user_id, dname;
+ *   4) (0.6.0, физлица) ссылка «Идентификация через Госуслуги» со страницы Sd — state и ссылка на JSON
+ *      ЕСИА. Сам JSON лежит на другом сайте (identity.reg.ru) — его загружает background.js.
+ *
+ * Аккаунт (account, 0.6.0): /manager/user_details?user_id=N (базовая анкета — скрытый блок страницы,
+ * логин, обслуживающая организация) и /user/N/runic_details (тип анкеты, значения формы).
+ * По логину/e-mail номер аккаунта находится через /user/<логин>/runic_details.
+ *
+ * Заполнение (fillRunic, 0.6.0): только во вкладке «Базовая анкета пользователя #N», которую видит оператор:
+ * вписывает значения в поля формы физлица и вызывает события страницы (input/change/blur), чтобы она
+ * подсветила изменённые поля и пересчитала English name. Кнопку «Сохранить» не нажимает.
  */
 (() => {
-  if (window.__doctoolManager) return;
+  const VERSION = '0.6.0';
+  if (window.__doctoolManager && window.__doctoolManager.version === VERSION) return;
 
   // Поля Sd, которые передаются в doctool. authinfo, телефоны, адреса и служебные поля не передаются.
   // E-mail администратора передаётся (с 0.5.0): e_mail — зоны .RU/.РФ/.SU, o_email — остальные зоны.
@@ -43,7 +54,9 @@
 
   let lastToken = '';
   const tokenOf = doc => (doc.querySelector('meta[name="_csrf"]') || {}).content || '';
-  const isManagerPage = doc => !!doc.querySelector('meta[name="_csrf"]') && !!doc.querySelector('#content');
+  // Обычная страница manager: «старая» (#content) или новая на Bootstrap (nav.navbar, напр. базовая анкета).
+  const isManagerPage = doc => !!doc.querySelector('meta[name="_csrf"]')
+    && !!(doc.querySelector('#content') || doc.querySelector('nav.navbar'));
   const norm = s => (s || '').toString().trim().toLowerCase().replace(/\.$/, '');
   const text = el => ((el && el.textContent) || '').replace(/\s+/g, ' ').trim();
 
@@ -150,7 +163,215 @@
     const body = text(doc.querySelector('#content'));
     const trustee = /Trustee:\s*(Да|Нет)/i.exec(body);
     const status = /Статус услуги:\s*(.+?\([A-Z]+\))/.exec(body);
-    return { group: pickGroup(groups), fields, trustee: trustee ? trustee[1] : '', status: status ? status[1] : '' };
+    // ссылки со страницы Sd: «Данные персоны услуги» и «Идентификация через Госуслуги» (у физлица — ?user_id=,
+    // у персоны/юрлица — ?person_id=; идентификация относится к администратору домена, а не к аккаунту)
+    const href = sel => { const a = doc.querySelector(sel); return a ? absUrl(a.getAttribute('href')) : ''; };
+    const links = {
+      person: href('a[href*="/manager/user_details?"], a[href*="/manager/person?"]'),
+      esia: href('a[href*="esia_identifications"]'),
+    };
+    return { group: pickGroup(groups), fields, trustee: trustee ? trustee[1] : '', status: status ? status[1] : '', links };
+  }
+
+  const absUrl = h => { try { return h ? new URL(h, location.origin).href : ''; } catch (e) { return ''; } };
+
+  // ------------------------------------------------------------------ идентификация через Госуслуги (ЕСИА)
+
+  // Таблица /manager/esia_identifications?…: колонки identity_id, object, object_id, state, file, comment,
+  // creation_date, processed_date, login_processed, doc_id, esia_state_id, reason, action, params.
+  function parseEsiaList(doc) {
+    const table = [...doc.querySelectorAll('table')].find(t => [...t.querySelectorAll('th')].some(th => text(th) === 'state'));
+    if (!table) {
+      if (!isManagerPage(doc)) throw new LookupError('bad_page', 'Страница идентификации через Госуслуги не открылась.');
+      return { rows: [], latest: null };
+    }
+    const heads = [...table.querySelectorAll('th')].map(th => text(th));
+    const rows = [];
+    for (const tr of table.querySelectorAll('tr')) {
+      const cells = [...tr.querySelectorAll('td')];
+      if (cells.length < heads.length / 2) continue;
+      const r = {};
+      heads.forEach((h, i) => { if (cells[i]) r[h] = text(cells[i]); });
+      const fileCell = cells[heads.indexOf('file')];
+      const a = fileCell && fileCell.querySelector('a[href]');
+      r.file_url = a ? absUrl(a.getAttribute('href')) : '';
+      delete r.file;
+      if (r.state !== undefined) rows.push(r);
+    }
+    // последняя попытка — по дате создания (формат «ГГГГ-ММ-ДД чч:мм:сс» сортируется как строка)
+    const latest = rows.length ? [...rows].sort((a, b) => (b.creation_date || '').localeCompare(a.creation_date || ''))[0] : null;
+    return { rows, latest };
+  }
+
+  // ------------------------------------------------------------------ аккаунт: данные пользователя и базовая анкета
+
+  // /manager/user_details?user_id=N. Базовая анкета уже есть в HTML (блок .user_contacts_block, скрыт стилем),
+  // кнопка «Базовая анкета пользователя» только показывает его.
+  function parseUserDetails(doc) {
+    const h = text(doc.querySelector('#content h2'));
+    const m = /#\s*(\d+)/.exec(h) || /user_id=(\d+)/.exec((doc.querySelector('a[href*="user_details?user_id="]') || {}).href || '');
+    const ba = {};
+    const block = doc.querySelector('.user_contacts_block');
+    if (block) {
+      for (const tr of block.querySelectorAll('tr')) {
+        const c = tr.querySelectorAll('td');
+        if (c.length < 2) continue;
+        const k = text(c[0]);
+        if (/^[a-z_]+\.[a-z0-9_]+$/i.test(k)) ba[k] = (c[1].textContent || '').replace(/[ \t]+/g, ' ').trim();
+      }
+    }
+    const det = doc.querySelector('#user_details');
+    const row = title => {
+      if (!det) return null;
+      return [...det.querySelectorAll('tr')].find(tr => { const th = tr.querySelector('th'); return th && text(th).startsWith(title); }) || null;
+    };
+    const first = det && det.querySelector('tr td');
+    const login = first ? text(first.querySelector('b')) : '';
+    const statuses = first ? [...first.querySelectorAll('span')].map(s => text(s)).filter(Boolean) : [];
+    const org = row('Обслуживающая организация');
+    const orgText = org ? text(org.querySelector('td')) : '';
+    const orgCur = /текущая:\s*(.+)$/i.exec(orgText);
+    const companyId = org ? (org.querySelector('input[name="company_id"]') || {}).value || '' : '';
+    const contypes = row('contypes');
+    const ent = doc.querySelector('#user_details input[name="is_entrepreneur"]');
+    const links = {};
+    for (const [k, sel] of [['runic', 'a[href*="/runic_details"]'], ['esia', 'a[href*="esia_identifications"]'],
+                            ['persons', 'a[href*="/manager/persons?"]'], ['history', 'a[href*="history_changes_of_base_form"]']]) {
+      const a = doc.querySelector(sel);
+      if (a) links[k] = absUrl(a.getAttribute('href'));
+    }
+    return {
+      user_id: m ? m[1] : '', login, statuses, ba,
+      servicing_org: orgCur ? orgCur[1].trim() : orgText, servicing_org_id: companyId,
+      contypes: contypes ? text(contypes.querySelector('td')) : '',
+      is_entrepreneur: !!(ent && ent.checked), links,
+    };
+  }
+
+  // Поля формы физлица на странице базовой анкеты (/user/N/runic_details), которые читает и заполняет doctool.
+  // Гражданство (country), страна почтового адреса, область, SMS-безопасность, факс, English name
+  // и флажок «Внесены данные нового владельца» doctool не заполняет.
+  const RUNIC_FIELDS = ['person_r_surname', 'person_r_name', 'person_r_patronimic', 'person', 'passport_number',
+    'passport_date', 'passport_place', 'birth_date', 'country', 'p_addr_country', 'p_addr_zip', 'p_addr_area',
+    'p_addr_city', 'p_addr_addr', 'p_addr_recipient', 'phone', 'sms_security_number', 'fax', 'e_mail'];
+  const RUNIC_FILL = ['person_r_surname', 'person_r_name', 'person_r_patronimic', 'passport_number', 'passport_date',
+    'passport_place', 'birth_date', 'p_addr_zip', 'p_addr_city', 'p_addr_addr', 'p_addr_recipient', 'phone', 'e_mail'];
+  const TYPE_RU = { pp: 'физлицо', ip: 'ИП', org: 'юрлицо' };
+
+  function parseRunic(doc) {
+    const h = text(doc.querySelector('h3'));
+    const m = /#\s*(\d+)/.exec(h);
+    const checked = doc.querySelector('input[name="type"]:checked') || doc.querySelector('input[name="type"][checked]');
+    const form = doc.querySelector('form#ru_pp_contacts');
+    const values = {};
+    if (form) {
+      for (const k of RUNIC_FIELDS) {
+        const el = form.querySelector(`[name="${k}"]`);
+        if (el) values[k] = (el.value || '').trim();
+      }
+    }
+    return { user_id: m ? m[1] : '', type: checked ? checked.value : '', has_pp_form: !!form, values };
+  }
+
+  // Заполнение формы физлица на открытой странице базовой анкеты (вкладка оператора). fields — {имя поля: значение};
+  // пустые значения пропускаются (кроме restore — возврата прежних значений). «Сохранить» не нажимается.
+  function fillRunic(expectedId, fields, opts) {
+    opts = opts || {};
+    const info = parseRunic(document);
+    if (!info.user_id) return { ok: false, error: { code: 'bad_page', message: 'Во вкладке не страница базовой анкеты.' } };
+    if (String(info.user_id) !== String(expectedId)) {
+      return { ok: false, error: { code: 'wrong_account', message: `Во вкладке базовая анкета аккаунта #${info.user_id}, а нужен #${expectedId}.` } };
+    }
+    if (info.type !== 'pp') {
+      const who = TYPE_RU[info.type] || (info.type || 'неизвестный тип');
+      return { ok: false, error: { code: 'not_person', type: info.type,
+        message: `Аккаунт #${expectedId} оформлен на ${who === 'юрлицо' ? 'юрлицо' : who === 'ИП' ? 'ИП' : who}: автозаполнение пока только для физлиц. Вкладка базовой анкеты открыта.` } };
+    }
+    const form = document.querySelector('form#ru_pp_contacts');
+    if (!form) return { ok: false, error: { code: 'bad_page', message: 'На странице нет формы физлица (form#ru_pp_contacts).' } };
+    const changed = [], same = [], missing = [];
+    const fire = (el, type) => el.dispatchEvent(new Event(type, { bubbles: type !== 'blur' }));
+    fields = fields || {};
+    for (const name of RUNIC_FILL) {             // в порядке полей на странице
+      if (!(name in fields)) continue;
+      const value = (fields[name] ?? '').toString();
+      if (!value && !opts.restore) continue;
+      const el = form.querySelector(`[name="${name}"]`);
+      if (!el) { missing.push(name); continue; }
+      const old = el.value;
+      const label = text((el.previousElementSibling && el.previousElementSibling.matches('.input-group-addon'))
+        ? el.previousElementSibling : form.querySelector(`.input-group-addon.${name}`)) || name;
+      if (old === value) { same.push({ name, label, value }); continue; }
+      try { el.focus({ preventScroll: true }); } catch (e) { /* ничего */ }
+      el.value = value;
+      fire(el, 'input');
+      fire(el, 'change');      // страница помечает поле как изменённое (класс unsaved)
+      try { el.blur(); } catch (e) { /* ничего */ }
+      fire(el, 'blur');        // у ФИО — пересчёт English name (translit_pers_org)
+      el.style.outline = opts.restore ? '' : '2px solid #f0ad4e';
+      changed.push({ name, label, old, new: value });
+    }
+    return { ok: true, data: { user_id: info.user_id, type: info.type, changed, same, missing,
+                               values: parseRunic(document).values } };
+  }
+
+  async function account(reqId, query) {
+    const progress = (step, message) => {
+      try { chrome.runtime.sendMessage({ type: 'progress', reqId, step, message }); } catch (e) { /* вне расширения */ }
+    };
+    try {
+      let uid = String((query && query.user_id) || '').trim();
+      const login = String((query && query.login) || '').trim();
+      if (!uid && login) {
+        progress('account', `${login}: поиск аккаунта по логину`);
+        const r = parseRunic(await getDoc(`/user/${encodeURIComponent(login)}/runic_details`));
+        if (!r.user_id) throw new LookupError('not_found', `Аккаунт с логином «${login}» не найден в manager.`);
+        uid = r.user_id;
+      }
+      if (!/^\d+$/.test(uid)) throw new LookupError('bad_request', 'Не указан номер аккаунта.');
+      progress('user_details', `аккаунт #${uid}: данные пользователя`);
+      const det = parseUserDetails(await getDoc(`/manager/user_details?user_id=${uid}`));
+      if (!det.user_id && !det.login) throw new LookupError('not_found', `Аккаунт #${uid} не найден в manager.`);
+      progress('runic', `аккаунт #${uid}: базовая анкета`);
+      const runic = parseRunic(await getDoc(`/user/${uid}/runic_details`));
+      return {
+        ok: true,
+        data: {
+          ...det, user_id: det.user_id || uid, runic,
+          urls: {
+            user_details: `${location.origin}/manager/user_details?user_id=${uid}`,
+            runic: `${location.origin}/user/${uid}/runic_details`,
+            esia: det.links.esia || `${location.origin}/manager/esia_identifications?user_id=${uid}`,
+          },
+        },
+      };
+    } catch (e) {
+      if (e instanceof LookupError) return { ok: false, error: { code: e.code, message: e.message, ...e.extra } };
+      return { ok: false, error: { code: 'error', message: String((e && e.message) || e) } };
+    }
+  }
+
+  // Страница идентификации общая у доменов одной персоны — в пределах одной загрузки читается один раз.
+  const esiaCache = new Map();   // url → {t, value}
+  async function esiaFor(url, task) {
+    const key = `${task || ''}|${url}`;
+    const hit = esiaCache.get(key);
+    if (hit && Date.now() - hit.t < 10 * 60 * 1000) return hit.value;
+    let value;
+    try {
+      const { rows, latest } = parseEsiaList(await getDoc(url.replace(location.origin, '')));
+      value = latest
+        ? { url, count: rows.length, state: latest.state || '', file_url: latest.file_url, latest,
+            history: rows.map(r => ({ state: r.state, creation_date: r.creation_date, processed_date: r.processed_date,
+                                      action: r.action, reason: r.reason, comment: r.comment })) }
+        : { url, count: 0, state: '' };
+    } catch (e) {
+      if (e instanceof LookupError && e.code === 'not_logged_in') throw e;
+      value = { url, error: String((e && e.message) || e) };
+    }
+    if (esiaCache.size > 500) esiaCache.clear();
+    esiaCache.set(key, { t: Date.now(), value });
+    return value;
   }
 
   function parseS(doc) {
@@ -166,7 +387,8 @@
 
   // ------------------------------------------------------------------ один домен целиком
 
-  async function lookup(reqId, domain, ascii) {
+  async function lookup(reqId, domain, ascii, opts) {
+    opts = opts || {};
     const names = [...new Set([norm(domain), norm(ascii)].filter(Boolean))];
     const progress = (step, message) => {
       try { chrome.runtime.sendMessage({ type: 'progress', reqId, step, message }); } catch (e) { /* вне расширения */ }
@@ -196,11 +418,17 @@
       if (s.dname && !names.includes(norm(s.dname))) {
         throw new LookupError('mismatch', `Страница S относится к другому домену: ${s.dname}`);
       }
+      // ЕСИА — только для физлиц (ru_pp): по ссылке со страницы Sd этого домена
+      let esia = null;
+      if (opts.esia !== false && sd.group === 'ru_pp' && sd.links && sd.links.esia) {
+        progress('esia', `${domain}: идентификация через Госуслуги`);
+        esia = await esiaFor(sd.links.esia, opts.task);
+      }
       return {
         ok: true,
         data: {
           domain, service_id: found.service_id, account: s.user_id || found.user_id, bill_owner: found.bill_owner,
-          bill_state: found.state, sd, s,
+          bill_state: found.state, sd, s, esia,
           urls: {
             bills: `${location.origin}/bill/bills?searchstring=${encodeURIComponent(found.query)}`,
             sd: `${location.origin}/tech/srv_details?service_id=${found.service_id}`,
@@ -214,5 +442,8 @@
     }
   }
 
-  window.__doctoolManager = { version: '0.5.0', lookup, parseBills, pickService, parseSd, parseS, isManagerPage };
+  window.__doctoolManager = {
+    version: VERSION, lookup, account, fillRunic, parseBills, pickService, parseSd, parseS, parseEsiaList,
+    parseUserDetails, parseRunic, isManagerPage,
+  };
 })();

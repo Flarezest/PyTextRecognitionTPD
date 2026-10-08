@@ -1,14 +1,21 @@
 """Связь с расширением Chrome «doctool — manager» по WebSocket (ws://127.0.0.1:<порт>/ext).
 
-Расширение само подключается к doctool, когда Chrome запущен. doctool отправляет ему команды
-(lookup — данные домена из manager) и ждёт ответ. Расширение работает от имени оператора, с его входом
-в manager, и только читает страницы. doctool логины не хранит и к manager сам не обращается.
+Расширение само подключается к doctool, когда Chrome запущен. doctool отправляет ему команды и ждёт ответ.
+Расширение работает от имени оператора, с его входом в manager. doctool логины не хранит и к manager сам
+не обращается.
+
+Команды:
+  lookup     — данные домена: счета, Sd, S, идентификация через Госуслуги (0.6.0);
+  account    — данные аккаунта и базовая анкета (0.6.0);
+  fill_runic — вписать значения в форму базовой анкеты во вкладке оператора (0.6.0). «Сохранить» нажимает оператор.
 
 Протокол (JSON):
-  расширение → doctool: {"type": "hello", "version": "0.3.0"}, {"type": "ping"},
+  расширение → doctool: {"type": "hello", "version": "0.6.0"}, {"type": "ping"},
                         {"type": "progress", "id": …, "step": …, "message": …},
                         {"type": "result", "id": …, "ok": true, "data": {…}} | {"ok": false, "error": {code, message}}
-  doctool → расширение: {"type": "request", "id": …, "cmd": "lookup", "params": {"domain": …, "ascii": …}},
+  doctool → расширение: {"type": "request", "id": …, "cmd": "lookup", "params": {"domain": …, "ascii": …, "task": …}},
+                        {"type": "request", "id": …, "cmd": "account", "params": {"user_id": … | "login": …}},
+                        {"type": "request", "id": …, "cmd": "fill_runic", "params": {"user_id": …, "fields": {…}, "restore": false}},
                         {"type": "welcome"}, {"type": "pong"}
 """
 from __future__ import annotations
@@ -155,7 +162,8 @@ class ManagerTasks:
     def lookup(self, domains: list[str], log=print, cancel=None) -> list:
         """Синхронная загрузка (из потока проверки дела)."""
         return lookup_domains(self.bridge.request_sync, domains, log=log,
-                              whois_lookup=whois_lookup if self.use_whois else None, cancel=cancel)
+                              whois_lookup=whois_lookup if self.use_whois else None, cancel=cancel,
+                              task=uuid.uuid4().hex[:8])
 
     def submit(self, domains: list[str], job_id: str | None = None, on_done=None) -> ManagerTask:
         t = ManagerTask(id=uuid.uuid4().hex[:12], domains=domains, job_id=job_id)

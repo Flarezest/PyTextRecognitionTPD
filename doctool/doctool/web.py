@@ -2,7 +2,8 @@
 
 Работает без интернета: страница и скрипты отдаются этим же сервером, внешних CDN нет.
 Сюда же подключается расширение Chrome «doctool — manager» (WebSocket /ext) — через него
-загружаются данные доменов (Sd, S) из manager.
+загружаются данные доменов (Sd, S, ЕСИА) и аккаунтов из manager и заполняется базовая анкета
+(вкладка «Смена владельца ЛК», API /api/owner/*).
 """
 from __future__ import annotations
 
@@ -17,8 +18,8 @@ import numpy as np
 from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile, WebSocket
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
-from . import domain_report
-from .domains import sort_by_problem, split_domains
+from . import account, domain_report
+from .domains import ManagerUnavailable, sort_by_problem, split_domains
 from .integrations import push_to_system
 from .jobs import JobManager, result_payload
 from .manager_bridge import ExtensionBridge, ManagerTasks
@@ -233,6 +234,82 @@ def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-inst
         if t:
             t.cancel.set()
         return {"ok": True}
+
+    # ---------------------------------------------------------------- смена владельца ЛК (физлица)
+    def _need_extension():
+        if not bridge.connected():
+            raise HTTPException(409, "Расширение «doctool — manager» не подключено: откройте Chrome с расширением "
+                                     "(значок расширения покажет состояние связи)")
+
+    def _ext(cmd: str, params: dict, timeout: float = 240, log=None) -> dict:
+        """Запрос к расширению; ошибки связи — ответом {ok: false, error}."""
+        try:
+            return bridge.request_sync(cmd, params, timeout,
+                                       (lambda m: log(f"manager: {m.get('message') or m.get('step')}")) if log else None)
+        except ManagerUnavailable as e:
+            raise HTTPException(409, str(e)) from e
+        except TimeoutError as e:
+            return {"ok": False, "error": {"code": "timeout", "message": f"расширение не ответило вовремя ({e})"}}
+
+    @app.post("/api/owner/parse")
+    def owner_parse(body: dict = Body(...)):
+        """Что ввели в поле «Пользователь» (подсказка под полем)."""
+        return account.parse_query(body.get("query") or "")
+
+    @app.post("/api/owner/account")
+    def owner_account(body: dict = Body(...)):
+        """Данные аккаунта и базовая анкета (по номеру, логину/e-mail или домену)."""
+        _need_extension()
+        log: list[str] = []
+        try:
+            acc = account.resolve_account(lambda c, p, t, cb: _ext(c, p, t, log.append), body.get("query") or "",
+                                          log=log.append)
+        except account.AccountError as e:
+            return {"ok": False, "error": {"code": e.code, "message": str(e)}, "log": log}
+        return {"ok": True, "account": acc, "log": log}
+
+    @app.post("/api/owner/compare")
+    def owner_compare(body: dict = Body(...)):
+        """Текущий владелец: базовая анкета ↔ данные заявления."""
+        return account.compare_owner(body.get("ba") or {}, body.get("app") or {})
+
+    @app.post("/api/owner/prepare")
+    def owner_prepare(body: dict = Body(...)):
+        """Новый владелец: что и как будет вписано в базовую анкету (предпросмотр)."""
+        return account.prepare_fill(body.get("form") or {})
+
+    @app.post("/api/owner/fill")
+    def owner_fill(body: dict = Body(...)):
+        """«Заполнить автоматически» / «Вернуть как было» (restore: значения, которые были до заполнения)."""
+        uid = str(body.get("user_id") or "").strip()
+        if not uid.isdigit():
+            raise HTTPException(400, "Сначала загрузите аккаунт (нужен номер аккаунта)")
+        restore = bool(body.get("restore"))
+        prepared = None
+        if restore:
+            fields = {k: str(v) for k, v in (body.get("fields") or {}).items()}
+        else:
+            prepared = account.prepare_fill(body.get("form") or {})
+            fields = prepared["fields"]
+        if not fields:
+            raise HTTPException(400, "Нечего заполнять: форма нового владельца пустая")
+        _need_extension()
+        reply = _ext("fill_runic", {"user_id": uid, "fields": fields, "restore": restore}, timeout=300)
+        return {"ok": bool(reply.get("ok")), "data": reply.get("data"), "error": reply.get("error"),
+                "prepared": prepared, "fields": fields}
+
+    @app.post("/api/owner/verify")
+    def owner_verify(body: dict = Body(...)):
+        """«Проверить, что сохранилось»: перечитать базовую анкету и сверить с тем, что заполняли."""
+        uid = str(body.get("user_id") or "").strip()
+        if not uid.isdigit():
+            raise HTTPException(400, "Нет номера аккаунта")
+        _need_extension()
+        reply = _ext("account", {"user_id": uid})
+        if not reply.get("ok"):
+            return {"ok": False, "error": reply.get("error")}
+        acc = account.account_from_extension(reply.get("data") or {})
+        return {"ok": True, "verify": account.verify_saved(acc["runic"], body.get("fields") or {}), "account": acc}
 
     return app
 

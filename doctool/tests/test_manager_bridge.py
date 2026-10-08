@@ -37,7 +37,8 @@ def test_extension_roundtrip(tmp_path):
         th.start()
         req = ws.receive_json()
         assert req["type"] == "request" and req["cmd"] == "lookup"
-        assert req["params"] == {"domain": "testdomain-pp.ru", "ascii": "testdomain-pp.ru"}
+        task = req["params"].pop("task")                 # номер загрузки (кэш ЕСИА в расширении)
+        assert req["params"] == {"domain": "testdomain-pp.ru", "ascii": "testdomain-pp.ru"} and task
         ws.send_json({"type": "progress", "id": req["id"], "step": "sd", "message": "Sd"})
         ws.send_json({"type": "result", "id": req["id"], **reply(SD_PP, S_PP, "testdomain-pp.ru")})
         th.join(10)
@@ -231,3 +232,56 @@ def test_domains_report_without_case(tmp_path, monkeypatch):
     assert "/tech/srv_details?service_id=11" in html and "Найдено несколько услуг" in html
     assert "Сверка с заявлением и паспортом не выполнялась" in html
     assert client.get("/api/manager/tasks/nope/report").status_code == 404
+
+
+def test_owner_account_and_fill(tmp_path):
+    """Вкладка «Смена владельца ЛК»: аккаунт по «Данные пользователя #N», сверка, заполнение и возврат значений."""
+    from test_account import ACCOUNT_DATA
+
+    app = create_app(out_root=str(tmp_path))
+    client = TestClient(app)
+    assert client.post("/api/owner/account", json={"query": "1000"}).status_code == 409   # расширения нет
+    assert client.post("/api/owner/parse", json={"query": "Данные пользователя #1000"}).json()["value"] == "1000"
+
+    def call(path, body):
+        box = {}
+        th = threading.Thread(target=lambda: box.setdefault("r", client.post(path, json=body)))
+        th.start()
+        return th, box
+
+    with client.websocket_connect("/ext", headers=ORIGIN) as ws:
+        ws.receive_json()
+        th, box = call("/api/owner/account", {"query": "Данные пользователя #1000"})
+        req = ws.receive_json()
+        assert req["cmd"] == "account" and req["params"] == {"user_id": "1000"}
+        ws.send_json({"type": "result", "id": req["id"], "ok": True, "data": ACCOUNT_DATA})
+        th.join(10)
+        j = box["r"].json()
+        assert j["ok"] and j["account"]["type"] == "pp" and j["account"]["ba"]["person_r_surname"] == "Тестов"
+
+        cmp_ = client.post("/api/owner/compare", json={"ba": j["account"]["ba"], "app": {"birth_date": "16.03.1990"}}).json()
+        assert cmp_["mismatch"] == ["Дата рождения"]
+
+        form = {"surname": "Сидорова", "name": "Анна", "patronymic": "Викторовна", "phone": "8 921 555 12 34",
+                "address": "г. Казань, ул. Баумана, д. 1"}
+        th, box = call("/api/owner/fill", {"user_id": "1000", "form": form})
+        req = ws.receive_json()
+        assert req["cmd"] == "fill_runic" and req["params"]["user_id"] == "1000" and req["params"]["restore"] is False
+        f = req["params"]["fields"]
+        assert f["phone"] == "+79215551234" and f["p_addr_city"] == "Казань" and f["p_addr_recipient"] == "Сидорова Анна Викторовна"
+        changed = [{"name": "person_r_surname", "label": "Фамилия", "old": "Тестов", "new": "Сидорова"}]
+        ws.send_json({"type": "result", "id": req["id"], "ok": True,
+                      "data": {"user_id": "1000", "type": "pp", "changed": changed, "same": [], "missing": [], "values": {}}})
+        th.join(10)
+        j = box["r"].json()
+        assert j["ok"] and j["data"]["changed"][0]["old"] == "Тестов" and j["fields"] == f
+
+        th, box = call("/api/owner/fill", {"user_id": "1000", "restore": True, "fields": {"person_r_surname": "Тестов"}})
+        req = ws.receive_json()
+        assert req["params"] == {"user_id": "1000", "fields": {"person_r_surname": "Тестов"}, "restore": True}
+        ws.send_json({"type": "result", "id": req["id"], "ok": False,
+                      "error": {"code": "not_person", "message": "Аккаунт #1000 оформлен на юрлицо"}})
+        th.join(10)
+        assert box["r"].json()["error"]["code"] == "not_person"
+    assert client.post("/api/owner/fill", json={"user_id": "", "form": form}).status_code == 400
+    assert client.post("/api/owner/fill", json={"user_id": "1000", "form": {}}).status_code == 400

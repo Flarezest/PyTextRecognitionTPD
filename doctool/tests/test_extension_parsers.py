@@ -58,3 +58,93 @@ def test_sd_email_and_intl(page):
     assert intl["fields"]["o_email"] == "owner@example.com\nsecond@example.org"
     assert intl["fields"]["o_company"] == "Test Holding LP" and "o_phone" not in intl["fields"]
     assert "authinfo" not in intl["fields"] and "o_addr" not in intl["fields"]
+
+
+# ------------------------------------------------------------------ 0.6.0: ЕСИА, аккаунт, базовая анкета
+
+def test_sd_links_to_esia(page):
+    # ссылка «Идентификация через Госуслуги» берётся со страницы Sd домена: у физлица ?user_id=, у персоны — ?person_id=
+    sd = json.loads(run(page, "sd_pp.html", "M.parseSd(document)"))
+    assert sd["links"]["esia"] == "https://manager.reg.ru/manager/esia_identifications?user_id=1000"
+    assert sd["links"]["person"] == "https://manager.reg.ru/manager/user_details?user_id=1000"
+    org = json.loads(run(page, "sd_org.html", "M.parseSd(document)"))
+    assert org["links"]["esia"].endswith("esia_identifications?person_id=3000")
+
+
+def test_esia_list(page):
+    r = json.loads(run(page, "esia_list.html", "M.parseEsiaList(document)"))
+    assert len(r["rows"]) == 2
+    latest = r["latest"]                                    # последняя попытка — по дате создания
+    assert latest["state"] == "approved" and latest["creation_date"] == "2026-08-01 18:55:32"
+    assert latest["file_url"] == "https://identity.reg.ru/esia/0123456789abcdef0123456789abcdef.json"
+    assert latest["action"] == "fill_base_contacts" and "file" not in latest
+    old = next(x for x in r["rows"] if x["state"] == "rejected")
+    assert old["file_url"] == "" and old["reason"] == "passport_not_verified"
+
+
+def test_user_details(page):
+    r = json.loads(run(page, "user_details_pp.html", "M.parseUserDetails(document)"))
+    assert r["user_id"] == "1000" and r["login"] == "person@example.com"
+    assert "Идентификация через Госуслуги пройдена" in r["statuses"]
+    assert r["servicing_org"] == 'ООО "РДХ"' and r["servicing_org_id"] == "3"
+    assert r["contypes"] == "RUSURF: ru_pp" and r["is_entrepreneur"] is False
+    ba = r["ba"]                                             # базовая анкета — скрытый блок страницы
+    assert ba["ru_pp.person_r_surname"] == "Тестов" and ba["ru_pp.passport_number"] == "4509123456"
+    assert ba["ru_pp.passport_place"] == "ГУ МВД РОССИИ ПО Г. МОСКВЕ" and ba["ru_pp.fax"] == ""
+    assert ba["ru_pp.phone"] == "+79990000000" and ba["ru_pp.birth_date"] == "15.03.1990"
+    assert r["links"]["runic"].endswith("/user/1000/runic_details")
+    assert r["links"]["esia"].endswith("esia_identifications?user_id=1000")
+
+
+def test_runic_parse(page):
+    r = json.loads(run(page, "runic_pp.html", "M.parseRunic(document)"))
+    assert r["user_id"] == "1000" and r["type"] == "pp" and r["has_pp_form"]
+    v = r["values"]
+    assert v["person_r_surname"] == "Тестов" and v["person"] == "Petr Sergeevich Testov"
+    assert v["passport_place"] == "ГУ МВД РОССИИ ПО Г. МОСКВЕ" and v["country"] == "RU" and v["p_addr_zip"] == "101000"
+    # страница базовой анкеты — «новая» (Bootstrap): без #content, но это страница manager
+    assert page.evaluate("() => window.__doctoolManager.isManagerPage(document)")
+
+
+NEW_OWNER = {"person_r_surname": "Сидорова", "person_r_name": "Анна", "person_r_patronimic": "Викторовна",
+             "passport_number": "4012654321", "passport_date": "03.12.2010", "passport_place": "ТП № 5 ОУФМС России",
+             "birth_date": "21.11.1990", "p_addr_city": "Санкт-Петербург", "p_addr_addr": "г. Санкт-Петербург, ул. Новая, д. 7",
+             "p_addr_recipient": "Сидорова Анна Викторовна", "phone": "+79215551234", "e_mail": "anna@example.com",
+             "country": "KZ", "sms_security_number": "+70000000000", "p_addr_area": "Ленинградская"}
+
+
+def test_fill_runic(page):
+    page.goto((FIX / "runic_pp.html").as_uri())
+    page.add_script_tag(content=JS)
+    r = page.evaluate("f => window.__doctoolManager.fillRunic('1000', f)", NEW_OWNER)
+    assert r["ok"], r
+    names = {c["name"] for c in r["data"]["changed"]}
+    # гражданство, SMS-безопасность, область не заполняются, даже если их передать
+    assert names == {"person_r_surname", "person_r_name", "person_r_patronimic", "passport_number", "passport_date",
+                     "passport_place", "birth_date", "p_addr_city", "p_addr_addr", "p_addr_recipient", "phone", "e_mail"}
+    val = lambda n: page.evaluate(f"() => document.querySelector('#ru_pp_contacts [name={n}]').value")  # noqa: E731
+    assert val("person_r_surname") == "Сидорова" and val("passport_place") == "ТП № 5 ОУФМС России"
+    assert val("country") == "RU" and val("sms_security_number") == "" and val("p_addr_area") == "Москва"
+    assert val("p_addr_zip") == "101000"                    # индекс не передан — остался прежний
+    # форма юрлица с теми же именами полей не тронута
+    assert page.evaluate("() => document.querySelector('#ru_org_contacts [name=phone]').value") == "+79990000000"
+    # события страницы: поле помечено изменённым, English name пересчитан по blur
+    assert "unsaved" in page.evaluate("() => document.querySelector('#ru_pp_contacts [name=phone]').className")
+    assert val("person") == "Anna Viktorovna Sidorova"
+    old = {c["name"]: c["old"] for c in r["data"]["changed"]}
+    assert old["person_r_surname"] == "Тестов" and old["p_addr_addr"] == "Тестовая, д 1, кв 1"
+    # «Вернуть как было»
+    back = page.evaluate("f => window.__doctoolManager.fillRunic('1000', f, {restore: true})", old)
+    assert back["ok"] and val("person_r_surname") == "Тестов" and val("phone") == "+79990000000"
+
+
+def test_fill_runic_guards(page):
+    page.goto((FIX / "runic_pp.html").as_uri())
+    page.add_script_tag(content=JS)
+    r = page.evaluate("f => window.__doctoolManager.fillRunic('2000', f)", NEW_OWNER)
+    assert not r["ok"] and r["error"]["code"] == "wrong_account"
+    page.evaluate("() => { document.querySelector('input[name=type][value=pp]').checked = false;"
+                  " document.querySelector('input[name=type][value=org]').checked = true; }")
+    r = page.evaluate("f => window.__doctoolManager.fillRunic('1000', f)", NEW_OWNER)
+    assert not r["ok"] and r["error"]["code"] == "not_person" and "юрлиц" in r["error"]["message"]
+    assert page.evaluate("() => document.querySelector('#ru_pp_contacts [name=person_r_surname]').value") == "Тестов"

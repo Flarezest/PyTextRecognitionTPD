@@ -233,3 +233,71 @@ def test_email_and_international_holder():
     ru = domains.DomainInfo("example.ru", status=domains.FOUND, kind="person",
                             sd={"person_r_surname": "Тестов", "e_mail": "a@example.ru, b@example.ru"})
     assert ru.emails == ["a@example.ru", "b@example.ru"]
+
+
+# ------------------------------------------------------------------ 0.6.0: идентификация через Госуслуги (ЕСИА)
+
+ESIA_JSON = {"status": "success", "first_name": "Пётр", "last_name": "Тестов", "middle_name": "Сергеевич",
+             "birth_date": "15.03.1990", "citizenship": "RUS", "trusted": True,
+             "rf_passport": {"series": "4509", "number": "123456", "issue_date": "20.04.2010",
+                             "issued_by": "ГУ МВД России по г. Москве", "vrf_stu": "VERIFIED"}}
+ESIA_PAGE = {"url": "https://manager.reg.ru/manager/esia_identifications?user_id=1000", "count": 1, "state": "approved",
+             "file_url": "https://identity.reg.ru/esia/0123456789abcdef0123456789abcdef.json",
+             "latest": {"state": "approved", "creation_date": "2026-08-01 18:55:32", "processed_date": "2026-08-01 18:55:38",
+                        "action": "fill_base_contacts"}}
+
+
+def with_esia(esia, sd=SD_PP, s=S_PP, domain="testdomain-pp.ru"):
+    r = reply(sd, s, domain)
+    r["data"]["esia"] = esia
+    return domains.from_extension(domain, r)
+
+
+def test_esia_match():
+    info = with_esia({**ESIA_PAGE, "data": ESIA_JSON})
+    d = info.to_dict()
+    assert d["esia_status"] == "match" and d["esia_state"] == "approved"
+    assert d["esia_ru"] == "approved · Sd = ЕСИА (9 из 9)"
+    rows = {r["field"]: r for r in d["esia_rows"]}
+    # фамилия — last_name, отчество — middle_name; гражданство RU ↔ RUS
+    assert rows["person_r_surname"]["esia_field"] == "last_name" and rows["person_r_surname"]["esia"] == "Тестов"
+    assert rows["person_r_patronimic"]["esia_field"] == "middle_name" and rows["person_r_patronimic"]["status"] == "ok"
+    assert rows["country"]["status"] == "ok" and rows["passport_place"]["status"] == "ok"
+    # ЕСИА на сверку с документами и вердикт не влияет
+    assert info.verdict == "" and domains.problem(info) == "unchecked"
+    assert domains.DomainInfo.from_dict(d).esia["state"] == "approved"
+
+
+def test_esia_mismatch_and_states():
+    bad = with_esia({**ESIA_PAGE, "data": {**ESIA_JSON, "rf_passport": {**ESIA_JSON["rf_passport"], "issue_date": "21.04.2010"}}})
+    d = bad.to_dict()
+    assert d["esia_status"] == "mismatch" and "Дата выдачи" in d["esia_ru"]
+    assert [r["status"] for r in d["esia_rows"] if r["field"] == "passport_date"] == ["fail"]
+    # нет записей об идентификации / нет файла / ошибка / нет ссылки
+    assert with_esia({"url": ESIA_PAGE["url"], "count": 0, "state": ""}).to_dict()["esia_ru"] == "не проходил"
+    nd = with_esia({**ESIA_PAGE, "json_error": "HTTP 404"}).to_dict()
+    assert nd["esia_status"] == "error" and "HTTP 404" in nd["esia_ru"]
+    assert with_esia({**ESIA_PAGE, "file_url": ""}).to_dict()["esia_status"] == "no_data"
+    assert with_esia(None).to_dict()["esia_status"] == "no_link"
+    assert with_esia({**ESIA_PAGE, "data": {"status": "error"}}).to_dict()["esia_status"] == "error"
+    assert with_esia({**ESIA_PAGE, "data": {"status": "success", "rf_passport": None}}).to_dict()["esia_status"] == "no_data"
+    # юрлица — без ЕСИА
+    org = domains.from_extension("testdomain-org.ru", reply(SD_ORG, S_ORG, "testdomain-org.ru"))
+    assert org.to_dict()["esia_status"] == ""
+    # значения нет с одной стороны — не красный, а «нет в ЕСИА»
+    part = with_esia({**ESIA_PAGE, "data": {**ESIA_JSON, "middle_name": ""}}).to_dict()
+    row = next(r for r in part["esia_rows"] if r["field"] == "person_r_patronimic")
+    assert row["status"] == "" and row["detail"] == "нет в ЕСИА" and part["esia_status"] == "match"
+
+
+def test_esia_in_reports():
+    from doctool import domain_report, report
+    good = with_esia({**ESIA_PAGE, "data": ESIA_JSON}).to_dict()
+    bad = with_esia({**ESIA_PAGE, "data": {**ESIA_JSON, "birth_date": "16.03.1990"}}, domain="second-pp.ru",
+                    s={**S_PP, "dname": "second-pp.ru"}).to_dict()
+    html = domain_report.build([good, bad])
+    assert '<th>ЕСИА</th>' in html and 'class="esia" data-d="testdomain-pp.ru"' in html
+    assert 'id="esia-data"' in html and '"last_name"' in html and "VERIFIED" in html
+    assert "Идентификация через Госуслуги (ЕСИА)" in html and "second-pp.ru" in html.split("К сведению")[1]
+    assert "</script" not in html.split('id="esia-data">')[1].split("</script>")[0]
+    assert "ЕСИА: approved" in report.domains_table([good])

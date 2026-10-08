@@ -1,13 +1,20 @@
 /* doctool — manager: фоновая часть расширения (service worker).
  *
  * 1) Держит WebSocket-соединение с doctool на этом компьютере: ws://127.0.0.1:<порт>/ext.
- * 2) Получает команды lookup (данные домена) и выполняет их по очереди в отдельной фоновой вкладке manager.
- * 3) Если manager просит вход (окно «Войти»), показывает эту вкладку и сообщает doctool.
+ * 2) Получает команды и выполняет их по очереди:
+ *    lookup      — данные домена (счета, Sd, S, с 0.6.0 — идентификация через Госуслуги и JSON ЕСИА);
+ *    account     — данные аккаунта и базовая анкета (0.6.0);
+ *    fill_runic  — заполнить поля базовой анкеты во вкладке оператора (0.6.0).
+ *    lookup и account читают страницы в отдельной фоновой вкладке manager.
+ * 3) Если manager просит вход (окно «Войти»), показывает вкладку и сообщает doctool.
  *
- * Расширение только читает страницы manager. Кнопки и формы manager оно не трогает.
+ * Расширение читает страницы manager. Единственное, что оно меняет, — значения полей формы базовой анкеты
+ * по кнопке «Заполнить автоматически» в doctool, во вкладке, которую видит оператор. Кнопки manager
+ * («Сохранить», «Изменить», «Удалить» и т. п.) оно не нажимает и формы не отправляет.
  */
 const VERSION = chrome.runtime.getManifest().version;
 const MANAGER = 'https://manager.reg.ru/';
+const IDENTITY = 'https://identity.reg.ru/';
 const DEFAULTS = { port: 8765, authWaitSec: 180, pauseMs: 300, closeTabAfterSec: 60 };
 
 let ws = null;
@@ -104,6 +111,8 @@ async function handle(m) {
   let reply;
   try {
     if (m.cmd === 'lookup') reply = await lookupDomain(m.id, m.params || {});
+    else if (m.cmd === 'account') reply = await readAccount(m.id, m.params || {});
+    else if (m.cmd === 'fill_runic') reply = await fillRunic(m.id, m.params || {});
     else if (m.cmd === 'check_manager') reply = await checkManager();
     else reply = { ok: false, error: { code: 'unknown_cmd', message: `Неизвестная команда: ${m.cmd}` } };
   } catch (e) {
@@ -122,31 +131,157 @@ function fail(code, message) {
   return e;
 }
 
-async function runLookup(tabId, reqId, domain, ascii) {
+// Вызвать функцию content/manager.js (window.__doctoolManager[fn]) во вкладке manager.
+async function runInTab(tabId, fn, args) {
   await chrome.scripting.executeScript({ target: { tabId }, files: ['content/manager.js'] });
   const [res] = await chrome.scripting.executeScript({
     target: { tabId },
-    func: (id, d, a) => window.__doctoolManager.lookup(id, d, a),
-    args: [reqId, domain, ascii || domain],
+    func: (name, a) => window.__doctoolManager[name](...a),
+    args: [fn, args],
   });
   return (res && res.result) || { ok: false, error: { code: 'error', message: 'Скрипт во вкладке manager не вернул результат' } };
 }
 
-async function lookupDomain(reqId, { domain, ascii }) {
-  if (!domain) throw fail('bad_request', 'Не указан домен');
-  note(`Запрос: ${domain}`);
-  let tabId = await ensureManagerTab();
-  let out = await runLookup(tabId, reqId, domain, ascii);
+// То же в фоновой вкладке manager; если вход истёк посреди работы — обновляем вкладку (появится окно «Войти»),
+// ждём вход и пробуем ещё раз.
+async function runWithLogin(fn, args) {
+  const tabId = await ensureManagerTab();
+  let out = await runInTab(tabId, fn, args);
   if (!out.ok && out.error && out.error.code === 'not_logged_in') {
-    // вход истёк посреди работы: обновляем вкладку (появится окно «Войти»), ждём вход и пробуем ещё раз
     await chrome.tabs.reload(tabId).catch(() => {});
     await waitLoaded(tabId, 30000, 30000);
     await waitForLogin(tabId);
-    out = await runLookup(tabId, reqId, domain, ascii);
+    out = await runInTab(tabId, fn, args);
+  }
+  return out;
+}
+
+async function lookupDomain(reqId, { domain, ascii, esia, task }) {
+  if (!domain) throw fail('bad_request', 'Не указан домен');
+  note(`Запрос: ${domain}`);
+  const out = await runWithLogin('lookup', [reqId, domain, ascii || domain, { esia: esia !== false, task: task || '' }]);
+  const e = out.ok && out.data && out.data.esia;
+  if (e && e.file_url) {
+    progressTo(reqId, 'esia_json', `${domain}: файл данных ЕСИА`);
+    try {
+      e.data = await esiaJson(e.file_url, task);
+    } catch (err) {
+      e.json_error = err.message || String(err);
+    }
   }
   note(`${domain}: ${out.ok ? 'данные получены' : out.error.message}`);
   const { pauseMs } = await settings();
   await sleep(pauseMs);
+  return out;
+}
+
+function progressTo(id, step, message) {
+  send({ type: 'progress', id, step, message });
+}
+
+// ------------------------------------------------------------------ JSON ЕСИА (identity.reg.ru)
+
+// Из файла ЕСИА в doctool передаются только поля для сверки с Sd и признаки проверки данных.
+// ИНН, СНИЛС, адреса, телефон, e-mail, oid не передаются.
+function esiaFields(j) {
+  const d = (j && j.data) || j || {};
+  const p = d.rf_passport || {};
+  return {
+    status: (j && j.status) || '',
+    first_name: d.first_name || '', last_name: d.last_name || '', middle_name: d.middle_name || '',
+    birth_date: d.birth_date || '', citizenship: d.citizenship || '', trusted: d.trusted,
+    rf_passport: d.rf_passport ? {
+      series: p.series || '', number: p.number || '', issue_date: p.issue_date || '',
+      issued_by: p.issued_by || '', vrf_stu: p.vrf_stu || '',
+    } : null,
+  };
+}
+
+const esiaJsonCache = new Map();   // `${task}|${url}` → {t, data}
+
+async function esiaJson(url, task) {
+  if (!url.startsWith(IDENTITY) && !url.startsWith(MANAGER)) throw fail('bad_url', `Неожиданный адрес файла ЕСИА: ${url}`);
+  const key = `${task || ''}|${url}`;
+  const hit = esiaJsonCache.get(key);
+  if (hit && Date.now() - hit.t < 10 * 60 * 1000) return hit.data;
+  let j = null, why = '';
+  try {
+    const r = await fetch(url, { credentials: 'include', cache: 'no-store' });
+    if (r.ok) j = JSON.parse(await r.text());
+    else why = `HTTP ${r.status}`;
+  } catch (e) {
+    why = e.message || String(e);
+  }
+  if (!j) j = await esiaJsonViaTab(url, why);   // напр. сайт требует вход — открываем файл как оператор по ссылке
+  const data = esiaFields(j);
+  if (esiaJsonCache.size > 500) esiaJsonCache.clear();
+  esiaJsonCache.set(key, { t: Date.now(), data });
+  return data;
+}
+
+async function esiaJsonViaTab(url, why) {
+  const tab = await chrome.tabs.create({ url, active: false });
+  try {
+    await waitLoaded(tab.id, 30000, 60000);
+    // JSON в Chrome показывается внутри <pre> (рядом может быть флажок «Автоформатирование» — его текст не берём)
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => { const pre = document.querySelector('pre'); return pre ? pre.textContent : (document.body ? document.body.innerText : ''); },
+    });
+    const textBody = (res && res.result) || '';
+    try {
+      const a = textBody.indexOf('{'), b = textBody.lastIndexOf('}');
+      return JSON.parse(a >= 0 && b > a ? textBody.slice(a, b + 1) : textBody);
+    } catch {
+      throw fail('esia_json', `Файл ЕСИА не открылся${why ? ` (${why})` : ''}: вместо JSON — «${textBody.slice(0, 80)}»`);
+    }
+  } finally {
+    chrome.tabs.remove(tab.id).catch(() => {});
+  }
+}
+
+// ------------------------------------------------------------------ аккаунт и базовая анкета
+
+async function readAccount(reqId, { user_id, login }) {
+  if (!user_id && !login) throw fail('bad_request', 'Не указан аккаунт');
+  note(`Аккаунт: ${user_id || login}`);
+  const out = await runWithLogin('account', [reqId, { user_id: user_id || '', login: login || '' }]);
+  note(`Аккаунт ${user_id || login}: ${out.ok ? 'данные получены' : out.error.message}`);
+  return out;
+}
+
+// Вкладка «Базовая анкета пользователя #N» (https://manager.reg.ru/user/N/runic_details): уже открытая
+// или новая. Это вкладка оператора: она показывается, а не закрывается.
+async function runicTab(userId) {
+  const url = `${MANAGER}user/${userId}/runic_details`;
+  const re = new RegExp(`^${MANAGER.replace(/[.]/g, '\\.')}user/${userId}/runic_details(?:[?#].*)?$`);
+  const tabs = await chrome.tabs.query({ url: `${MANAGER}user/*` });
+  let tab = tabs.find(t => re.test(t.url || ''));
+  let opened = false;
+  if (!tab) {
+    tab = await chrome.tabs.create({ url, active: true });
+    opened = true;
+  }
+  try {
+    const t = await chrome.tabs.update(tab.id, { active: true });
+    await chrome.windows.update(t.windowId, { focused: true });
+  } catch { /* окно недоступно */ }
+  const { authWaitSec } = await settings();
+  await waitLoaded(tab.id, 30000, authWaitSec * 1000);
+  await waitForLogin(tab.id);
+  return { tabId: tab.id, opened };
+}
+
+async function fillRunic(reqId, { user_id, fields, restore }) {
+  if (!/^\d+$/.test(String(user_id || ''))) throw fail('bad_request', 'Не указан номер аккаунта');
+  note(`Базовая анкета #${user_id}: ${restore ? 'возврат прежних значений' : 'заполнение'}`);
+  progressTo(reqId, 'runic_tab', `открываю базовую анкету #${user_id}`);
+  const { tabId, opened } = await runicTab(user_id);
+  progressTo(reqId, 'fill', `${restore ? 'возвращаю' : 'заполняю'} поля во вкладке базовой анкеты #${user_id}`);
+  const out = await runInTab(tabId, 'fillRunic', [String(user_id), fields || {}, { restore: !!restore }]);
+  if (out.ok) out.data.tab_opened = opened;
+  else out.error.tab_opened = opened;
+  note(`Базовая анкета #${user_id}: ${out.ok ? `изменено полей ${out.data.changed.length}` : out.error.message}`);
   return out;
 }
 
@@ -168,7 +303,9 @@ async function pageOk(tabId) {
   try {
     const [r] = await chrome.scripting.executeScript({
       target: { tabId },
-      func: () => !!document.querySelector('meta[name="_csrf"]') && !!document.querySelector('#content'),
+      // обычная страница manager: «старая» (#content) или новая на Bootstrap (nav.navbar, напр. базовая анкета)
+      func: () => !!document.querySelector('meta[name="_csrf"]')
+        && !!(document.querySelector('#content') || document.querySelector('nav.navbar')),
     });
     return !!(r && r.result);
   } catch {
@@ -193,7 +330,7 @@ function waitLoaded(tabId, ms, authMs) {
     authHooks.set(tabId, () => { clearTimeout(timer); timer = setTimeout(() => done(false), authMs); });
     timer = setTimeout(() => done(false), ms);
     chrome.tabs.get(tabId).then(t => {
-      if (t.status === 'complete' && t.url && t.url.startsWith(MANAGER)) done(true);
+      if (t.status === 'complete' && t.url && (t.url.startsWith(MANAGER) || t.url.startsWith(IDENTITY))) done(true);
     }).catch(() => done(false));
   });
 }

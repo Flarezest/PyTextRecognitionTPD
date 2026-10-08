@@ -164,7 +164,8 @@ def domains_table(domains: list[dict]) -> str:
             cmp_ = "<br>".join(f"{e(r['title'])}: <b>{STATUS_RU[r['status']]}</b>"
                                + (f" — {e(r['detail'])}" if r.get("detail") else "") for r in d.get("compare") or [])
             extra = (f"provider: {e(d.get('provider', '') or '—')}<br>аккаунт: {e(d.get('account', '') or '—')}<br>"
-                     f"смена админа: {e(d.get('last_admin_change', '') or '—')}<br>страна: {e(sd.get('country', '') or '—')}")
+                     f"смена админа: {e(d.get('last_admin_change', '') or '—')}<br>страна: {e(sd.get('country', '') or '—')}"
+                     + (f"<br>ЕСИА: {e(d['esia_ru'])}" if d.get("esia_ru") else ""))
         else:
             w = d.get("whois") or {}
             data = e(d.get("error", ""))

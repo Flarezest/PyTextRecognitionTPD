@@ -3,11 +3,15 @@
 На входе — домены в виде DomainInfo.to_dict() (как в таблице интерфейса и в export.json), на выходе — одна
 самодостаточная страница: итог по группам «проблемности», проверки, администраторы найденных доменов,
 замечания «к сведению» и таблица доменов с фильтром. Внешних ресурсов нет — файл можно переслать.
+
+С 0.6.0 у доменов физлиц — колонка «ЕСИА» (идентификация через Госуслуги) и кнопка ESIA рядом с Sd / S:
+окно сверки Sd ↔ ЕСИА встроено в файл (данные — в блоке <script type="application/json" id="esia-data">).
 """
 from __future__ import annotations
 
 import difflib
 import html
+import json
 import re
 from collections import Counter, OrderedDict
 from datetime import datetime
@@ -110,6 +114,14 @@ def notes(items: list[dict]) -> list[str]:
         out.append(f"«Найдено несколько услуг» — {len(amb)}: активной (A) услуги нет, расширение не выбирает услугу само. "
                    "Откройте Sd по ссылкам в таблице" + (f"; все услуги удалены (D): {', '.join(map(_e, all_d))}" if all_d else "")
                    + ".")
+    esia = [d for d in found if d.get("esia_status")]
+    if esia:
+        st = Counter(d.get("esia_state") or {"none": "не проходил", "no_link": "нет ссылки на Sd", "error": "ошибка"}
+                     .get(d.get("esia_status"), "без state") for d in esia)
+        bad = [d["domain"] for d in esia if d.get("esia_status") == "mismatch"]
+        out.append("Идентификация через Госуслуги (ЕСИА) по Sd доменов-физлиц: " + ", ".join(f"{_e(k)} — {v}" for k, v in st.most_common())
+                   + (f"; данные Sd не совпадают с ЕСИА: {', '.join(map(_e, bad[:15]))}{' и др.' if len(bad) > 15 else ''}" if bad else "")
+                   + ". На вердикт не влияет — кнопка ESIA у домена открывает сверку.")
     other = Counter(d.get("group") or "?" for d in found if d.get("kind") not in ("person", "org"))
     if other:
         out.append("Домены с другим типом контактов (не ru_pp/ru_org) — сверка только вручную: "
@@ -160,7 +172,8 @@ def _domain_row(d: dict, similar: dict[str, str]) -> str:
         links.insert(0, _link(urls["sd"], "Sd"))
     if urls.get("s"):
         links.insert(1, _link(urls["s"], "S"))
-    head = f"<td><b>{_e(dom)}</b><br><span class=src>{' '.join(links)}</span></td>"
+    esia_btn = f' <button class="esia" data-d="{_e(dom)}">ESIA</button>' if d.get("esia") else ""
+    head = f"<td><b>{_e(dom)}</b><br><span class=src>{' '.join(links)}</span>{esia_btn}</td>"
     if d.get("status") == NOT_FOUND:
         w = d.get("whois") or {}
         if w.get("status") == "free":
@@ -177,11 +190,11 @@ def _domain_row(d: dict, similar: dict[str, str]) -> str:
         if dom in similar:
             wt += f"<br><span class=hint>похож на {_e(similar[dom])} из списка</span>"
         return (f'<tr class="fail" data-q="{_e(dom)}">{head}<td>не найден</td><td>{_e(d.get("error") or "")}</td>'
-                f"<td></td><td>{wt}</td></tr>")
+                f"<td></td><td></td><td>{wt}</td></tr>")
     if d.get("status") != FOUND:
         svc = "<br>".join(_link(f"{MANAGER}/tech/srv_details?service_id={sid}", f"Sd {sid} ({st})") for sid, st in _services(d))
         return (f'<tr class="review" data-q="{_e(dom)}">{head}<td>ошибка</td><td>{_e(d.get("error") or "")}</td>'
-                f"<td></td><td>{svc}</td></tr>")
+                f"<td></td><td></td><td>{svc}</td></tr>")
     sd = d.get("sd") or {}
     sst = d.get("service_status") or ""
     mail = (f"<br>e-mail: {', '.join(map(_e, d['emails']))}" if d.get("emails") else "")
@@ -208,8 +221,42 @@ def _domain_row(d: dict, similar: dict[str, str]) -> str:
              f"смена админа: {_e(d.get('last_admin_change') or '—')}<br>"
              f"страна: {_e(sd.get('country') or sd.get('o_country_code') or '—')}")
     cls = d.get("verdict") or ""
+    q += f" {d.get('esia_ru', '')}"
     return (f'<tr class="{cls}" data-q="{_e(q)}">{head}<td>найден<br><span{"" if sst.startswith("Активна") else " class=bad"}>'
-            f"{_e(sst)}</span></td><td>{data}</td><td>{cmp_}</td><td>{extra}</td></tr>")
+            f"{_e(sst)}</span></td><td>{data}</td><td>{cmp_}</td><td>{_esia_cell(d)}</td><td>{extra}</td></tr>")
+
+
+_ESIA_CLS = {"match": "ok", "warn": "warn", "mismatch": "fail", "none": "info", "no_data": "review", "no_link": "info",
+             "error": "review"}
+
+
+def _esia_cell(d: dict) -> str:
+    if not d.get("esia_status"):
+        return "<span class=src>—</span>"
+    state = d.get("esia_state") or ""
+    text = (d.get("esia_ru") or "").replace(f"{state} · ", "", 1) if state else d.get("esia_ru") or ""
+    return ((f"<b>{_e(state)}</b><br>" if state else "")
+            + f'<span class="tag {_ESIA_CLS.get(d["esia_status"], "info")}">{_e(text)}</span>')
+
+
+def _esia_data(items: list[dict]) -> str:
+    """Данные для окна ESIA (JSON внутри страницы): по домену — шапка, строки сверки, история попыток."""
+    out = {}
+    for d in items:
+        e = d.get("esia") or {}
+        if not e:
+            continue
+        data, latest = e.get("data") or {}, e.get("latest") or {}
+        out[d["domain"]] = {
+            "status": d.get("esia_status"), "text": d.get("esia_ru"), "state": e.get("state") or "",
+            "created": latest.get("creation_date") or "", "processed": latest.get("processed_date") or "",
+            "action": latest.get("action") or "", "reason": latest.get("reason") or "", "comment": latest.get("comment") or "",
+            "trusted": data.get("trusted"), "vrf": (data.get("rf_passport") or {}).get("vrf_stu") or "",
+            "url": e.get("url") or "", "file_url": e.get("file_url") or "", "sd_url": (d.get("urls") or {}).get("sd") or "",
+            "error": e.get("error") or e.get("json_error") or "", "rows": d.get("esia_rows") or [],
+            "history": e.get("history") or [] if (e.get("count") or 0) > 1 else [],
+        }
+    return json.dumps(out, ensure_ascii=False).replace("</", "<\\/")
 
 
 _JS = """
@@ -232,6 +279,48 @@ _JS = """
 })();
 """
 
+_ESIA_JS = """
+(function(){
+  var data = JSON.parse(document.getElementById('esia-data').textContent || '{}');
+  var dlg = document.getElementById('esiaDlg');
+  function e(s){ return (s === undefined || s === null ? '' : String(s)).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function a(u, t){ return u ? '<a href="' + e(u) + '" target="_blank" rel="noopener">' + t + '</a>' : ''; }
+  var WHY = {none: 'Записей об идентификации через Госуслуги нет.', no_link: 'На странице Sd нет ссылки «Идентификация через Госуслуги».',
+             no_data: 'Файла данных ЕСИА нет или он не загрузился.'};
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest ? ev.target.closest('button.esia') : null;
+    if (!b) return;
+    var x = data[b.getAttribute('data-d')]; if (!x) return;
+    document.getElementById('esiaTitle').textContent = 'ЕСИА ↔ Sd — ' + b.getAttribute('data-d');
+    var h = '<table class="kv"><tr><th>state</th><td>' + e(x.state || '—') + '</td><th>создано / обработано</th><td>' + e(x.created || '—')
+      + ' / ' + e(x.processed || '—') + '</td></tr><tr><th>action</th><td>' + e(x.action || '—') + (x.reason ? '<br>reason: ' + e(x.reason) : '')
+      + (x.comment ? '<br>' + e(x.comment) : '') + '</td><th>данные ЕСИА</th><td>' + (x.trusted === undefined || x.trusted === null ? '—'
+      : 'trusted: ' + (x.trusted ? 'да' : 'нет')) + (x.vrf ? ' · паспорт: ' + e(x.vrf) : '') + '</td></tr><tr><th>ссылки</th><td colspan="3">'
+      + [a(x.url, 'Идентификация через Госуслуги'), a(x.file_url, 'JSON-файл'), a(x.sd_url, 'Sd')].filter(Boolean).join(' · ') + '</td></tr></table>';
+    var why = x.error ? 'Ошибка: ' + x.error : WHY[x.status];
+    if (why) h += '<p class="notes">' + e(why) + '</p>';
+    if (x.rows.length) {
+      h += '<table><tr><th>Поле</th><th>Sd (ru_pp)</th><th>ЕСИА (JSON)</th><th></th></tr>';
+      x.rows.forEach(function(r){
+        var c = r.status ? ' class="' + r.status + '"' : '';
+        h += '<tr><td>' + e(r.title) + '</td><td' + c + '>' + e(r.sd) + '<br><span class=src>' + e(r.field) + '</span></td><td' + c + '>'
+          + e(r.esia) + '<br><span class=src>' + e(r.esia_field) + '</span></td><td class=src>' + e(r.detail) + '</td></tr>';
+      });
+      h += '</table><p class=src>Зелёный — совпадает, красный — расходится, жёлтый — «кем выдан» написан по-разному; без цвета — значения нет с одной из сторон.</p>';
+    }
+    if (x.history.length) {
+      h += '<h3>Все попытки идентификации</h3><table><tr><th>state</th><th>создано</th><th>обработано</th><th>action</th><th>reason / comment</th></tr>';
+      x.history.forEach(function(r){ h += '<tr><td>' + e(r.state) + '</td><td>' + e(r.creation_date) + '</td><td>' + e(r.processed_date)
+        + '</td><td>' + e(r.action) + '</td><td>' + e([r.reason, r.comment].filter(Boolean).join(' / ')) + '</td></tr>'; });
+      h += '</table>';
+    }
+    document.getElementById('esiaBody').innerHTML = h;
+    dlg.showModal();
+  });
+})();
+"""
+
 _CSS = """
 body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:24px;color:#1d1d1f;background:#fff}
 h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:28px 0 8px}
@@ -247,7 +336,13 @@ tr.grp td{background:#f3f3f6;font-weight:600;font-size:13px}
 .tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
 .tools input{font:inherit;padding:6px 9px;border:1px solid #d0d0d5;border-radius:6px;min-width:280px}
 details summary{cursor:pointer;color:#2b6cb0} a{color:#2b6cb0}
-@media print{.tools{display:none} th{position:static}}
+button.esia{font:inherit;font-size:12px;padding:0 7px;margin-left:4px;border:1px solid #2b6cb0;color:#2b6cb0;background:#fff;border-radius:5px;cursor:pointer}
+.tag{display:inline-block;padding:1px 7px;border-radius:9px;font-size:12.5px}
+dialog{border:1px solid #d0d0d5;border-radius:10px;max-width:900px;width:94vw;padding:0 16px 14px}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+.dhd{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;position:sticky;top:0;background:#fff}
+dialog table.kv{margin-bottom:10px} dialog h3{font-size:14px;margin:14px 0 6px}
+@media print{.tools{display:none} th{position:static} button.esia{display:none}}
 """
 
 
@@ -268,7 +363,7 @@ def build(domains: list[dict], case_id: str = "", case_title: str = "", checks: 
     for d in items:
         if d.get("problem") != group:
             group = d.get("problem")
-            rows.append(f'<tr class="grp" id="g-{_e(group or "")}"><td colspan="5">{_e(titles.get(group, group or ""))} — '
+            rows.append(f'<tr class="grp" id="g-{_e(group or "")}"><td colspan="6">{_e(titles.get(group, group or ""))} — '
                         f'<span class="cnt" data-total="{counts[group]}">{counts[group]}</span></td></tr>')
         rows.append(_domain_row(d, sim))
     summary = " · ".join(f'<a href="#g-{code}">{_e(title)}: <b>{counts[code]}</b></a>'
@@ -293,9 +388,12 @@ def build(domains: list[dict], case_id: str = "", case_title: str = "", checks: 
 <h2>Домены</h2>
 <div class="tools"><input type="search" id="q" placeholder="Фильтр: домен, ФИО, паспорт, ИНН, e-mail">
 <span class="src" id="shown"></span></div>
-<table id="dom"><tr><th>Домен</th><th>manager</th><th>Администратор (Sd)</th><th>Сверка</th><th>Прочее</th></tr>
+<table id="dom"><tr><th>Домен</th><th>manager</th><th>Администратор (Sd)</th><th>Сверка</th><th>ЕСИА</th><th>Прочее</th></tr>
 {''.join(rows)}</table>
-<script>{_JS}</script>
+<dialog id="esiaDlg"><div class="dhd"><b id="esiaTitle"></b><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+<div id="esiaBody"></div></dialog>
+<script type="application/json" id="esia-data">{_esia_data(items)}</script>
+<script>{_JS}{_ESIA_JS}</script>
 </body></html>
 """
 

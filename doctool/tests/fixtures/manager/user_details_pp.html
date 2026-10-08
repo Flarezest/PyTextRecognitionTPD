@@ -1,0 +1,384 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0060)https://manager.reg.ru/manager/user_details?user_id=1000 -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Данные пользователя #1000</title>
+    
+    
+    <meta name="_csrf" content="00000000000000000000000000000000">
+
+</head><body>
+    <div id="content">    <table width="100%" cellpadding="0" cellspacing="0" border="0" height="50">
+     <tbody><tr>
+      <td align="left"><h2>Данные пользователя #1000</h2></td>
+      <td align="right"><h3>[operator]&nbsp;<a href="https://logoff@manager.reg.ru/" title="Выйти из manager">[x]</a></h3></td>
+     </tr>
+    </tbody></table>
+<p>
+	<a href="https://manager.reg.ru/bill/bills?searchstring=user_id:1000">Счета этого пользователя</a>
+	<a href="https://manager.reg.ru/bill/bills?searchstring=user_id:1000&amp;nofreezed=1">(-)</a>
+	
+	
+	<a href="https://manager.reg.ru/bill/bills?searchstring=referrer_user_id:1000">Счета этого реферера</a> |
+	
+	
+	<a href="https://manager.reg.ru/manager/user_history?user_id=1000">История</a> |
+	
+	
+	<a href="https://manager.reg.ru/manager/user_record_dump?user_id=1000">rec dump</a> |
+	
+	
+	<a href="https://manager.reg.ru/logs/actions_log?user_id=1000">action log</a> |
+	
+	<a class="unavailable" href="https://manager.reg.ru/tech/create_meta_service?login=person@example.com">Создать мета услугу</a> |
+	<a class="unavailable" href="https://manager.reg.ru/tech/create_custom_service?login=person@example.com">Создать custom-услугу</a> |
+	<a class="unavailable" href="https://manager.reg.ru/tech/create_solutions_service?login=person@example.com">Мастер заказа ручных услуг</a> |
+	
+
+	
+
+	
+	<a href="https://manager.reg.ru/xml1c/cosignatory_unload?login=person@example.com">Выгрузить контрагента в 1с</a> |
+	
+	
+	<a class="available" target="_blank" href="https://manager.reg.ru/user/1000/prefs">prefs</a><br>
+	
+	<a class="user_contacts_link" style="cursor: pointer; color: #00f; border-bottom: 1px dashed #00f;">Базовая анкета
+		пользователя</a> |
+	<a href="https://manager.reg.ru/manager/persons?user_id=1000">Все персоны аккаунта</a> |
+	
+	<a href="https://manager.reg.ru/referral/history/users?referrer=1000">Рефералы</a> |
+	<br>
+	
+    
+	| <a href="https://otrs6.reg.ru/otrs/index.pl?Action=AgentTicketSphinxSearch;Subaction=Search;CustomerID=person@example.com;StateIDs=2" target="_blank">Открыть тикеты владельца аккаунта в OTRS на <b>person@example.com</b></a>
+    
+	| <a href="https://manager.reg.ru/manager/esia_identifications?user_id=1000">Идентификация через Госуслуги</a>
+	<br>
+	
+    | <a href="https://manager.reg.ru/tech/confirmation_sms/index?user_id=1000">Отправить код подтверждения</a> |
+	
+	
+	<br>
+</p>
+
+
+<div class="user_contacts_block" style="display:none">
+		
+			<p>
+			<a class="available" target="_blank" href="https://manager.reg.ru/user/1000/runic_details">Изменить базовую анкету</a><br>
+			</p>
+		
+		<p><a href="https://manager.reg.ru/manager/history_changes_of_base_form?user_id=1000">История изменений базовой анкеты</a></p>
+        
+		<p>
+		</p><p><a href="https://manager.reg.ru/manager/user_details?user_id=1000#" id="init_sync_contacts_to_1c">Синхронизировать 1С</a></p>
+		<p></p>
+        
+        <p><a href="javascript:$('#actualize_esia_identity_form').toggle();">Актуализировать данные ЕСИА</a></p>
+        <div id="actualize_esia_identity_form" class="form-group" style="display: none;">
+    <div id="actualize_esia_identity_new" class="form-group">
+        <form method="post" id="actualize_esia_identity" action="https://manager.reg.ru/manager/actualize_esia_identity" class="form-horizontal">
+            
+            <input type="hidden" name="user_id" value="1000">
+            
+            <div class="form-group" id="actualize_form">
+                <div class="col-sm-4">
+                    <button id="btn_actualize_esia_identity" class="btn btn-primary make-sended">Актуализировать</button>
+                </div>
+            </div>
+        <input type="hidden" value="00000000000000000000000000000000" name="_csrf"></form>
+    </div>
+    <br>
+</div>
+
+        
+        
+        <p><a href="javascript:$('#cancel_identification_form').toggle();">Аннулировать идентификацию владельца аккаунта</a></p>
+        <div id="cancel_identification_form" class="form-group" style="display: none;">
+    <div id="cancel_identification_new" class="form-group">
+        <form method="post" id="cancel_identification" action="https://manager.reg.ru/manager/cancel_identification" class="form-horizontal">
+            
+            <input type="hidden" name="user_id" value="1000">
+            
+            <div class="form-group" id="reasons_form">
+                <label for="reason" class="col-sm-3 control-label">Укажите причину аннулирования:</label>
+                <div class="col-sm-5">
+                    <select class="form-control" name="reason">                        <option value="account_owner_changed">Смена владельца аккаунта</option>                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="reasons_form">
+                <label for="comment" class="col-sm-3 control-label">Комментарий:</label>
+                <div class="col-sm-2">
+                    <textarea name="comment" cols="60" rows="2"></textarea>
+                </div>
+                <div class="col-sm-4">
+                    <button id="btn_cancel_identification" class="btn btn-primary make-sended">Аннулировать</button>
+                </div>
+            </div>
+        <input type="hidden" value="00000000000000000000000000000000" name="_csrf"></form>
+    </div>
+    <br>
+</div>
+
+        
+        <div>
+            <div style="float: left">
+			
+ <table border="1">  
+   <tbody><tr>
+    <td>ru_pp.birth_date</td>
+    <td>
+              15.03.1990    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.country</td>
+    <td>
+              RU    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.e_mail</td>
+    <td>
+              person@example.com    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.fax</td>
+    <td>
+                  </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.oid_esia</td>
+    <td>
+              1000000001    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.p_addr_addr</td>
+    <td>
+              Тестовая, д 1, кв 1    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.p_addr_area</td>
+    <td>
+              Москва    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.p_addr_city</td>
+    <td>
+              Москва    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.p_addr_country</td>
+    <td>
+              RU    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.p_addr_recipient</td>
+    <td>
+              Тестов Пётр Сергеевич    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.p_addr_zip</td>
+    <td>
+              101000    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.passport_date</td>
+    <td>
+              20.04.2010    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.passport_number</td>
+    <td>
+              4509123456    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.passport_place</td>
+    <td>
+              ГУ МВД РОССИИ ПО Г. МОСКВЕ    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.person</td>
+    <td>
+              Petr Sergeevich Testov    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.person_r_name</td>
+    <td>
+              Пётр    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.person_r_patronimic</td>
+    <td>
+              Сергеевич    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.person_r_surname</td>
+    <td>
+              Тестов    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.phone</td>
+    <td>
+              +79990000000    </td>
+    
+   </tr>
+  
+   <tr>
+    <td>ru_pp.sms_security_number</td>
+    <td>
+                  </td>
+    
+   </tr>
+  
+ </tbody></table>
+
+            </div>
+            <div>
+                <table id="dadata_table" border="1">
+
+                </table>
+            </div>
+        </div>
+        <div style="clear:left"></div>
+</div>
+ <form method="post" action="https://manager.reg.ru/manager/user_details?user_id=1000" id="user_details_form" class="sms_noties">
+	<div>
+	<table border="0" cellspacing="1" cellpadding="1" class="styledP" id="user_details">
+		<tbody><tr>
+			<th><abbr title="Редактировать сообщение пользователю" onclick="javascript:msg()">Login &gt;&gt;&gt;</abbr></th>
+			<td>
+				<input type="hidden" name="_csrf" value="00000000000000000000000000000000">
+				
+				
+  
+    
+  
+<b>person@example.com</b>
+				
+					<span style="color: green">E-mail подтвержден</span>
+				
+				
+					<span style="color: green">Идентификация для хостинга пройдена</span>
+				
+                
+					<span style="color: green">Идентификация через Госуслуги пройдена</span>
+				
+				
+					
+						
+							<a href="https://manager.reg.ru/manager/user_details?user_id=1000#" class="unavailable change_password_for_debug">Сменить пароль для отладки</a>
+						
+					
+				
+			
+				<div style="float:right">
+					<input type="button" class="available " value="Переместить в архив" onclick="scrollButtom()">
+				</div>
+			
+			
+			</td>
+		</tr> <!-- /Login -->
+
+		<tr>
+			<th>Аутентификация</th>
+			<td style="vertical-align: baseline;">
+				
+					
+			            
+					
+
+					<a href="https://masterkey.login.reg.ru/?user_id=1000&amp;redirect_to=https://www.reg.ru/user/welcomepage" target="_blank" title="" class="available masterkeyLink">Login</a>
+					
+					<a class="unavailable" href="https://manager.reg.ru/manager/user_change_password?user_id=1000" title="Сменить пароль" onclick="return confirm('Сменить пароль пользователя (и выслать ему уведомление)?')">См. пароль</a>
+					
+				
+				&nbsp;
+				
+				
+					<span style="color:&gt;&nbsp;&lt;span id=" su_label"="">Особые условия обслуживания</span>
+				
+				&nbsp;<textarea id="su_comment" name="special_user_comment" readonly="" cols="60" rows="3" style="resize: none;"></textarea>
+			</td>
+		</tr> <!-- /Аутентификация -->
+		</tr>
+		<tr>
+			<th>regdate</th>
+			<td>2026-07-16 09:07:12 (IP: 10.0.0.1)</td>
+		</tr>
+
+		<tr>
+			<th>lastlogin</th>
+			<td>2026-09-13 14:15:20 (IP: 10.0.0.1)</td>
+		</tr>
+
+		<tr>
+			<th>ЕСИА last_identity_id</th>
+			<td></td>
+		</tr>
+
+		<tr>
+			<th>Обслуживающая организация
+			</th>
+			<td>
+			 <table>
+				<tbody><tr>
+					<td>
+						текущая:
+						ООО "РДХ"
+					</td>
+				</tr>
+					<input type="hidden" name="company_id" value="3" id="company_id">
+				</tbody></table>
+			</td>
+		</tr> <!-- /Обслуживающие организации -->
+
+		<tr>
+			<th>Является ИП</th>
+			<td>
+				<input type="checkbox" name="is_entrepreneur" value="1">
+			</td>
+		</tr> <!-- /Прочее -->
+		<tr>
+			<th>contypes</th>
+			<td>
+				RUSURF: ru_pp
+			</td>
+		</tr>
+	</tbody></table>
+</div></form>
+</div></body></html>

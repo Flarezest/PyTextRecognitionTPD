@@ -7,6 +7,11 @@
 Домены в таблице (веб-интерфейс, отчёт) выводятся по «проблемности» — см. PROBLEMS и sort_by_problem():
 сначала свободные по WHOIS, затем те, у которых данные в Sd не сходятся с документами, и т. д.
 В выгрузке (export.json) порядок доменов — как в заявлении.
+
+С 0.6.0 у доменов физлиц есть статус идентификации через Госуслуги (ЕСИА): расширение открывает ссылку
+«Идентификация через Госуслуги» со страницы Sd домена (идентификация относится к администратору домена,
+а не к аккаунту), берёт поле state последней записи и файл данных ЕСИА. Сверка Sd ↔ ЕСИА — esia_compare().
+На вердикт дела ЕСИА не влияет.
 """
 from __future__ import annotations
 
@@ -14,7 +19,7 @@ import re
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 
-from . import names, parsers
+from . import fieldnorm, names, parsers
 from .checks import Ctx, register
 from .compare import FAIL, INFO, OK, REVIEW, WARN, Check, issuer_similarity
 from .formspec import Fields
@@ -86,6 +91,7 @@ class DomainInfo:
     error: str = ""
     service_id: str = ""
     account: str = ""                # user_id владельца услуги (страница S)
+    bill_owner: str = ""             # логин владельца счёта (колонка «Владелец» в счетах)
     group: str = ""                  # группа контактов Sd: ru_pp, ru_org, …
     kind: str = ""                   # person | org
     sd: dict = field(default_factory=dict)   # поля Sd (белый список из расширения)
@@ -96,6 +102,7 @@ class DomainInfo:
     urls: dict = field(default_factory=dict)
     whois: dict = field(default_factory=dict)
     compare: list = field(default_factory=list)   # [{field, title, sd, doc, status, detail}]
+    esia: dict = field(default_factory=dict)      # идентификация через Госуслуги: state, url, file_url, data (JSON)…
     verdict: str = ""                # итог по домену: ok | warn | review | fail | info
     note: str = ""
     loaded_at: str = ""
@@ -127,10 +134,12 @@ class DomainInfo:
     def to_dict(self) -> dict:
         d = asdict(self)
         code = problem(self)
+        es = esia_summary(self)
         d.update(fio=self.fio, passport=self.passport, holder=self.holder, kind_ru=KIND_RU.get(self.kind, "?"),
                  emails=self.emails,
                  last_admin_change=_date(self.sd.get("last_admin_change", "")),
-                 problem=code, problem_ru=PROBLEM_RU[code], problem_rank=PROBLEM_RANK[code])
+                 problem=code, problem_ru=PROBLEM_RU[code], problem_rank=PROBLEM_RANK[code],
+                 esia_rows=es["rows"], esia_status=es["status"], esia_state=es["state"], esia_ru=es["text"])
         return d
 
     @classmethod
@@ -192,6 +201,8 @@ def from_extension(domain: str, reply: dict) -> DomainInfo:
     info.service_id = str(data.get("service_id", ""))
     info.s = data.get("s") or {}
     info.account = str(data.get("account") or info.s.get("user_id", ""))
+    info.bill_owner = data.get("bill_owner") or ""
+    info.esia = data.get("esia") or {}
     info.provider = info.s.get("provider", "")
     info.group = sd.get("group", "") or info.s.get("contype", "")
     info.sd = {k: v for k, v in (sd.get("fields") or {}).items() if k != "authinfo"}
@@ -204,6 +215,86 @@ def from_extension(domain: str, reply: dict) -> DomainInfo:
     elif contype in ORG_GROUPS or info.sd.get("org_r"):
         info.kind = "org"
     return info
+
+
+# ------------------------------------------------------------------ ЕСИА (идентификация через Госуслуги)
+
+# Sd (группа ru_pp) ↔ файл данных ЕСИА. В ЕСИА last_name — фамилия, middle_name — отчество.
+ESIA_MAP = (
+    ("person_r_surname", "last_name", "Фамилия", "text"),
+    ("person_r_name", "first_name", "Имя", "text"),
+    ("person_r_patronimic", "middle_name", "Отчество", "text"),
+    ("birth_date", "birth_date", "Дата рождения", "date"),
+    ("country", "citizenship", "Гражданство", "country"),
+    ("passport_series", "rf_passport.series", "Серия паспорта", "digits"),
+    ("passport_number_short", "rf_passport.number", "Номер паспорта", "digits"),
+    ("passport_date", "rf_passport.issue_date", "Дата выдачи", "date"),
+    ("passport_place", "rf_passport.issued_by", "Кем выдан", "issuer"),
+)
+ESIA_STATUS_RU = {"match": "Sd = ЕСИА", "warn": "Sd ≈ ЕСИА", "mismatch": "Sd ≠ ЕСИА", "none": "не проходил",
+                  "no_data": "нет файла данных", "no_link": "нет ссылки на Sd", "error": "ошибка", "": ""}
+
+
+def _esia_value(data: dict, path: str) -> str:
+    cur = data
+    for part in path.split("."):
+        cur = cur.get(part) if isinstance(cur, dict) else None
+    return "" if cur is None else str(cur).strip()
+
+
+def esia_compare(info: "DomainInfo") -> list[dict]:
+    """Строки сверки Sd ↔ ЕСИА: [{field, esia_field, title, sd, esia, status, detail}] (status: ok/warn/fail/"")."""
+    data = (info.esia or {}).get("data") or {}
+    if info.kind != "person" or not data:
+        return []
+    rows = []
+    for sd_key, es_key, title, kind in ESIA_MAP:
+        sv, ev = info.sd.get(sd_key, "") or "", _esia_value(data, es_key)
+        st, det = fieldnorm.same(kind, sv, ev)
+        if st == fieldnorm.NONE and (sv or ev):
+            det = "нет в ЕСИА" if sv else "нет в Sd"
+        rows.append({"field": sd_key, "esia_field": es_key, "title": title, "sd": sv, "esia": ev, "status": st,
+                     "detail": det})
+    return rows
+
+
+def esia_summary(info: "DomainInfo") -> dict:
+    """Итог ЕСИА домена: {status, state, text, rows}. status — ключ ESIA_STATUS_RU ("" — не применимо)."""
+    e = info.esia or {}
+    out = {"status": "", "state": e.get("state", "") or "", "text": "", "rows": []}
+    if info.status != FOUND or info.kind != "person":
+        return out
+    if not e:
+        out["status"] = "no_link"
+    elif e.get("error") or e.get("json_error"):
+        out["status"] = "error"
+        out["text"] = "ошибка: " + (e.get("error") or e.get("json_error"))
+    elif not e.get("count"):
+        out["status"] = "none"
+    elif not e.get("data"):
+        out["status"] = "no_data"
+    elif (e["data"].get("status") or "success") != "success":
+        out["status"] = "error"
+        out["text"] = f"ошибка: в файле ЕСИА status = {e['data']['status']}"
+    else:
+        rows = esia_compare(info)
+        out["rows"] = rows
+        bad = [r["title"] for r in rows if r["status"] == fieldnorm.FAIL]
+        warn = [r["title"] for r in rows if r["status"] == fieldnorm.WARN]
+        n = sum(1 for r in rows if r["status"] != fieldnorm.NONE)
+        if not n:
+            out["status"], out["text"] = "no_data", "в файле ЕСИА нет полей для сверки"
+        elif bad:
+            out["status"], out["text"] = "mismatch", f"Sd ≠ ЕСИА: {', '.join(bad)}"
+        elif warn:
+            out["status"], out["text"] = "warn", f"Sd ≈ ЕСИА: {', '.join(warn)} — написано по-разному"
+        else:
+            out["status"], out["text"] = "match", f"Sd = ЕСИА ({n} из {n})"
+    if not out["text"]:
+        out["text"] = ESIA_STATUS_RU[out["status"]]
+    if out["state"]:
+        out["text"] = f"{out['state']} · {out['text']}"
+    return out
 
 
 # ------------------------------------------------------------------ сверка одного домена
@@ -423,9 +514,10 @@ class ManagerUnavailable(RuntimeError):
 
 
 def lookup_domains(request, domains: list[str], log=print, whois_lookup=None, cancel=None,
-                   timeout: float = 240) -> list[DomainInfo]:
+                   timeout: float = 240, task: str = "") -> list[DomainInfo]:
     """Загружает данные доменов по одному. request(cmd, params, timeout, on_progress) → ответ расширения
-    (см. manager_bridge.ExtensionBridge.request_sync). whois_lookup(domain) → WhoisInfo для ненайденных."""
+    (см. manager_bridge.ExtensionBridge.request_sync). whois_lookup(domain) → WhoisInfo для ненайденных.
+    task — номер загрузки: в её пределах расширение читает страницу и файл ЕСИА одной персоны один раз."""
     out: list[DomainInfo] = []
     stop_reason = ""
     for n, d in enumerate(domains, 1):
@@ -438,7 +530,7 @@ def lookup_domains(request, domains: list[str], log=print, whois_lookup=None, ca
         uni = unicode_name(d)
         log(f"manager [{n}/{len(domains)}]: {uni}…")
         try:
-            reply = request("lookup", {"domain": uni, "ascii": ascii_name}, timeout,
+            reply = request("lookup", {"domain": uni, "ascii": ascii_name, "task": task}, timeout,
                             lambda m: log(f"manager: {m.get('message') or m.get('step')}"))
         except ManagerUnavailable as e:
             reply = {"ok": False, "error": {"code": "no_extension", "message": str(e)}}
@@ -447,6 +539,9 @@ def lookup_domains(request, domains: list[str], log=print, whois_lookup=None, ca
         info = from_extension(d, reply)
         if info.status == FOUND:
             log(f"manager: {uni} — найден, {KIND_RU.get(info.kind, '?')}, {info.holder or '—'}, provider {info.provider or '—'}")
+            es = esia_summary(info)
+            if es["status"]:
+                log(f"manager: {uni} — ЕСИА: {es['text']}")
         elif info.status == NOT_FOUND:
             log(f"manager: {uni} — не найден в manager")
             if whois_lookup is not None:

@@ -77,6 +77,28 @@ textarea{font:inherit;color:var(--text);background:var(--input);border:1px solid
 #domTable ul{margin:4px 0 0 16px;padding:0}
 #domTable tr.grp td{background:var(--bg);font-weight:600;font-size:12.5px;padding-top:10px}
 .wrap{overflow-x:auto}
+nav.tabs{display:flex;gap:4px;padding:0 24px;background:var(--card);border-bottom:1px solid var(--line)}
+nav.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;padding:10px 14px;color:var(--muted);font-weight:600}
+nav.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+td.c-ok,input.c-ok,textarea.c-ok{background:var(--ok)}
+td.c-fail,input.c-fail,textarea.c-fail{background:var(--fail)}
+td.c-warn,input.c-warn,textarea.c-warn{background:var(--warn)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px 18px;margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.kv div b{display:block;font-size:12px;color:var(--muted);font-weight:600}
+td.k{white-space:nowrap;font-weight:600}
+.mono{font-family:Consolas,monospace;font-size:11.5px;color:var(--muted);font-weight:400}
+.msg.ok{background:var(--ok);color:var(--ok-t)} .msg.warn{background:var(--warn);color:var(--warn-t)} .msg.fail{background:var(--fail);color:var(--fail-t)}
+.esiaBtn{font-size:11.5px;padding:1px 7px;margin-left:4px;border-color:var(--accent);color:var(--accent)}
+button.sm{padding:2px 8px;font-size:12px}
+.ownGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 14px}
+.ownGrid label.f{min-width:0}
+.ownGrid input[type=text],.ownGrid textarea{width:100%;min-width:0}
+.ownGrid .wide{grid-column:1/-1}
+dialog{border:1px solid var(--line);border-radius:10px;padding:0;max-width:900px;width:94vw;background:var(--card);color:var(--text)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog .hd{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+dialog .hd h3{margin:0;font-size:16px}
+dialog .bd{padding:14px 18px;max-height:75vh;overflow:auto}
 </style>
 </head>
 <body>
@@ -85,7 +107,12 @@ textarea{font:inherit;color:var(--text);background:var(--input);border:1px solid
   <span class="meta" id="meta">загрузка…</span>
   <span class="ext" id="extState" title="Расширение Chrome «doctool — manager»"><span class="dot"></span><span>manager: …</span></span>
 </header>
+<nav class="tabs">
+  <button data-tab="tabCheck" class="on">Проверка заявления и домены</button>
+  <button data-tab="tabOwner">Смена владельца ЛК</button>
+</nav>
 <main>
+<div id="tabCheck">
 <section class="card" id="formCard">
   <h2>Новая проверка</h2>
   <div class="row">
@@ -128,7 +155,7 @@ textarea{font:inherit;color:var(--text);background:var(--input);border:1px solid
 </section>
 
 <section class="card" id="domCard">
-  <h2>Домены в manager <span class="hint">— данные Sd и S через расширение Chrome</span></h2>
+  <h2>Домены в manager <span class="hint">— данные Sd, S и ЕСИА (Госуслуги) через расширение Chrome</span></h2>
   <div class="row">
     <label class="f" style="flex:1;min-width:280px">Домены (через пробел, запятую или с новой строки)
       <textarea id="domList" placeholder="example.ru&#10;пример.рф"></textarea></label>
@@ -141,7 +168,7 @@ textarea{font:inherit;color:var(--text);background:var(--input);border:1px solid
   </div>
   <div id="domLog" class="hidden"></div>
   <div class="wrap"><table id="domTable" class="hidden"><thead><tr>
-    <th>Домен</th><th>manager</th><th>Администратор (Sd)</th><th>Паспорт / ИНН</th><th>Страна</th>
+    <th>Домен</th><th>manager</th><th>Администратор (Sd)</th><th>Паспорт / ИНН</th><th>ЕСИА</th><th>Страна</th>
     <th>Смена админа</th><th>Provider</th><th>Аккаунт</th><th>Сверка с документами</th></tr></thead><tbody></tbody></table></div>
 </section>
 
@@ -177,7 +204,72 @@ textarea{font:inherit;color:var(--text);background:var(--input);border:1px solid
   <details><summary>Выгрузка для системы (предпросмотр)</summary><pre id="record"></pre></details>
   <p class="hint" id="caseDir"></p>
 </section>
+</div>
+
+<!-- ================================================================ смена владельца ЛК -->
+<div id="tabOwner" class="hidden">
+<section class="card">
+  <h2>1. Аккаунт</h2>
+  <p class="hint">Номер аккаунта, «Данные пользователя #…» или «Базовая анкета пользователя #…», ссылка из manager, «договор № …»,
+    логин или e-mail, домен (аккаунт — владелец услуги домена). Пока только физлица.</p>
+  <div class="row">
+    <label class="f" style="flex:1;min-width:280px">Пользователь <input type="text" id="ownQuery" placeholder="15904265 / Данные пользователя #15904265 / login@example.com / example.ru"></label>
+    <button class="primary" id="ownLoad">Загрузить из manager</button>
+  </div>
+  <div class="hint" id="ownParsed" style="margin-top:6px"></div>
+  <div id="ownInfo" class="kv hidden"></div>
+  <div id="ownNotes"></div>
+</section>
+
+<section class="card">
+  <h2>2. Текущий владелец: базовая анкета ↔ заявление</h2>
+  <p class="hint">Данные заявления пока вводятся вручную. Зелёный — совпадает, красный — расходится, жёлтый — «кем выдан» написан по-разному,
+    без цвета — сравнивать не с чем. Сравнение без учёта регистра, ё/е, пробелов и знаков препинания; паспорт и телефон — по цифрам.</p>
+  <div class="wrap"><table id="ownCmp"><thead><tr><th>Поле</th><th>Базовая анкета (manager)</th><th style="width:38%">Заявление</th><th>Итог</th></tr></thead><tbody></tbody></table></div>
+  <div class="actions"><span id="ownCmpSum" class="hint"></span></div>
+  <details><summary>Все поля базовой анкеты</summary><table><tbody id="ownBaAll"></tbody></table></details>
+</section>
+
+<section class="card">
+  <h2>3. Новый владелец (физлицо) → базовая анкета в manager</h2>
+  <p class="hint">«Заполнить автоматически» можно нажать в любой момент: программа откроет (или найдёт) вкладку manager «Базовая анкета пользователя #…»
+    этого аккаунта и заменит в ней поля, которые заполнены здесь; пустые поля не трогает. <b>«Сохранить» в manager нажимаете вы.</b>
+    Гражданство и страну почтового адреса выставляете сами; English name пересчитывает сама страница manager.</p>
+  <div class="ownGrid" id="ownForm">
+    <label class="f">Фамилия <input type="text" data-k="surname"></label>
+    <label class="f">Имя <input type="text" data-k="name"></label>
+    <label class="f">Отчество <input type="text" data-k="patronymic"></label>
+    <label class="f">Дата рождения <input type="text" data-k="birth_date" placeholder="ДД.ММ.ГГГГ"></label>
+    <label class="f">Серия и номер паспорта <input type="text" data-k="passport" placeholder="4021 925790"></label>
+    <label class="f wide">Кем и когда выдан документ <span class="hint">(как в заявлении — дата и «кем выдан» разделятся сами)</span>
+      <input type="text" data-k="issued" placeholder="ГУ МВД России по г. Санкт-Петербургу и Ленинградской области, 24.08.2021"></label>
+    <label class="f">Дата выдачи <span class="hint">(если не из строки выше)</span> <input type="text" data-k="passport_date" placeholder="ДД.ММ.ГГГГ"></label>
+    <label class="f" style="grid-column:span 2">Кем выдан <span class="hint">(если не из строки выше)</span> <input type="text" data-k="passport_place"></label>
+    <label class="f wide">Адрес регистрации <span class="hint">(→ «Почтовый адрес» 1 в 1, город — из адреса)</span>
+      <textarea data-k="address" rows="2"></textarea></label>
+    <label class="f">Город <span class="hint">(пусто — из адреса)</span> <input type="text" data-k="city"></label>
+    <label class="f">Индекс <span class="hint">(пусто — останется прежний)</span> <input type="text" data-k="zip"></label>
+    <label class="f">Получатель <span class="hint">(пусто — ФИО)</span> <input type="text" data-k="recipient"></label>
+    <label class="f">Телефон <input type="text" data-k="phone"></label>
+    <label class="f">Email <input type="text" data-k="email"></label>
+  </div>
+  <div class="wrap" style="margin-top:14px"><table id="ownPrev"><thead><tr><th>Поле в manager</th><th>Будет вписано</th><th>Сейчас в анкете</th></tr></thead><tbody></tbody></table></div>
+  <ul id="ownPrevNotes" class="hint"></ul>
+  <div class="actions">
+    <button class="primary" id="ownFill">Заполнить автоматически</button>
+    <button id="ownUndo" disabled title="Вернуть в форме manager значения, которые были до заполнения (пока вы не нажали «Сохранить»)">Вернуть как было</button>
+    <button id="ownVerify" disabled title="Перечитать базовую анкету после «Сохранить» и сверить с тем, что заполняли">Проверить, что сохранилось</button>
+    <button id="ownClear">Очистить форму</button>
+  </div>
+  <div id="ownFillMsg"></div>
+</section>
+</div>
 </main>
+
+<dialog id="esiaDlg">
+  <div class="hd"><h3 id="esiaTitle">ЕСИА ↔ Sd</h3><button style="margin-left:auto" onclick="document.getElementById('esiaDlg').close()">Закрыть</button></div>
+  <div class="bd" id="esiaBody"></div>
+</dialog>
 <div id="zoom"><img alt=""></div>
 
 <script>
@@ -307,6 +399,8 @@ function setDomReport(url){ dom.reportUrl = url; $('#domReport').disabled = !url
 // ------------------------------------------------------------------ домены в manager
 const MST = {found:'найден', not_found:'не найден', error:'ошибка'};
 function renderDomains(items){
+  dom.items = {};
+  items.forEach(d => dom.items[d.domain] = d);
   $('#domTable').classList.toggle('hidden', !items.length);
   // сервер присылает домены по проблемности (свободные → данные не сходятся → …); здесь — заголовки групп
   items = [...items].sort((a, b) => (a.problem_rank ?? 99) - (b.problem_rank ?? 99));
@@ -315,7 +409,7 @@ function renderDomains(items){
   let grp = null;
   $('#domTable tbody').innerHTML = items.map(d => {
     const head = d.problem && d.problem !== grp
-      ? (grp = d.problem, `<tr class="grp"><td colspan="9">${esc(d.problem_ru || d.problem)} — ${cnt[d.problem]}</td></tr>`) : '';
+      ? (grp = d.problem, `<tr class="grp"><td colspan="10">${esc(d.problem_ru || d.problem)} — ${cnt[d.problem]}</td></tr>`) : '';
     return head + domainRow(d);
   }).join('');
 }
@@ -329,7 +423,7 @@ function domainRow(d){
       : w.status === 'error' ? 'WHOIS недоступен: ' + esc(w.error) : '';
     return `<tr><td><b>${esc(d.domain)}</b></td>
       <td><span class="badge s-${d.status==='not_found'?'fail':'review'}">${MST[d.status]||d.status}</span></td>
-      <td colspan="7">${esc(d.error)}${wt ? `<br>${wt}` : ''}${w.manual_url ? ` · ${link(w.manual_url,'проверить WHOIS вручную')}` : ''}</td></tr>`;
+      <td colspan="8">${esc(d.error)}${wt ? `<br>${wt}` : ''}${w.manual_url ? ` · ${link(w.manual_url,'проверить WHOIS вручную')}` : ''}</td></tr>`;
   }
   const person = d.kind === 'person', org = d.kind === 'org';
   const mail = (d.emails||[]).length ? `<br><small>e-mail: ${d.emails.map(esc).join(', ')}</small>` : '';
@@ -340,14 +434,16 @@ function domainRow(d){
               : org ? `ИНН ${esc(sd.code||'—')}` : '—';
   const cmp = (d.compare||[]).filter(r => r.status !== 'ok');
   const sv = d.verdict ? `<span class="badge s-${d.verdict}">${ST[d.verdict]}</span>` : '';
-  return `<tr><td><b>${esc(d.domain)}</b><br><small>${link((d.urls||{}).sd,'Sd')} ${link((d.urls||{}).s,'S')}</small></td>
+  const esiaBtn = d.esia && Object.keys(d.esia).length ? `<button class="sm esiaBtn" data-esia="${esc(d.domain)}">ESIA</button>` : '';
+  const accBtn = d.account ? ` <button class="sm" data-acc="${esc(d.account)}" title="Открыть вкладку «Смена владельца ЛК» с этим аккаунтом">→ ЛК</button>` : '';
+  return `<tr><td><b>${esc(d.domain)}</b><br><small>${link((d.urls||{}).sd,'Sd')} ${link((d.urls||{}).s,'S')}</small>${esiaBtn}</td>
     <td><span class="badge s-ok">найден</span><br><small>${esc(d.service_status||'')}</small></td>
-    <td>${who}</td><td>${doc}</td><td>${esc(sd.country||sd.o_country_code||'—')}</td><td>${esc(d.last_admin_change||'—')}</td>
-    <td>${esc(d.provider||'—')}</td><td>${esc(d.account||'—')}</td>
+    <td>${who}</td><td>${doc}</td><td>${esiaCell(d)}</td><td>${esc(sd.country||sd.o_country_code||'—')}</td><td>${esc(d.last_admin_change||'—')}</td>
+    <td>${esc(d.provider||'—')}</td><td>${esc(d.account||'—')}${accBtn}</td>
     <td>${d.verdict ? '' : '<small>сверка — после проверки заявления и паспорта</small>'}${sv}${cmp.length ? '<ul>' + cmp.map(r => `<li>${esc(r.title)}: ${ST[r.status]}${r.detail ? ' — ' + esc(r.detail) : ''}${r.status==='fail' ? `<br><small>Sd: ${esc(r.sd)} · документы: ${esc(r.doc)}</small>` : ''}</li>`).join('') + '</ul>' : ''}</td></tr>`;
 }
 
-const dom = {taskId:null, logLen:0, timer:null};
+const dom = {taskId:null, logLen:0, timer:null, items:{}};
 $('#domList').addEventListener('input', () => $('#domList').dataset.touched = '1');
 $('#domLoad').addEventListener('click', async () => {
   $('#domHint').textContent = '';
@@ -411,6 +507,184 @@ document.addEventListener('click', e => {
   if (e.target.matches('td.crop img')){ $('#zoom img').src = e.target.src; $('#zoom').style.display = 'flex'; }
 });
 $('#zoom').addEventListener('click', () => $('#zoom').style.display = 'none');
+
+// ------------------------------------------------------------------ ЕСИА (идентификация через Госуслуги)
+const ESIA_CLS = {match:'ok', warn:'warn', mismatch:'fail', none:'info', no_data:'review', no_link:'info', error:'review'};
+const C = st => st ? ' c-' + st : '';
+function esiaCell(d){
+  if (!d.esia_status) return '<small>—</small>';
+  const st = d.esia_state ? `<span class="badge s-${d.esia_state === 'approved' ? 'ok' : 'info'}">${esc(d.esia_state)}</span><br>` : '';
+  const t = d.esia_state ? (d.esia_ru || '').replace(d.esia_state + ' · ', '') : d.esia_ru;
+  return st + `<span class="badge s-${ESIA_CLS[d.esia_status] || 'info'}">${esc(t)}</span>`;
+}
+function showEsia(d){
+  const e = d.esia || {}, l = e.latest || {}, data = e.data || {}, p = data.rf_passport || {};
+  const lk = (u, t) => u ? `<a href="${esc(u)}" target="_blank">${t}</a>` : '';
+  $('#esiaTitle').textContent = `ЕСИА ↔ Sd — ${d.domain}`;
+  const why = {none: 'Записей об идентификации через Госуслуги нет.', no_link: 'На странице Sd нет ссылки «Идентификация через Госуслуги».',
+    no_data: 'Файла данных ЕСИА нет или он не загрузился' + (e.json_error ? ': ' + e.json_error : '.'), error: d.esia_ru}[d.esia_status] || '';
+  const rows = (d.esia_rows || []).map(r => `<tr><td class="k">${esc(r.title)}</td>
+    <td class="${C(r.status)}">${esc(r.sd) || '<span class="hint">пусто</span>'}<br><span class="mono">${esc(r.field)}</span></td>
+    <td class="${C(r.status)}">${esc(r.esia) || '<span class="hint">пусто</span>'}<br><span class="mono">${esc(r.esia_field)}</span></td>
+    <td>${r.detail ? `<small>${esc(r.detail)}</small>` : ''}</td></tr>`).join('');
+  const hist = (e.history || []).length > 1 ? `<details><summary>Все попытки идентификации (${e.history.length})</summary><table>
+    <tr><th>state</th><th>создано</th><th>обработано</th><th>action</th><th>reason / comment</th></tr>
+    ${e.history.map(h => `<tr><td>${esc(h.state)}</td><td>${esc(h.creation_date)}</td><td>${esc(h.processed_date)}</td><td>${esc(h.action)}</td><td>${esc([h.reason, h.comment].filter(Boolean).join(' / '))}</td></tr>`).join('')}</table></details>` : '';
+  $('#esiaBody').innerHTML = `<div class="kv" style="margin-top:0">
+      <div><b>state</b>${e.state ? `<span class="badge s-${e.state === 'approved' ? 'ok' : 'info'}">${esc(e.state)}</span>` : '—'}</div>
+      <div><b>Создано / обработано</b>${esc(l.creation_date || '—')} / ${esc(l.processed_date || '—')}</div>
+      <div><b>action</b>${esc(l.action || '—')}${l.reason ? '<br>reason: ' + esc(l.reason) : ''}${l.comment ? '<br>' + esc(l.comment) : ''}</div>
+      <div><b>Данные ЕСИА</b>${data.trusted === undefined ? '—' : 'trusted: ' + (data.trusted ? 'да' : 'нет')}${p.vrf_stu ? ' · паспорт: ' + esc(p.vrf_stu) : ''}</div>
+      <div><b>Ссылки</b>${[lk(e.url, 'Идентификация через Госуслуги'), lk(e.file_url, 'JSON-файл'), lk((d.urls || {}).sd, 'Sd')].filter(Boolean).join(' · ')}</div>
+    </div>
+    ${why ? `<div class="msg">${esc(why)}</div>` : ''}
+    ${rows ? `<table style="margin-top:12px"><tr><th>Поле</th><th>Sd (ru_pp)</th><th>ЕСИА (JSON)</th><th></th></tr>${rows}</table>
+      <p class="hint">Зелёный — совпадает, красный — расходится, жёлтый — «кем выдан» написан по-разному; без цвета — значения нет с одной из сторон.</p>` : ''}
+    ${hist}`;
+  $('#esiaDlg').showModal();
+}
+
+// ------------------------------------------------------------------ вкладки
+function showTab(id){
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === id));
+  ['tabCheck', 'tabOwner'].forEach(t => $('#' + t).classList.toggle('hidden', t !== id));
+  try { localStorage.setItem('doctool.tab', id); } catch (e) {}
+}
+document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+try { const t = localStorage.getItem('doctool.tab'); if (t === 'tabOwner') showTab(t); } catch (e) {}
+document.addEventListener('click', e => {
+  const es = e.target.closest && e.target.closest('[data-esia]');
+  if (es && dom.items[es.dataset.esia]) showEsia(dom.items[es.dataset.esia]);
+  const ac = e.target.closest && e.target.closest('[data-acc]');
+  if (ac){ showTab('tabOwner'); $('#ownQuery').value = ac.dataset.acc; ownParse(); ownLoad(); window.scrollTo(0, 0); }
+});
+
+// ------------------------------------------------------------------ смена владельца ЛК
+const own = {acc:null, last:null, timers:{}};
+const later = (key, fn, ms = 300) => { clearTimeout(own.timers[key]); own.timers[key] = setTimeout(fn, ms); };
+async function api(url, body){
+  const r = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.detail || ('HTTP ' + r.status));
+  return j;
+}
+const msg = (cls, html) => `<div class="msg ${cls}">${html}</div>`;
+async function ownParse(){
+  const q = $('#ownQuery').value.trim();
+  if (!q){ $('#ownParsed').textContent = ''; return; }
+  try { $('#ownParsed').innerHTML = 'Распознано: <b>' + esc((await api('/api/owner/parse', {query: q})).label) + '</b>'; } catch (e) {}
+}
+$('#ownQuery').addEventListener('input', () => later('parse', ownParse));
+$('#ownQuery').addEventListener('keydown', e => { if (e.key === 'Enter') ownLoad(); });
+$('#ownLoad').addEventListener('click', () => ownLoad());
+async function ownLoad(){
+  const q = $('#ownQuery').value.trim();
+  if (!q){ $('#ownNotes').innerHTML = msg('warn', 'Введите номер аккаунта, логин, e-mail или домен'); return; }
+  $('#ownLoad').disabled = true; $('#ownNotes').innerHTML = msg('', 'Загрузка из manager…');
+  try {
+    const j = await api('/api/owner/account', {query: q});
+    if (!j.ok){ $('#ownNotes').innerHTML = msg('fail', esc(j.error.message)); return; }
+    own.acc = j.account; own.last = null; $('#ownUndo').disabled = $('#ownVerify').disabled = true; $('#ownFillMsg').innerHTML = '';
+    renderOwnAcc(); ownCompare(); ownPreview();
+  } catch (e) { $('#ownNotes').innerHTML = msg('fail', esc(e.message)); }
+  finally { $('#ownLoad').disabled = false; }
+}
+function renderOwnAcc(){
+  const a = own.acc, u = a.urls || {}, lk = (h, t) => h ? `<a href="${esc(h)}" target="_blank">${t}</a>` : '';
+  const via = a.via_domain ? `<div><b>Найден по домену</b>${esc(a.via_domain.domain)}${a.via_domain.bill_owner ? `<br><small>владелец счёта: ${esc(a.via_domain.bill_owner)}</small>` : ''}</div>` : '';
+  $('#ownInfo').innerHTML = `<div><b>Аккаунт</b>#${esc(a.user_id)} · <small>${[lk(u.user_details, 'Данные пользователя'), lk(u.runic, 'Базовая анкета'), lk(u.esia, 'Госуслуги')].filter(Boolean).join(' · ')}</small></div>
+    <div><b>Логин</b>${esc(a.login || '—')}</div>
+    <div><b>Тип базовой анкеты</b>${esc(a.type_ru)}${a.ba_group ? ` <small>(${esc(a.ba_group)})</small>` : ''}</div>
+    <div><b>Обслуживающая организация</b>${a.servicing_org ? 'текущая: ' + esc(a.servicing_org) : '—'}</div>
+    <div><b>Идентификация аккаунта через Госуслуги</b>${esc(a.esia_account || '—')}</div>${via}`;
+  $('#ownInfo').classList.remove('hidden');
+  $('#ownNotes').innerHTML = (a.notes || []).map(n => msg('warn', esc(n))).join('');
+  $('#ownBaAll').innerHTML = Object.entries(a.ba_all || {}).map(([k, v]) => `<tr><td class="mono">${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')
+    || '<tr><td class="hint">базовая анкета пустая</td></tr>';
+}
+// сверка: строки — из ответа сервера (поля и заголовки — account.OWNER_FIELDS)
+async function ownCompare(){
+  const app = {};
+  $('#ownCmp tbody').querySelectorAll('input[data-f]').forEach(i => app[i.dataset.f] = i.value);
+  let j;
+  try { j = await api('/api/owner/compare', {ba: own.acc ? own.acc.ba : {}, app}); } catch (e) { return; }
+  const tb = $('#ownCmp tbody');
+  if (!tb.children.length){
+    tb.innerHTML = j.rows.map(r => `<tr data-f="${r.field}"><td class="k">${esc(r.title)} <span class="mono">ru_pp.${esc(r.field)}</span></td>
+      <td class="ba"></td><td><input type="text" data-f="${r.field}"></td><td class="st"></td></tr>`).join('');
+    tb.querySelectorAll('input').forEach(i => i.addEventListener('input', () => later('cmp', ownCompare)));
+  }
+  const ST2 = {ok: 'совпадает', fail: 'расходится', warn: 'похоже'};
+  j.rows.forEach(r => {
+    const tr = tb.querySelector(`tr[data-f="${r.field}"]`);
+    tr.querySelector('.ba').textContent = r.ba;
+    tr.querySelector('.ba').className = 'ba' + C(r.status);
+    tr.querySelector('input').className = C(r.status).trim();
+    tr.querySelector('.st').innerHTML = (r.status ? `<span class="badge s-${r.status}">${ST2[r.status]}</span>` : '')
+      + (r.detail ? `<br><small class="hint">${esc(r.detail)}</small>` : '');
+  });
+  $('#ownCmpSum').innerHTML = !j.total ? 'Введите данные заявления' : j.mismatch.length
+    ? `<span class="badge s-fail">Расхождения: ${j.mismatch.length}</span> ${esc(j.mismatch.join(', '))}`
+    : `<span class="badge s-ok">Совпадает ${j.ok} из ${j.total}</span>${j.warn.length ? ' · по-разному написано: ' + esc(j.warn.join(', ')) : ''}`;
+}
+// новый владелец
+const ownForm = () => { const f = {}; $('#ownForm').querySelectorAll('[data-k]').forEach(i => f[i.dataset.k] = i.value); return f; };
+$('#ownForm').addEventListener('input', () => later('prev', ownPreview));
+async function ownPreview(){
+  let j;
+  try { j = await api('/api/owner/prepare', {form: ownForm()}); } catch (e) { return; }
+  const cur = (own.acc && own.acc.runic) || {};
+  $('#ownPrev tbody').innerHTML = j.preview.map(r => `<tr><td class="k">${esc(r.title)} <span class="mono">${esc(r.field)}</span></td>
+    <td class="${r.value && r.value !== (cur[r.field] || '') ? 'c-warn' : ''}">${r.value ? esc(r.value) : '<span class="hint">не трогаем</span>'}</td>
+    <td>${own.acc ? esc(cur[r.field] || '') : '<span class="hint">загрузите аккаунт</span>'}</td></tr>`).join('');
+  $('#ownPrevNotes').innerHTML = [...j.notes.map(esc), 'Выставьте сами в manager: ' + esc(j.manual.join(', ')),
+    'Не трогаем: ' + esc(j.untouched.join(', '))].map(x => `<li>${x}</li>`).join('');
+}
+$('#ownClear').addEventListener('click', () => { $('#ownForm').querySelectorAll('[data-k]').forEach(i => i.value = ''); ownPreview(); });
+$('#ownFill').addEventListener('click', async () => {
+  if (!own.acc){ $('#ownFillMsg').innerHTML = msg('warn', 'Сначала загрузите аккаунт (раздел 1)'); return; }
+  $('#ownFill').disabled = true; $('#ownFillMsg').innerHTML = msg('', `Открываю базовую анкету #${esc(own.acc.user_id)} в Chrome…`);
+  try {
+    const j = await api('/api/owner/fill', {user_id: own.acc.user_id, form: ownForm()});
+    if (!j.ok){
+      const e = j.error || {};
+      $('#ownFillMsg').innerHTML = msg(e.code === 'not_person' ? 'warn' : 'fail', esc(e.message || 'ошибка'));
+      return;
+    }
+    const d = j.data;
+    own.last = {fields: j.fields, changed: d.changed};
+    own.acc.runic = d.values || own.acc.runic;
+    $('#ownUndo').disabled = !d.changed.length; $('#ownVerify').disabled = false;
+    $('#ownFillMsg').innerHTML = msg('ok', `<b>Вкладка «Базовая анкета пользователя #${esc(d.user_id)}» ${d.tab_opened ? 'открыта' : 'найдена'} и заполнена.</b><br>
+      Заменено полей: ${d.changed.length}${d.changed.length ? ' — ' + esc(d.changed.map(c => c.label).join(', ')) : ''}.
+      ${d.same.length ? `Уже были такими: ${d.same.length}. ` : ''}${d.missing.length ? `Не найдены на странице: ${esc(d.missing.join(', '))}. ` : ''}<br>
+      Выставьте сами: <b>Гражданство</b>, <b>Страна почтового адреса</b>. Проверьте форму (заполненные поля обведены) и нажмите «Сохранить» в manager.`);
+  } catch (e) { $('#ownFillMsg').innerHTML = msg('fail', esc(e.message)); }
+  finally { $('#ownFill').disabled = false; }
+});
+$('#ownUndo').addEventListener('click', async () => {
+  if (!own.last) return;
+  const fields = {}; own.last.changed.forEach(c => fields[c.name] = c.old);
+  try {
+    const j = await api('/api/owner/fill', {user_id: own.acc.user_id, restore: true, fields});
+    $('#ownFillMsg').innerHTML = j.ok ? msg('', `В форме manager возвращены прежние значения: ${j.data.changed.length} полей. Если вы уже нажали «Сохранить», это не отменит сохранение.`)
+      : msg('fail', esc((j.error || {}).message || 'ошибка'));
+    if (j.ok){ $('#ownUndo').disabled = true; own.acc.runic = j.data.values || own.acc.runic; }
+  } catch (e) { $('#ownFillMsg').innerHTML = msg('fail', esc(e.message)); }
+});
+$('#ownVerify').addEventListener('click', async () => {
+  if (!own.last) return;
+  try {
+    const j = await api('/api/owner/verify', {user_id: own.acc.user_id, fields: own.last.fields});
+    if (!j.ok){ $('#ownFillMsg').innerHTML = msg('fail', esc((j.error || {}).message || 'ошибка')); return; }
+    const v = j.verify;
+    own.acc.runic = j.account.runic; ownPreview();
+    $('#ownFillMsg').innerHTML = msg(v.ok ? 'ok' : 'fail', (v.ok ? '<b>Базовая анкета перечитана: всё сохранено так, как заполняли.</b>'
+      : `<b>Сохранено не всё: ${esc(v.mismatch.join(', '))}.</b> Возможно, «Сохранить» ещё не нажато.`)
+      + `<table>${v.rows.map(r => `<tr><td>${esc(r.title)}</td><td class="${C(r.status)}">${esc(r.actual)}</td><td class="hint">${r.status === 'ok' ? '' : 'ожидалось: ' + esc(r.expected)}</td></tr>`).join('')}</table>`);
+  } catch (e) { $('#ownFillMsg').innerHTML = msg('fail', esc(e.message)); }
+});
+ownCompare(); ownPreview();
 loadMeta();
 </script>
 </body>
