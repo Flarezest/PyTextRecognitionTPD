@@ -7,3 +7,4 @@ export.json
 *.png
 *.jpg
 *.pdf
+/doctool_llm_test/
