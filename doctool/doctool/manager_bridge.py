@@ -1,4 +1,4 @@
-"""Связь с расширением Chrome «doctool — manager» по WebSocket (ws://127.0.0.1:<порт>/ext).
+"""Связь с расширением Chrome «PySimpleManager» по WebSocket (ws://127.0.0.1:<порт>/ext).
 
 Расширение само подключается к doctool, когда Chrome запущен. doctool отправляет ему команды и ждёт ответ.
 Расширение работает от имени оператора, с его входом в manager. doctool логины не хранит и к manager сам
@@ -110,7 +110,7 @@ class ExtensionBridge:
     # ---------------------------------------------------------------- запросы
     async def request(self, cmd: str, params: dict, timeout: float = 240, on_progress=None) -> dict:
         if self.ws is None:
-            raise ManagerUnavailable("Расширение «doctool — manager» не подключено: откройте Chrome с расширением")
+            raise ManagerUnavailable("Расширение «PySimpleManager» не подключено: откройте Chrome с расширением")
         rid = uuid.uuid4().hex[:12]
         fut = asyncio.get_running_loop().create_future()
         self._pending[rid] = fut
@@ -128,7 +128,7 @@ class ExtensionBridge:
     def request_sync(self, cmd: str, params: dict, timeout: float = 240, on_progress=None) -> dict:
         """Для фоновых потоков (проверка дела, задача загрузки): ждёт ответ расширения."""
         if self.ws is None or self.loop is None:
-            raise ManagerUnavailable("Расширение «doctool — manager» не подключено: откройте Chrome с расширением")
+            raise ManagerUnavailable("Расширение «PySimpleManager» не подключено: откройте Chrome с расширением")
         fut = asyncio.run_coroutine_threadsafe(self.request(cmd, params, timeout, on_progress), self.loop)
         try:
             return fut.result(timeout + 5)

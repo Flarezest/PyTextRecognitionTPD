@@ -1,7 +1,7 @@
 """Локальный веб-интерфейс: python -m doctool web  →  http://127.0.0.1:8765
 
 Работает без интернета: страница и скрипты отдаются этим же сервером, внешних CDN нет.
-Сюда же подключается расширение Chrome «doctool — manager» (WebSocket /ext) — через него
+Сюда же подключается расширение Chrome «PySimpleManager» (WebSocket /ext) — через него
 загружаются данные доменов (Sd, S, ЕСИА) и аккаунтов из manager и заполняется базовая анкета
 (вкладка «Смена владельца ЛК», API /api/owner/*).
 """
@@ -184,7 +184,7 @@ def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-inst
         if not doms:
             raise HTTPException(400, "Укажите домены")
         if not bridge.connected():
-            raise HTTPException(409, "Расширение «doctool — manager» не подключено: откройте Chrome с расширением "
+            raise HTTPException(409, "Расширение «PySimpleManager» не подключено: откройте Chrome с расширением "
                                      "(значок расширения покажет состояние связи)")
         job_id = body.get("job_id") or None
         job = jobs.get(job_id) if job_id else None
@@ -242,7 +242,7 @@ def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-inst
     # ---------------------------------------------------------------- смена владельца ЛК (физлица)
     def _need_extension():
         if not bridge.connected():
-            raise HTTPException(409, "Расширение «doctool — manager» не подключено: откройте Chrome с расширением "
+            raise HTTPException(409, "Расширение «PySimpleManager» не подключено: откройте Chrome с расширением "
                                      "(значок расширения покажет состояние связи)")
 
     def _ext(cmd: str, params: dict, timeout: float = 240, log=None) -> dict:

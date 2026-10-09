@@ -379,7 +379,7 @@ def build(domains: list[dict], case_id: str = "", case_title: str = "", checks: 
 <h1>{head}</h1>
 {f'<div class="src">{_e(case_title)}</div>' if case_title else ''}
 <div class="src">Сформировано {datetime.now():%d.%m.%Y %H:%M}. Доменов: {len(items)}. Данные Sd и S — из manager через расширение
-«doctool — manager»; все данные обработаны локально.</div>
+«PySimpleManager»; все данные обработаны локально.</div>
 <div class="verdict {vcls}">{summary or 'нет доменов'}</div>
 <h2>Сверка</h2>
 {_checks_table(dom_checks) if dom_checks else '<p class=src>нет</p>'}

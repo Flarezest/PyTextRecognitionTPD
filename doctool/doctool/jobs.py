@@ -82,7 +82,7 @@ class JobManager:
             progress.log("[!] В заявлении не найдены домены — данные из manager не загружались")
             return
         if self.manager is None or not self.manager.bridge.connected():
-            msg = ("Данные Sd не загружены: расширение «doctool — manager» не подключено "
+            msg = ("Данные Sd не загружены: расширение «PySimpleManager» не подключено "
                    "(Chrome с расширением должен быть открыт). Можно загрузить позже кнопкой.")
             progress.log("[!] " + msg)
             res.notes.append(msg)

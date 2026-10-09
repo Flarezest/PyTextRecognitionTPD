@@ -1,4 +1,4 @@
-/* doctool — manager: фоновая часть расширения (service worker).
+/* PySimpleManager: фоновая часть расширения (service worker).
  *
  * 1) Держит WebSocket-соединение с doctool на этом компьютере: ws://127.0.0.1:<порт>/ext.
  * 2) Получает команды и выполняет их по очереди:
