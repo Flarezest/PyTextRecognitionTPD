@@ -281,9 +281,13 @@ def test_esia_mismatch_and_states():
     assert with_esia(None).to_dict()["esia_status"] == "no_link"
     assert with_esia({**ESIA_PAGE, "data": {"status": "error"}}).to_dict()["esia_status"] == "error"
     assert with_esia({**ESIA_PAGE, "data": {"status": "success", "rf_passport": None}}).to_dict()["esia_status"] == "no_data"
-    # юрлица — без ЕСИА
+    # юрлица (с 0.7.2) — тоже со статусом ЕСИА; без ссылки на странице Sd — «нет ссылки»
     org = domains.from_extension("testdomain-org.ru", reply(SD_ORG, S_ORG, "testdomain-org.ru"))
-    assert org.to_dict()["esia_status"] == ""
+    assert org.to_dict()["esia_status"] == "no_link"
+    # остальные зоны (группа o_*) — без ЕСИА
+    intl = domains.from_extension("x.com", reply({"group": "o_gtld", "fields": {"o_company": "X"}},
+                                                {"provider": "x", "dname": "x.com", "contype": "o_gtld", "user_id": "1"}, "x.com"))
+    assert intl.to_dict()["esia_status"] == ""
     # значения нет с одной стороны — не красный, а «нет в ЕСИА»
     part = with_esia({**ESIA_PAGE, "data": {**ESIA_JSON, "middle_name": ""}}).to_dict()
     row = next(r for r in part["esia_rows"] if r["field"] == "person_r_patronimic")
@@ -296,7 +300,7 @@ def test_esia_in_reports():
     bad = with_esia({**ESIA_PAGE, "data": {**ESIA_JSON, "birth_date": "16.03.1990"}}, domain="second-pp.ru",
                     s={**S_PP, "dname": "second-pp.ru"}).to_dict()
     html = domain_report.build([good, bad])
-    assert '<th>ЕСИА</th>' in html and 'class="esia" data-d="testdomain-pp.ru"' in html
+    assert '>ЕСИА<span class="arr">' in html and 'class="esia" data-d="testdomain-pp.ru"' in html
     assert 'id="esia-data"' in html and '"last_name"' in html and "VERIFIED" in html
     assert "Идентификация через Госуслуги (ЕСИА)" in html and "second-pp.ru" in html.split("К сведению")[1]
     assert "</script" not in html.split('id="esia-data">')[1].split("</script>")[0]

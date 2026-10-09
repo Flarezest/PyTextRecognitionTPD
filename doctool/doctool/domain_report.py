@@ -6,6 +6,8 @@
 
 С 0.6.0 у доменов физлиц — колонка «ЕСИА» (идентификация через Госуслуги) и кнопка ESIA рядом с Sd / S:
 окно сверки Sd ↔ ЕСИА встроено в файл (данные — в блоке <script type="application/json" id="esia-data">).
+С 0.7.2 — то же у доменов юрлиц; provider — отдельная колонка; таблицу доменов можно сортировать щелчком
+по заголовку колонки (повторный щелчок — обратный порядок, «По группам» — исходный вид).
 """
 from __future__ import annotations
 
@@ -119,7 +121,7 @@ def notes(items: list[dict]) -> list[str]:
         st = Counter(d.get("esia_state") or {"none": "не проходил", "no_link": "нет ссылки на Sd", "error": "ошибка"}
                      .get(d.get("esia_status"), "без state") for d in esia)
         bad = [d["domain"] for d in esia if d.get("esia_status") == "mismatch"]
-        out.append("Идентификация через Госуслуги (ЕСИА) по Sd доменов-физлиц: " + ", ".join(f"{_e(k)} — {v}" for k, v in st.most_common())
+        out.append("Идентификация через Госуслуги (ЕСИА) по Sd доменов (физлица и юрлица): " + ", ".join(f"{_e(k)} — {v}" for k, v in st.most_common())
                    + (f"; данные Sd не совпадают с ЕСИА: {', '.join(map(_e, bad[:15]))}{' и др.' if len(bad) > 15 else ''}" if bad else "")
                    + ". На вердикт не влияет — кнопка ESIA у домена открывает сверку.")
     other = Counter(d.get("group") or "?" for d in found if d.get("kind") not in ("person", "org"))
@@ -172,8 +174,8 @@ def _domain_row(d: dict, similar: dict[str, str]) -> str:
         links.insert(0, _link(urls["sd"], "Sd"))
     if urls.get("s"):
         links.insert(1, _link(urls["s"], "S"))
-    esia_btn = f' <button class="esia" data-d="{_e(dom)}">ESIA</button>' if d.get("esia") else ""
-    head = f"<td><b>{_e(dom)}</b><br><span class=src>{' '.join(links)}</span>{esia_btn}</td>"
+    esia_btn = f' <button class="esia" data-d="{_e(dom)}">ESIA</button>' if d.get("esia") or d.get("esia_status") else ""
+    head = f'<td data-k="{_e(dom)}"><b>{_e(dom)}</b><br><span class=src>{" ".join(links)}</span>{esia_btn}</td>'
     if d.get("status") == NOT_FOUND:
         w = d.get("whois") or {}
         if w.get("status") == "free":
@@ -190,11 +192,11 @@ def _domain_row(d: dict, similar: dict[str, str]) -> str:
         if dom in similar:
             wt += f"<br><span class=hint>похож на {_e(similar[dom])} из списка</span>"
         return (f'<tr class="fail" data-q="{_e(dom)}">{head}<td>не найден</td><td>{_e(d.get("error") or "")}</td>'
-                f"<td></td><td></td><td>{wt}</td></tr>")
+                f"<td></td><td></td><td></td><td>{wt}</td></tr>")
     if d.get("status") != FOUND:
         svc = "<br>".join(_link(f"{MANAGER}/tech/srv_details?service_id={sid}", f"Sd {sid} ({st})") for sid, st in _services(d))
         return (f'<tr class="review" data-q="{_e(dom)}">{head}<td>ошибка</td><td>{_e(d.get("error") or "")}</td>'
-                f"<td></td><td></td><td>{svc}</td></tr>")
+                f"<td></td><td></td><td></td><td>{svc}</td></tr>")
     sd = d.get("sd") or {}
     sst = d.get("service_status") or ""
     mail = (f"<br>e-mail: {', '.join(map(_e, d['emails']))}" if d.get("emails") else "")
@@ -217,13 +219,14 @@ def _domain_row(d: dict, similar: dict[str, str]) -> str:
             for r in cmp_rows))
     else:
         cmp_ = "<span class=src>не выполнялась — нет заявления и паспорта</span>"
-    extra = (f"provider: {_e(d.get('provider') or '—')}<br>аккаунт: {_e(d.get('account') or '—')}<br>"
+    extra = (f"аккаунт: {_e(d.get('account') or '—')}<br>"
              f"смена админа: {_e(d.get('last_admin_change') or '—')}<br>"
              f"страна: {_e(sd.get('country') or sd.get('o_country_code') or '—')}")
     cls = d.get("verdict") or ""
-    q += f" {d.get('esia_ru', '')}"
+    q += f" {d.get('esia_ru', '')} {d.get('provider', '')}"
     return (f'<tr class="{cls}" data-q="{_e(q)}">{head}<td>найден<br><span{"" if sst.startswith("Активна") else " class=bad"}>'
-            f"{_e(sst)}</span></td><td>{data}</td><td>{cmp_}</td><td>{_esia_cell(d)}</td><td>{extra}</td></tr>")
+            f"{_e(sst)}</span></td><td>{data}</td><td>{cmp_}</td><td>{_esia_cell(d)}</td>"
+            f"<td>{_e(d.get('provider') or '—')}</td><td>{extra}</td></tr>")
 
 
 _ESIA_CLS = {"match": "ok", "warn": "warn", "mismatch": "fail", "none": "info", "no_data": "review", "no_link": "info",
@@ -244,10 +247,13 @@ def _esia_data(items: list[dict]) -> str:
     out = {}
     for d in items:
         e = d.get("esia") or {}
-        if not e:
+        if not e and not d.get("esia_status"):
             continue
         data, latest = e.get("data") or {}, e.get("latest") or {}
         out[d["domain"]] = {
+            "group": d.get("group") or "", "kind": d.get("kind") or "",
+            "ogrn": data.get("ogrn") or "", "liquidated": data.get("is_liquidated"),
+            "address": (data.get("legal_address") or {}).get("address_str") or "",
             "status": d.get("esia_status"), "text": d.get("esia_ru"), "state": e.get("state") or "",
             "created": latest.get("creation_date") or "", "processed": latest.get("processed_date") or "",
             "action": latest.get("action") or "", "reason": latest.get("reason") or "", "comment": latest.get("comment") or "",
@@ -261,10 +267,10 @@ def _esia_data(items: list[dict]) -> str:
 
 _JS = """
 (function(){
-  var q=document.getElementById('q'), shown=document.getElementById('shown');
-  var rows=[].slice.call(document.querySelectorAll('#dom tr'));
+  var q=document.getElementById('q'), shown=document.getElementById('shown'), tb=document.querySelector('#dom tbody');
+  var rows=[].slice.call(tb.rows), sorted=null;
   function fin(h){ if(!h) return; var c=h.row.querySelector('.cnt'), t=q.value.trim();
-    c.textContent=t?(h.n+' из '+c.dataset.total):c.dataset.total; h.row.style.display=(h.n||!t)?'':'none'; }
+    c.textContent=t?(h.n+' из '+c.dataset.total):c.dataset.total; h.row.style.display=(!sorted&&(h.n||!t))?'':'none'; }
   function apply(){
     var t=q.value.trim().toLowerCase(), head=null, n=0, total=0;
     rows.forEach(function(r){
@@ -276,6 +282,21 @@ _JS = """
     fin(head); shown.textContent=t?('показано '+n+' из '+total):'';
   }
   q.addEventListener('input', apply);
+  // сортировка щелчком по заголовку: повторный щелчок — обратный порядок; «По группам» — исходный вид
+  var heads=[].slice.call(document.querySelectorAll('#dom thead th')), reset=document.getElementById('bygroups');
+  function key(r, i){ var c=r.cells[i]; if(!c) return ''; var k=c.getAttribute('data-k');
+    return (k!==null?k:c.textContent).replace(/\\s+/g,' ').trim().toLowerCase(); }
+  function mark(){ heads.forEach(function(h, i){ var a=h.querySelector('.arr');
+    a.textContent = sorted && sorted.col===i ? (sorted.dir>0?' ▲':' ▼') : ''; }); reset.style.display=sorted?'':'none'; }
+  heads.forEach(function(h, i){ h.addEventListener('click', function(){
+    var dir = sorted && sorted.col===i ? -sorted.dir : 1; sorted={col:i, dir:dir};
+    var data=rows.filter(function(r){ return r.dataset.q; });
+    data.sort(function(a, b){ var x=key(a,i), y=key(b,i), ex=!x||x==='—', ey=!y||y==='—';
+      if(ex!==ey) return ex?1:-1;                       // пустые — всегда в конце
+      return dir*x.localeCompare(y, 'ru', {numeric:true}); });
+    data.forEach(function(r){ tb.appendChild(r); }); mark(); apply(); }); });
+  reset.addEventListener('click', function(){ sorted=null; rows.forEach(function(r){ tb.appendChild(r); }); mark(); apply(); });
+  mark();
 })();
 """
 
@@ -296,18 +317,23 @@ _ESIA_JS = """
     var h = '<table class="kv"><tr><th>state</th><td>' + e(x.state || '—') + '</td><th>создано / обработано</th><td>' + e(x.created || '—')
       + ' / ' + e(x.processed || '—') + '</td></tr><tr><th>action</th><td>' + e(x.action || '—') + (x.reason ? '<br>reason: ' + e(x.reason) : '')
       + (x.comment ? '<br>' + e(x.comment) : '') + '</td><th>данные ЕСИА</th><td>' + (x.trusted === undefined || x.trusted === null ? '—'
-      : 'trusted: ' + (x.trusted ? 'да' : 'нет')) + (x.vrf ? ' · паспорт: ' + e(x.vrf) : '') + '</td></tr><tr><th>ссылки</th><td colspan="3">'
+      : 'trusted: ' + (x.trusted ? 'да' : 'нет')) + (x.vrf ? ' · паспорт: ' + e(x.vrf) : '')
+      + (x.ogrn ? '<br>ОГРН ' + e(x.ogrn) : '') + (x.liquidated === true ? '<br><b class=bad>ликвидирована</b>' : x.liquidated === false ? ' · действует' : '')
+      + '</td></tr>' + (x.address ? '<tr><th>юр. адрес (ЕСИА)</th><td colspan="3">' + e(x.address) + '</td></tr>' : '')
+      + '<tr><th>ссылки</th><td colspan="3">'
       + [a(x.url, 'Идентификация через Госуслуги'), a(x.file_url, 'JSON-файл'), a(x.sd_url, 'Sd')].filter(Boolean).join(' · ') + '</td></tr></table>';
     var why = x.error ? 'Ошибка: ' + x.error : WHY[x.status];
     if (why) h += '<p class="notes">' + e(why) + '</p>';
     if (x.rows.length) {
-      h += '<table><tr><th>Поле</th><th>Sd (ru_pp)</th><th>ЕСИА (JSON)</th><th></th></tr>';
+      h += '<table><tr><th>Поле</th><th>Sd (' + e(x.group || 'ru_pp') + ')</th><th>ЕСИА (JSON)</th><th></th></tr>';
       x.rows.forEach(function(r){
         var c = r.status ? ' class="' + r.status + '"' : '';
         h += '<tr><td>' + e(r.title) + '</td><td' + c + '>' + e(r.sd) + '<br><span class=src>' + e(r.field) + '</span></td><td' + c + '>'
           + e(r.esia) + '<br><span class=src>' + e(r.esia_field) + '</span></td><td class=src>' + e(r.detail) + '</td></tr>';
       });
-      h += '</table><p class=src>Зелёный — совпадает, красный — расходится, жёлтый — «кем выдан» написан по-разному; без цвета — значения нет с одной из сторон.</p>';
+      h += '</table><p class=src>Зелёный — совпадает, красный — расходится, жёлтый — написано по-разному (кем выдан, тип улицы, корпус, '
+        + 'форма организации указана с одной стороны); без цвета — значения нет с одной из сторон. ООО = «Общество с ограниченной '
+        + 'ответственностью», АО/НПАО = «(Непубличное) акционерное общество» и т. п.</p>';
     }
     if (x.history.length) {
       h += '<h3>Все попытки идентификации</h3><table><tr><th>state</th><th>создано</th><th>обработано</th><th>action</th><th>reason / comment</th></tr>';
@@ -336,6 +362,7 @@ tr.grp td{background:#f3f3f6;font-weight:600;font-size:13px}
 .tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
 .tools input{font:inherit;padding:6px 9px;border:1px solid #d0d0d5;border-radius:6px;min-width:280px}
 details summary{cursor:pointer;color:#2b6cb0} a{color:#2b6cb0}
+#dom thead th{cursor:pointer;user-select:none} #dom thead th:hover{background:#e8e8ee}
 button.esia{font:inherit;font-size:12px;padding:0 7px;margin-left:4px;border:1px solid #2b6cb0;color:#2b6cb0;background:#fff;border-radius:5px;cursor:pointer}
 .tag{display:inline-block;padding:1px 7px;border-radius:9px;font-size:12.5px}
 dialog{border:1px solid #d0d0d5;border-radius:10px;max-width:900px;width:94vw;padding:0 16px 14px}
@@ -363,7 +390,7 @@ def build(domains: list[dict], case_id: str = "", case_title: str = "", checks: 
     for d in items:
         if d.get("problem") != group:
             group = d.get("problem")
-            rows.append(f'<tr class="grp" id="g-{_e(group or "")}"><td colspan="6">{_e(titles.get(group, group or ""))} — '
+            rows.append(f'<tr class="grp" id="g-{_e(group or "")}"><td colspan="7">{_e(titles.get(group, group or ""))} — '
                         f'<span class="cnt" data-total="{counts[group]}">{counts[group]}</span></td></tr>')
         rows.append(_domain_row(d, sim))
     summary = " · ".join(f'<a href="#g-{code}">{_e(title)}: <b>{counts[code]}</b></a>'
@@ -386,10 +413,12 @@ def build(domains: list[dict], case_id: str = "", case_title: str = "", checks: 
 {('<h2>Администраторы найденных доменов</h2>' + _admins_table(found)) if found else ''}
 {('<h2>К сведению</h2><ul class="notes">' + ''.join(f'<li>{n}</li>' for n in nts) + '</ul>') if nts else ''}
 <h2>Домены</h2>
-<div class="tools"><input type="search" id="q" placeholder="Фильтр: домен, ФИО, паспорт, ИНН, e-mail">
-<span class="src" id="shown"></span></div>
-<table id="dom"><tr><th>Домен</th><th>manager</th><th>Администратор (Sd)</th><th>Сверка</th><th>ЕСИА</th><th>Прочее</th></tr>
-{''.join(rows)}</table>
+<div class="tools"><input type="search" id="q" placeholder="Фильтр: домен, ФИО, паспорт, ИНН, e-mail, provider">
+<span class="src" id="shown"></span><span class="src">Сортировка — щелчок по заголовку колонки</span>
+<button type="button" id="bygroups" style="display:none">По группам</button></div>
+<table id="dom"><thead><tr>{''.join(f'<th title="Сортировать">{h}<span class="arr"></span></th>' for h in
+    ("Домен", "manager", "Администратор (Sd)", "Сверка", "ЕСИА", "Provider", "Прочее"))}</tr></thead>
+<tbody>{''.join(rows)}</tbody></table>
 <dialog id="esiaDlg"><div class="dhd"><b id="esiaTitle"></b><button onclick="this.closest('dialog').close()">Закрыть</button></div>
 <div id="esiaBody"></div></dialog>
 <script type="application/json" id="esia-data">{_esia_data(items)}</script>

@@ -11,6 +11,7 @@ sync_api = pytest.importorskip("playwright.sync_api")
 ROOT = Path(__file__).resolve().parent.parent
 FIX = ROOT / "tests" / "fixtures" / "manager"
 JS = (ROOT / "doctool_extension" / "content" / "manager.js").read_text(encoding="utf-8")
+BG = (ROOT / "doctool_extension" / "background.js").read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
@@ -148,3 +149,34 @@ def test_fill_runic_guards(page):
     r = page.evaluate("f => window.__doctoolManager.fillRunic('1000', f)", NEW_OWNER)
     assert not r["ok"] and r["error"]["code"] == "not_person" and "юрлиц" in r["error"]["message"]
     assert page.evaluate("() => document.querySelector('#ru_pp_contacts [name=person_r_surname]').value") == "Тестов"
+
+
+# ------------------------------------------------------------------ 0.7.2: ЕСИА у юрлиц
+
+def test_sd_org_legal_address(page):
+    # юридический адрес юрлица — для сверки с ЕСИА; почтовый адрес (p_addr_*) и квартира/офис не передаются
+    org = json.loads(run(page, "sd_org.html", "M.parseSd(document)"))
+    f = org["fields"]
+    assert f["address_r_street"] == "ул. Тестовая" and f["address_r_house"] == "1" and f["address_r_zip"] == "140000"
+    assert f["address_r_frame"] == "" and f["address_r_building"] == ""
+    assert "address_r_flat" not in f and "p_addr_street" not in f and "phone" not in f
+
+
+def test_esia_fields_org_and_person(page):
+    # esiaFields() из background.js: что из файла ЕСИА уходит в программу
+    import re
+    src = re.search(r"function esiaFields\(j\) \{.*?\n\}\n", BG, re.S).group(0)
+    page.goto("about:blank")
+    org_json = json.loads((FIX / "esia_org.json").read_text(encoding="utf-8"))
+    org = page.evaluate(f"j => {{ {src}; return esiaFields(j); }}", org_json)
+    assert org["kind"] == "org" and org["inn"] == "7701234567" and org["kpp"] == "770101001"
+    assert org["full_name"].startswith("ОБЩЕСТВО С ОГРАНИЧЕННОЙ") and org["ogrn"] == "1000000000001"
+    assert org["is_liquidated"] is False and org["trusted"] is True
+    la = org["legal_address"]
+    assert la["house"] == "Д. 1" and la["street"] == "УЛ. ТЕСТОВАЯ" and la["zip_code"] == "140000"
+    text = json.dumps(org, ensure_ascii=False)
+    for secret in ("prs_auth", "Тестов", "+7(999)", "org@example.com", "mail_address", "oid"):
+        assert secret not in text, secret
+    pp = page.evaluate(f"j => {{ {src}; return esiaFields(j); }}",
+                       json.loads((FIX / "esia_pp.json").read_text(encoding="utf-8")))
+    assert pp["last_name"] == "Тестов" and "inn" not in pp and "snils" not in pp and "kind" not in pp

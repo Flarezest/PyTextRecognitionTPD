@@ -123,7 +123,6 @@ dialog .bd{padding:14px 18px;max-height:75vh;overflow:auto}
         <option value="check_export">Сверка и выгрузка данных для системы</option>
         <option value="autofill" disabled>Автозаполнение во внутренней системе (позже)</option>
       </select></label>
-    <label class="f">Название дела (необязательно) <input type="text" id="caseId" placeholder="напр. Иванов_домен.рф"></label>
   </div>
 
   <label class="chk" style="margin-top:14px"><input type="checkbox" id="combined"> Заявление и паспорт в одном файле</label>
@@ -323,7 +322,7 @@ $('#combined').addEventListener('change', e => {
 function options(extra={}){
   const v = n => (document.querySelector(`input[name=${n}]:checked`)||{}).value;
   return {
-    case_type: $('#caseType').value, case_id: $('#caseId').value.trim(),
+    case_type: $('#caseType').value,
     combined: $('#combined').checked, app_mode: v('appMode'), pas_mode: v('pasMode'),
     handwritten: $('#handwritten').checked, use_vlm: $('#handwritten').checked || $('#pasVlm').checked,
     model: $('#model').value, manager_autoload: $('#mgrAuto').checked,
@@ -442,7 +441,7 @@ function domainRow(d){
               : org ? `ИНН ${esc(sd.code||'—')}` : '—';
   const cmp = (d.compare||[]).filter(r => r.status !== 'ok');
   const sv = d.verdict ? `<span class="badge s-${d.verdict}">${ST[d.verdict]}</span>` : '';
-  const esiaBtn = d.esia && Object.keys(d.esia).length ? `<button class="sm esiaBtn" data-esia="${esc(d.domain)}">ESIA</button>` : '';
+  const esiaBtn = d.esia_status || (d.esia && Object.keys(d.esia).length) ? `<button class="sm esiaBtn" data-esia="${esc(d.domain)}" title="Идентификация через Госуслуги: сверка Sd ↔ ЕСИА">ESIA</button>` : '';
   const accBtn = d.account ? ` <button class="sm" data-acc="${esc(d.account)}" title="Открыть вкладку «Смена владельца ЛК» с этим аккаунтом">→ ЛК</button>` : '';
   return `<tr><td><b>${esc(d.domain)}</b><br><small>${link((d.urls||{}).sd,'Sd')} ${link((d.urls||{}).s,'S')}</small>${esiaBtn}</td>
     <td><span class="badge s-ok">найден</span><br><small>${esc(d.service_status||'')}</small></td>
@@ -542,12 +541,15 @@ function showEsia(d){
       <div><b>state</b>${e.state ? `<span class="badge s-${e.state === 'approved' ? 'ok' : 'info'}">${esc(e.state)}</span>` : '—'}</div>
       <div><b>Создано / обработано</b>${esc(l.creation_date || '—')} / ${esc(l.processed_date || '—')}</div>
       <div><b>action</b>${esc(l.action || '—')}${l.reason ? '<br>reason: ' + esc(l.reason) : ''}${l.comment ? '<br>' + esc(l.comment) : ''}</div>
-      <div><b>Данные ЕСИА</b>${data.trusted === undefined ? '—' : 'trusted: ' + (data.trusted ? 'да' : 'нет')}${p.vrf_stu ? ' · паспорт: ' + esc(p.vrf_stu) : ''}</div>
+      <div><b>Данные ЕСИА</b>${data.trusted === undefined ? '—' : 'trusted: ' + (data.trusted ? 'да' : 'нет')}${p.vrf_stu ? ' · паспорт: ' + esc(p.vrf_stu) : ''}${data.ogrn ? ' · ОГРН ' + esc(data.ogrn) : ''}${data.is_liquidated === true ? ' · <b style="color:#9b1c1c">ликвидирована</b>' : data.is_liquidated === false ? ' · действует' : ''}</div>
+      ${(data.legal_address || {}).address_str ? `<div><b>Юр. адрес (ЕСИА)</b>${esc(data.legal_address.address_str)}</div>` : ''}
       <div><b>Ссылки</b>${[lk(e.url, 'Идентификация через Госуслуги'), lk(e.file_url, 'JSON-файл'), lk((d.urls || {}).sd, 'Sd')].filter(Boolean).join(' · ')}</div>
     </div>
     ${why ? `<div class="msg">${esc(why)}</div>` : ''}
-    ${rows ? `<table style="margin-top:12px"><tr><th>Поле</th><th>Sd (ru_pp)</th><th>ЕСИА (JSON)</th><th></th></tr>${rows}</table>
-      <p class="hint">Зелёный — совпадает, красный — расходится, жёлтый — «кем выдан» написан по-разному; без цвета — значения нет с одной из сторон.</p>` : ''}
+    ${rows ? `<table style="margin-top:12px"><tr><th>Поле</th><th>Sd (${esc(d.group || 'ru_pp')})</th><th>ЕСИА (JSON)</th><th></th></tr>${rows}</table>
+      <p class="hint">Зелёный — совпадает, красный — расходится, жёлтый — написано по-разному (кем выдан, тип улицы, корпус,
+        форма организации указана с одной стороны); без цвета — значения нет с одной из сторон.
+        ${d.kind === 'org' ? 'ООО = «Общество с ограниченной ответственностью», АО/НПАО = «(Непубличное) акционерное общество», ОАО, ПК, хозяйственное товарищество — так же; название должно совпасть.' : ''}</p>` : ''}
     ${hist}`;
   $('#esiaDlg').showModal();
 }

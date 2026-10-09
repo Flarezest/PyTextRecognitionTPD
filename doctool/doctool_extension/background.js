@@ -2,7 +2,8 @@
  *
  * 1) Держит WebSocket-соединение с doctool на этом компьютере: ws://127.0.0.1:<порт>/ext.
  * 2) Получает команды и выполняет их по очереди:
- *    lookup      — данные домена (счета, Sd, S, с 0.6.0 — идентификация через Госуслуги и JSON ЕСИА);
+ *    lookup      — данные домена (счета, Sd, S, с 0.6.0 — идентификация через Госуслуги и JSON ЕСИА;
+ *                  с 0.7.2 — и у юрлиц);
  *    account     — данные аккаунта и базовая анкета (0.6.0);
  *    fill_runic  — заполнить поля базовой анкеты во вкладке оператора (0.6.0).
  *    lookup и account читают страницы в отдельной фоновой вкладке manager.
@@ -182,9 +183,24 @@ function progressTo(id, step, message) {
 // ------------------------------------------------------------------ JSON ЕСИА (identity.reg.ru)
 
 // Из файла ЕСИА в doctool передаются только поля для сверки с Sd и признаки проверки данных.
-// ИНН, СНИЛС, адреса, телефон, e-mail, oid не передаются.
+// Физлицо: ИНН, СНИЛС, адреса, телефон, e-mail, oid не передаются.
+// Организация (0.7.2; в файле есть full_name / ogrn / legal_address): название, ИНН, КПП, ОГРН, признак ликвидации
+// и юридический адрес. ФИО представителя (prs_auth_*), телефон, e-mail, почтовый адрес, oid не передаются.
 function esiaFields(j) {
   const d = (j && j.data) || j || {};
+  if (d.full_name !== undefined || d.ogrn !== undefined || d.legal_address) {
+    const a = d.legal_address || {};
+    return {
+      status: (j && j.status) || '', kind: 'org',
+      full_name: d.full_name || '', inn: d.inn || '', kpp: d.kpp || '', ogrn: d.ogrn || '',
+      is_liquidated: d.is_liquidated, trusted: d.trusted,
+      legal_address: d.legal_address ? {
+        zip_code: a.zip_code || '', region: a.region || '', area: a.area || '', city: a.city || '',
+        settlement: a.settlement || '', street: a.street || '', house: a.house || '', building: a.building || '',
+        frame: a.frame || '', flat: a.flat || '', address_str: a.address_str || '',
+      } : null,
+    };
+  }
   const p = d.rf_passport || {};
   return {
     status: (j && j.status) || '',

@@ -11,6 +11,7 @@
 С 0.6.0 у доменов физлиц есть статус идентификации через Госуслуги (ЕСИА): расширение открывает ссылку
 «Идентификация через Госуслуги» со страницы Sd домена (идентификация относится к администратору домена,
 а не к аккаунту), берёт поле state последней записи и файл данных ЕСИА. Сверка Sd ↔ ЕСИА — esia_compare().
+С 0.7.2 — и у доменов юрлиц (ru_org): ИНН, КПП, название организации, юридический адрес (дом, улица, индекс).
 На вердикт дела ЕСИА не влияет.
 """
 from __future__ import annotations
@@ -220,6 +221,7 @@ def from_extension(domain: str, reply: dict) -> DomainInfo:
 # ------------------------------------------------------------------ ЕСИА (идентификация через Госуслуги)
 
 # Sd (группа ru_pp) ↔ файл данных ЕСИА. В ЕСИА last_name — фамилия, middle_name — отчество.
+# (поле Sd, поле ЕСИА, название, вид значения для fieldnorm.same)
 ESIA_MAP = (
     ("person_r_surname", "last_name", "Фамилия", "text"),
     ("person_r_name", "first_name", "Имя", "text"),
@@ -230,6 +232,17 @@ ESIA_MAP = (
     ("passport_number_short", "rf_passport.number", "Номер паспорта", "digits"),
     ("passport_date", "rf_passport.issue_date", "Дата выдачи", "date"),
     ("passport_place", "rf_passport.issued_by", "Кем выдан", "issuer"),
+)
+# Sd (группа ru_org) ↔ файл данных ЕСИА организации (0.7.2). Название: «ООО» = «Общество с ограниченной
+# ответственностью» и т. п. (fieldnorm.same_org). Дом в Sd — address_r_house; если отдельно заполнены корпус
+# (Sd address_r_frame, ЕСИА frame) или строение (address_r_building, building), они тоже учитываются (_house_variants).
+ESIA_MAP_ORG = (
+    ("code", "inn", "ИНН", "digits"),
+    ("kpp", "kpp", "КПП", "digits"),
+    ("org_r", "full_name", "Название организации", "org"),
+    ("address_r_street", "legal_address.street", "Улица (юр. адрес)", "street"),
+    ("address_r_house", "legal_address.house", "Дом (юр. адрес)", "house"),
+    ("address_r_zip", "legal_address.zip_code", "Индекс (юр. адрес)", "digits"),
 )
 ESIA_STATUS_RU = {"match": "Sd = ЕСИА", "warn": "Sd ≈ ЕСИА", "mismatch": "Sd ≠ ЕСИА", "none": "не проходил",
                   "no_data": "нет файла данных", "no_link": "нет ссылки на Sd", "error": "ошибка", "": ""}
@@ -242,19 +255,40 @@ def _esia_value(data: dict, path: str) -> str:
     return "" if cur is None else str(cur).strip()
 
 
+_BEST = {fieldnorm.OK: 0, fieldnorm.WARN: 1, fieldnorm.FAIL: 2, fieldnorm.NONE: 3}
+
+
+def _house_variants(house, frame, building) -> list[str]:
+    """Варианты дома: вместе с корпусом/строением, если они заполнены отдельно, и только дом."""
+    house = str(house or "").strip()
+    extra = [f"{w} {str(v).strip()}" for w, v in (("корп.", frame), ("стр.", building)) if str(v or "").strip()]
+    return [", ".join([house] + extra), house] if house and extra else [house]
+
+
 def esia_compare(info: "DomainInfo") -> list[dict]:
-    """Строки сверки Sd ↔ ЕСИА: [{field, esia_field, title, sd, esia, status, detail}] (status: ok/warn/fail/"")."""
+    """Строки сверки Sd ↔ ЕСИА: [{field, esia_field, title, sd, esia, status, detail}] (status: ok/warn/fail/"").
+    Физлицо (ru_pp) — ESIA_MAP, юрлицо (ru_org) — ESIA_MAP_ORG."""
     data = (info.esia or {}).get("data") or {}
-    if info.kind != "person" or not data:
+    if info.kind not in ("person", "org") or not data:
         return []
     rows = []
-    for sd_key, es_key, title, kind in ESIA_MAP:
-        sv, ev = info.sd.get(sd_key, "") or "", _esia_value(data, es_key)
-        st, det = fieldnorm.same(kind, sv, ev)
+    la = data.get("legal_address") or {}
+    for sd_key, es_key, title, kind in (ESIA_MAP if info.kind == "person" else ESIA_MAP_ORG):
+        if sd_key == "address_r_house":      # корпус и строение бывают отдельными полями — и в Sd, и в ЕСИА
+            sd_vars = _house_variants(info.sd.get(sd_key), info.sd.get("address_r_frame"), info.sd.get("address_r_building"))
+            es_vars = _house_variants(la.get("house"), la.get("frame"), la.get("building"))
+        else:
+            sd_vars, es_vars = [info.sd.get(sd_key, "") or ""], [_esia_value(data, es_key)]
+        sv, ev, (st, det) = min(((v, w, fieldnorm.same(kind, v, w)) for v in sd_vars for w in es_vars),
+                                key=lambda x: _BEST[x[2][0]])
         if st == fieldnorm.NONE and (sv or ev):
             det = "нет в ЕСИА" if sv else "нет в Sd"
         rows.append({"field": sd_key, "esia_field": es_key, "title": title, "sd": sv, "esia": ev, "status": st,
                      "detail": det})
+    if info.kind == "org" and data.get("is_liquidated") is True:
+        rows.append({"field": "", "esia_field": "is_liquidated", "title": "Организация действует", "sd": "",
+                     "esia": "ликвидирована", "status": fieldnorm.FAIL,
+                     "detail": "по данным ЕСИА организация ликвидирована"})
     return rows
 
 
@@ -262,7 +296,7 @@ def esia_summary(info: "DomainInfo") -> dict:
     """Итог ЕСИА домена: {status, state, text, rows}. status — ключ ESIA_STATUS_RU ("" — не применимо)."""
     e = info.esia or {}
     out = {"status": "", "state": e.get("state", "") or "", "text": "", "rows": []}
-    if info.status != FOUND or info.kind != "person":
+    if info.status != FOUND or info.kind not in ("person", "org"):
         return out
     if not e:
         out["status"] = "no_link"

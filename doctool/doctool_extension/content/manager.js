@@ -8,8 +8,8 @@
  *   1) /bill/bills?searchstring=<домен>&from_head=1&_csrf=<токен>  — строка домена, service_id;
  *   2) /tech/srv_details?service_id=<id>                           — Sd: данные администратора;
  *   3) /tech/service_details?service_id=<id>                       — S: provider, user_id, dname;
- *   4) (0.6.0, физлица) ссылка «Идентификация через Госуслуги» со страницы Sd — state и ссылка на JSON
- *      ЕСИА. Сам JSON лежит на другом сайте (identity.reg.ru) — его загружает background.js.
+ *   4) (0.6.0 — физлица, с 0.7.2 — и юрлица) ссылка «Идентификация через Госуслуги» со страницы Sd — state
+ *      и ссылка на JSON ЕСИА. Сам JSON лежит на другом сайте (identity.reg.ru) — его загружает background.js.
  *
  * Аккаунт (account, 0.6.0): /manager/user_details?user_id=N (базовая анкета — скрытый блок страницы,
  * логин, обслуживающая организация) и /user/N/runic_details (тип анкеты, значения формы).
@@ -20,18 +20,19 @@
  * подсветила изменённые поля и пересчитала English name. Кнопку «Сохранить» не нажимает.
  */
 (() => {
-  const VERSION = '0.6.0';
+  const VERSION = '0.7.2';
   if (window.__doctoolManager && window.__doctoolManager.version === VERSION) return;
 
   // Поля Sd, которые передаются в doctool. authinfo, телефоны, адреса и служебные поля не передаются.
   // E-mail администратора передаётся (с 0.5.0): e_mail — зоны .RU/.РФ/.SU, o_email — остальные зоны.
+  // Юридический адрес юрлица (улица, дом, корпус, строение, индекс) — с 0.7.2, для сверки с ЕСИА.
   const SD_FIELDS = [
     // физлицо (.RU/.РФ/.SU)
     'person_r_surname', 'person_r_name', 'person_r_patronimic', 'person_surname', 'person_name', 'person_patronimic',
     'birth_date', 'passport_series', 'passport_number_short', 'passport_date', 'passport_place', 'passport_place_id',
     'passport_expiration_date', 'is_entrepreneur',
-    // юрлицо (.RU/.РФ/.SU)
-    'org_r', 'org', 'kpp',
+    // юрлицо (.RU/.РФ/.SU); юридический адрес — для сверки с ЕСИА (0.7.2)
+    'org_r', 'org', 'kpp', 'address_r_street', 'address_r_house', 'address_r_frame', 'address_r_building', 'address_r_zip',
     // администратор (владелец) в остальных зонах — группа o_* (o_deti_org, o_gtld…)
     'o_company', 'o_company_ru', 'o_first_name', 'o_first_name_ru', 'o_last_name', 'o_last_name_ru',
     'o_patronimic', 'o_patronimic_ru', 'o_country_code', 'o_birth_date',
@@ -418,9 +419,9 @@
       if (s.dname && !names.includes(norm(s.dname))) {
         throw new LookupError('mismatch', `Страница S относится к другому домену: ${s.dname}`);
       }
-      // ЕСИА — только для физлиц (ru_pp): по ссылке со страницы Sd этого домена
+      // ЕСИА — у физлиц (ru_pp) и юрлиц (ru_org, с 0.7.2): по ссылке со страницы Sd этого домена
       let esia = null;
-      if (opts.esia !== false && sd.group === 'ru_pp' && sd.links && sd.links.esia) {
+      if (opts.esia !== false && (sd.group === 'ru_pp' || sd.group === 'ru_org') && sd.links && sd.links.esia) {
         progress('esia', `${domain}: идентификация через Госуслуги`);
         esia = await esiaFor(sd.links.esia, opts.task);
       }

@@ -16,7 +16,7 @@ from PySide6.QtCore import QObject, Qt, QThread, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QButtonGroup, QCheckBox, QComboBox, QDialog,
                                QFileDialog, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
-                               QLineEdit, QMainWindow, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton,
+                               QMainWindow, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton,
                                QRadioButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem, QTabWidget,
                                QVBoxLayout, QWidget)
 
@@ -192,11 +192,8 @@ class MainWindow(QMainWindow):
         self.operation.addItem("Сверка и выгрузка данных для системы", "check_export")
         self.operation.addItem("Автозаполнение во внутренней системе (позже)", "autofill")
         self.operation.model().item(1).setEnabled(False)
-        self.case_id = QLineEdit()
-        self.case_id.setPlaceholderText("необязательно, напр. Иванов_домен.рф")
         form.addRow("Тип заявления", self.case_type)
         form.addRow("Операция", self.operation)
-        form.addRow("Название дела", self.case_id)
         lay.addLayout(form)
 
         self.combined = QCheckBox("Заявление и паспорт в одном файле")
@@ -365,7 +362,7 @@ class MainWindow(QMainWindow):
                          page_roles=page_roles, app_mode=self.app_box.mode(), app_handwritten=hand,
                          pas_mode=self.pas_box.mode(), vlm_model=self.model.currentText() if use_vlm else None,
                          ollama=self.ollama,
-                         case_id=self.case_id.text().strip() or None, out_root=self.out_root,
+                         out_root=self.out_root,
                          llm_fields=self.llm_fields.isChecked(), llm_model=self.llm_model.currentText().strip() or None)
 
     def start(self, _=None, page_roles=None):

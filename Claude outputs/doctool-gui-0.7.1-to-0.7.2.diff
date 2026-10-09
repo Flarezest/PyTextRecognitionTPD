@@ -1,0 +1,1098 @@
+diff -ruN a/CHANGELOG.md b/CHANGELOG.md
+--- a/CHANGELOG.md	2026-10-10 00:56:34.738386734 +0300
++++ b/CHANGELOG.md	2026-10-10 00:56:34.745027993 +0300
+@@ -10,6 +10,63 @@
+ 
+ ---
+ 
++## [0.7.2] — 2026-10-10
++
++Задачи: (1) статус идентификации через Госуслуги (ЕСИА) у доменов юрлиц — как у физлиц, сверка Sd ↔ файл ЕСИА;
++(2) кнопка ESIA рядом с Sd / S и у юрлиц; (3) в выгрузке по доменам (HTML) `provider` — отдельная колонка, таблицу
++можно сортировать; (4) убрать поле «Название дела».
++
++### Добавлено
++
++- **ЕСИА у доменов юрлиц** (группа Sd `ru_org`). Как у физлиц: ссылка «Идентификация через Госуслуги» со страницы
++  Sd домена → `state` последней записи → «Смотреть файл» (JSON ЕСИА организации). Сверка (`domains.ESIA_MAP_ORG`):
++  - `code` ↔ `inn`, `kpp` ↔ `kpp` — по цифрам;
++  - `org_r` ↔ `full_name` — организационно-правовая форма сокращением и полностью одно и то же: ООО = «Общество с
++    ограниченной ответственностью», АО / НПАО / НАО = «(Непубличное) акционерное общество», ОАО = «Открытое
++    акционерное общество», ПК = «Производственный кооператив», «Хозяйственное товарищество» = полное товарищество /
++    товарищество на вере (а также ЗАО, ПАО, ОДО, АНО, ФГУП, ГУП, МУП). Название в кавычках должно совпасть (без
++    учёта регистра, вида кавычек, знаков препинания). Разная форма → красный, форма только с одной стороны → жёлтый;
++  - юридический адрес: `address_r_street` ↔ `legal_address.street` («ул.» = «улица» = «УЛ.»; другой тип улицы или
++    похожее название → жёлтый), `address_r_house` ↔ `legal_address.house` («11» = «Д. 11»; корпус/строение из
++    отдельных полей тоже учитываются; совпал только номер дома → жёлтый), `address_r_zip` ↔ `legal_address.zip_code`;
++  - организация ликвидирована по данным ЕСИА (`is_liquidated`) → красная строка «Организация действует».
++
++  В окне ESIA у юрлица — ещё ОГРН и юридический адрес из ЕСИА целиком (для сведения). Где: `fieldnorm.py`
++  (`same_org`, `org_parts`, `same_house`, `house_key`, `same_street`, `street_parts`; виды `org`, `house`, `street`),
++  `domains.py` (`ESIA_MAP_ORG`, `esia_compare`, `esia_summary`), `content/manager.js` (шаг ЕСИА и для `ru_org`;
++  поля Sd `address_r_street`, `address_r_house`, `address_r_frame`, `address_r_building`, `address_r_zip`),
++  `background.js` (`esiaFields`: файл организации — название, ИНН, КПП, ОГРН, признак ликвидации, `trusted`,
++  юридический адрес; ФИО представителя, телефон, e-mail, почтовый адрес, oid не передаются).
++- **Выгрузка по доменам (HTML):** колонка **Provider** (раньше — строка в «Прочее»); сортировка щелчком по заголовку
++  любой колонки (повторный щелчок — обратный порядок, пустые — в конце), кнопка «По группам» — исходный вид;
++  фильтр ищет и по provider.
++- Тесты: `tests/test_esia_org.py` (7), `test_extension_parsers.py` +2 (юридический адрес из Sd, `esiaFields` для
++  организации и физлица), `test_domains.py` — ЕСИА юрлица без ссылки. Обезличенная фикстура `esia_org.json`.
++
++### Изменено
++
++- Кнопка **ESIA** (веб-интерфейс и выгрузка) — у всех найденных доменов физлиц и юрлиц, в том числе когда сверки нет:
++  окно объясняет почему (записей нет, нет ссылки на Sd, файл не загрузился). Заголовок колонки Sd в окне — по
++  группе (`ru_pp` / `ru_org`).
++- «К сведению» в выгрузке: строка ЕСИА — по доменам физлиц и юрлиц.
++- Расширение 0.7.2 (`content/manager.js` — `VERSION` 0.7.2: скрипт во вкладке manager перезагрузится сам).
++
++### Удалено
++
++- Поле **«Название дела»** в веб-интерфейсе и в окне Qt. Дело называется по имени файла заявления (или паспорта), как
++  раньше при пустом поле. Ключ командной строки `--case` остался.
++
++### Совместимость
++
++- Расширение нужно обновить (⟳ на `chrome://extensions`): без этого ЕСИА у юрлиц не загружается (колонка «ЕСИА» —
++  «нет ссылки на Sd»). Новых разрешений нет.
++- ЕСИА на вердикт дела и группы «проблемности» по-прежнему не влияет.
++- `export.json`: у доменов юрлиц теперь заполнены `esia`, `esia_rows`, `esia_status`, `esia_state`, `esia_ru`; в `sd`
++  юрлица — поля юридического адреса.
++- Проверки заявления и вердикты не менялись.
++
++---
++
+ ## [0.7.1] — 2026-10-09
+ 
+ Программа называется **PySimpleManager** (раньше — doctool). Решение пользователя: меняется только видимое название,
+diff -ruN a/README.md b/README.md
+--- a/README.md	2026-10-10 00:56:34.738476095 +0300
++++ b/README.md	2026-10-10 00:56:34.745110852 +0300
+@@ -12,7 +12,7 @@
+ 
+ Работать можно в **окне приложения**, в **браузере** (локальный веб-интерфейс) или из **командной строки**.
+ 
+-С версии 0.3.0 веб-интерфейс умеет сам загружать данные доменов из **manager** (Sd — администратор, S — `provider` и аккаунт) через расширение Chrome «PySimpleManager» и сверять их с паспортом и заявлением. Установка и работа — **[docs/MANAGER.md](docs/MANAGER.md)**. Домены в таблице выводятся по «проблемности»: сначала свободные по WHOIS, затем те, у которых данные в Sd не сходятся с документами, ниже — остальные (с 0.4.0). С 0.5.0 — e-mail администратора из Sd и кнопка «Выгрузка по доменам (HTML)». С 0.6.0 — статус идентификации администратора домена через Госуслуги (ЕСИА) и окно сверки Sd ↔ ЕСИА (кнопка ESIA), а также вкладка **«Смена владельца ЛК»**: базовая анкета аккаунта, сверка с заявлением и автозаполнение анкеты данными нового владельца (сохраняет оператор).
++С версии 0.3.0 веб-интерфейс умеет сам загружать данные доменов из **manager** (Sd — администратор, S — `provider` и аккаунт) через расширение Chrome «PySimpleManager» и сверять их с паспортом и заявлением. Установка и работа — **[docs/MANAGER.md](docs/MANAGER.md)**. Домены в таблице выводятся по «проблемности»: сначала свободные по WHOIS, затем те, у которых данные в Sd не сходятся с документами, ниже — остальные (с 0.4.0). С 0.5.0 — e-mail администратора из Sd и кнопка «Выгрузка по доменам (HTML)». С 0.6.0 — статус идентификации администратора домена через Госуслуги (ЕСИА) и окно сверки Sd ↔ ЕСИА (кнопка ESIA), а также вкладка **«Смена владельца ЛК»**: базовая анкета аккаунта, сверка с заявлением и автозаполнение анкеты данными нового владельца (сохраняет оператор). С 0.7.2 — ЕСИА и у доменов юрлиц (ИНН, КПП, название, юридический адрес), в выгрузке по доменам `provider` — отдельная колонка с сортировкой.
+ 
+ **Всё работает локально, документы никуда не отправляются.** Единственный запрос наружу — WHOIS по имени домена, которого нет в manager.
+ 
+diff -ruN a/docs/MANAGER.md b/docs/MANAGER.md
+--- a/docs/MANAGER.md	2026-10-10 00:56:34.738620672 +0300
++++ b/docs/MANAGER.md	2026-10-10 00:56:34.745246527 +0300
+@@ -4,7 +4,7 @@
+ 
+ - **Sd** — администратор домена;
+ - **S** — поле `provider` (текущий регистратор) и номер аккаунта;
+-- **ЕСИА** (с 0.6.0) — идентификация администратора домена через Госуслуги: поле `state` и сверка Sd с файлом данных ЕСИА.
++- **ЕСИА** (с 0.6.0; юрлица — с 0.7.2) — идентификация администратора домена через Госуслуги: поле `state` и сверка Sd с файлом данных ЕСИА.
+ 
+ Дальше эти данные сверяются с паспортом и заявлением. С 0.6.0 есть вкладка **«Смена владельца ЛК»**: базовая анкета аккаунта, сверка с заявлением и автозаполнение анкеты данными нового владельца (раздел 5). Работает только в **веб-интерфейсе** (`doctool_web.bat`).
+ 
+@@ -31,7 +31,7 @@
+    1. Откройте адрес `chrome://extensions`.
+    2. Справа вверху включите **«Режим разработчика»**.
+    3. Нажмите **«Загрузить распакованное расширение»** и выберите папку `doctool_extension` из архива программы.
+-   4. Появится карточка «PySimpleManager 0.7.1». Нажмите на значок-пазл на панели Chrome и закрепите значок расширения (синий квадрат с буквой «d»).
++   4. Появится карточка «PySimpleManager 0.7.2». Нажмите на значок-пазл на панели Chrome и закрепите значок расширения (синий квадрат с буквой «d»).
+ 
+    Не удаляйте и не перемещайте папку `doctool_extension`: Chrome загружает расширение прямо из неё. Если папку переместили, удалите расширение и загрузите его заново из нового места.
+ 
+@@ -99,12 +99,14 @@
+ 
+ **E-mail администратора** (с 0.5.0). В таблице и в отчётах под ФИО/названием администратора: для .RU/.РФ/.SU — поле `e_mail` из Sd, для остальных зон — `o_email`. Если адресов несколько (по строке на адрес), показываются все.
+ 
+-### ЕСИА — идентификация через Госуслуги (с 0.6.0)
++### ЕСИА — идентификация через Госуслуги (с 0.6.0; юрлица — с 0.7.2)
+ 
+-Для доменов физлиц (`ru_pp`) расширение открывает ссылку **«Идентификация через Госуслуги»** со страницы Sd этого домена. Идентификация относится к администратору домена (у физлица ссылка ведёт на `?user_id=…`, у персоны — на `?person_id=…`), а не к аккаунту: владелец аккаунта может не быть администратором домена. Если записей несколько, берётся последняя по дате создания.
++Для доменов физлиц (`ru_pp`) и, с 0.7.2, юрлиц (`ru_org`) расширение открывает ссылку **«Идентификация через Госуслуги»** со страницы Sd этого домена. Идентификация относится к администратору домена (у физлица ссылка ведёт на `?user_id=…`, у персоны — на `?person_id=…`), а не к аккаунту: владелец аккаунта может не быть администратором домена. Если записей несколько, берётся последняя по дате создания.
+ 
+-- Колонка **«ЕСИА»**: значение `state` (например, `approved`) и итог сверки: «Sd = ЕСИА (9 из 9)», «Sd ≠ ЕСИА: Дата выдачи», «не проходил» (записей нет), «нет файла данных», «ошибка: …».
+-- Кнопка **ESIA** рядом со ссылками Sd / S открывает окно сверки: state, даты, action, ссылки на страницу идентификации и JSON-файл, и таблица:
++- Колонка **«ЕСИА»**: значение `state` (например, `approved`) и итог сверки: «Sd = ЕСИА (9 из 9)», «Sd ≠ ЕСИА: Дата выдачи», «не проходил» (записей нет), «нет файла данных», «нет ссылки на Sd», «ошибка: …».
++- Кнопка **ESIA** рядом со ссылками Sd / S (у всех найденных доменов физлиц и юрлиц) открывает окно сверки: state, даты, action, ссылки на страницу идентификации и JSON-файл, и таблица. Если сверки нет, окно объясняет почему (записей нет, нет ссылки, файл не загрузился).
++
++Физлицо (`ru_pp`):
+ 
+ | Sd | ЕСИА (JSON) | Как сравнивается |
+ |---|---|---|
+@@ -118,7 +120,20 @@
+ | `passport_date` | `rf_passport.issue_date` | дата |
+ | `passport_place` | `rf_passport.issued_by` | одинаково → зелёный; похоже (≥ 85 %), но написано по-разному → жёлтый |
+ 
+-Зелёный — совпадает, красный — расходится. Если значения нет с одной из сторон — без цвета («нет в ЕСИА»). **На вердикт дела ЕСИА не влияет**; в выгрузке по доменам — колонка «ЕСИА», то же окно ESIA (встроено в файл) и строка в «К сведению». Юрлица пока не проверяются.
++Юрлицо (`ru_org`, с 0.7.2):
++
++| Sd | ЕСИА (JSON) | Как сравнивается |
++|---|---|---|
++| `code` | `inn` | цифры |
++| `kpp` | `kpp` | цифры |
++| `org_r` | `full_name` | организационно-правовая форма сокращением = полностью: ООО = «Общество с ограниченной ответственностью», АО / НПАО / НАО = «(Непубличное) акционерное общество», ОАО = «Открытое акционерное общество», ПК = «Производственный кооператив», «Хозяйственное товарищество» = полное товарищество / товарищество на вере (а также ЗАО, ПАО, ОДО, АНО, ФГУП, ГУП, МУП). Название (в кавычках) должно совпасть без учёта регистра, кавычек и знаков препинания. Разная форма (ООО ≠ АО, ОАО ≠ ПАО) → красный; форма указана только с одной стороны → жёлтый |
++| `address_r_street` | `legal_address.street` | тип улицы сокращением = полностью («ул.» = «улица», «пр-кт» = «проспект»…), название — без регистра и знаков. Другой тип улицы или похожее название (≥ 85 %) → жёлтый |
++| `address_r_house` | `legal_address.house` | «11» = «Д. 11» = «дом 11»; корпус и строение, если в Sd они в отдельных полях (`address_r_frame`, `address_r_building`), тоже учитываются. Совпал только номер дома → жёлтый |
++| `address_r_zip` | `legal_address.zip_code` | цифры |
++
++Если по данным ЕСИА организация ликвидирована (`is_liquidated`), в окне — красная строка «Организация действует: ликвидирована». В окне также ОГРН и юридический адрес из ЕСИА целиком (для сведения, не сверяются).
++
++Зелёный — совпадает, красный — расходится. Если значения нет с одной из сторон — без цвета («нет в ЕСИА»). **На вердикт дела ЕСИА не влияет**; в выгрузке по доменам — колонка «ЕСИА», то же окно ESIA (встроено в файл) и строка в «К сведению».
+ 
+ Страница идентификации и файл ЕСИА одной персоны в пределах одной загрузки читаются один раз (у 500 доменов одного администратора — один запрос).
+ 
+@@ -132,7 +147,7 @@
+ - проверки: если домены загружены после проверки дела — проверки дела по доменам (в т. ч. сверка Sd с заявлением и паспортом); если без дела — «Домены в manager» и «Администратор у доменов один»;
+ - администраторы найденных доменов: ФИО/организация, паспорт или ИНН, e-mail, статусы услуг, аккаунты, число доменов;
+ - «к сведению»: статусы услуг (приостановлена, удалена), разные администраторы в одном аккаунте, один и тот же паспорт с разными «кем выдан»/датой выдачи в Sd, не найденные домены, похожие на найденные (вероятная ошибка распознавания: `vstshakii.ru → vst-shakti.ru`), несуществующие зоны, «найдено несколько услуг»;
+-- таблица доменов с фильтром (домен, ФИО, паспорт, ИНН, e-mail), ссылками на Sd/S/счета и WHOIS.
++- таблица доменов с фильтром (домен, ФИО, паспорт, ИНН, e-mail, provider), ссылками на Sd/S/счета и WHOIS. С 0.7.2 `provider` — отдельная колонка; таблицу можно сортировать щелчком по заголовку любой колонки (повторный щелчок — обратный порядок, пустые значения — в конце), кнопка «По группам» возвращает исходный вид по «проблемности».
+ 
+ Для дела файл также сохраняется в его папку — `domains.html` рядом с `report.html`.
+ 
+@@ -213,7 +228,7 @@
+   - (0.6.0, вкладка «Смена владельца ЛК») `/manager/user_details?user_id=…` и `/user/<номер или логин>/runic_details`.
+ 
+   Это обычные GET-запросы — то же самое, что переход по ссылкам. Вкладка закрывается через 60 секунд без работы. Ту вкладку, которую вы сейчас смотрите, расширение не закрывает.
+-- **Файл данных ЕСИА** (0.6.0) лежит на `https://identity.reg.ru/esia/….json` (ссылка «Смотреть файл»). Расширение загружает его с вашим входом; если сразу не получилось — открывает ссылку в фоновой вкладке, читает и закрывает её. В программу из файла передаются только поля для сверки (ФИО, дата рождения, гражданство, серия, номер, дата выдачи, кем выдан) и признаки `trusted`, `vrf_stu`. ИНН, СНИЛС, адреса, телефон, e-mail, oid из файла не передаются.
++- **Файл данных ЕСИА** (0.6.0) лежит на `https://identity.reg.ru/esia/….json` (ссылка «Смотреть файл»). Расширение загружает его с вашим входом; если сразу не получилось — открывает ссылку в фоновой вкладке, читает и закрывает её. В программу из файла передаются только поля для сверки (ФИО, дата рождения, гражданство, серия, номер, дата выдачи, кем выдан) и признаки `trusted`, `vrf_stu`. ИНН, СНИЛС, адреса, телефон, e-mail, oid из файла не передаются. У файла организации (0.7.2) — название, ИНН, КПП, ОГРН, признак ликвидации, `trusted` и юридический адрес; ФИО представителя (`prs_auth_*`), телефон, e-mail, почтовый адрес и oid не передаются. Из Sd юрлица с 0.7.2 передаются ещё улица, дом, корпус, строение и индекс юридического адреса.
+ - **Кнопки manager не нажимаются.** «Сохранить», «Изменить», «Удалить», «Совершить массовое действие», «Актуализировать данные ЕСИА», «Аннулировать идентификацию» и другие формы manager расширение не трогает. Единственное изменение — значения полей формы физлица на странице базовой анкеты по кнопке «Заполнить автоматически», во вкладке, которую вы видите. Сохраняете вы.
+ - **В программу передаются только перечисленные выше поля.** С 0.5.0 к ним добавлен контактный e-mail администратора: `e_mail` (.RU/.РФ/.SU) и `o_email` (остальные зоны), а для остальных зон — название организации или ФИО владельца (`o_company`, `o_last_name`… группы `o_*`). Код передачи домена (`authinfo`), телефоны, адреса, `FOA_token` и служебные поля Sd не забираются. Во вкладке «Смена владельца ЛК» передаётся базовая анкета аккаунта целиком (в ней есть телефон, e-mail, почтовый адрес — они нужны для сверки и автозаполнения), логин, обслуживающая организация и статусы аккаунта.
+ - **Связь только внутри компьютера.** Расширение связывается только с программой PySimpleManager на этом же компьютере (`ws://127.0.0.1:8765/ext`). Программа принимает подключения только от расширений Chrome, обычные сайты подключиться не могут.
+@@ -262,4 +277,4 @@
+ - **Типы контактов:** `ru_pp` и `ru_org` сверяются с документами. Остальные (группы `o_*` других зон) — показываются администратор и e-mail, сверка — вручную.
+ - **Домен на юрлицо** со сверкой бланка физлица — всегда ручная проверка.
+ - **Автозаполнение — только базовая анкета физлица** (вкладка «Смена владельца ЛК»). Юрлица и ИП, «Перенос доменов между аккаунтами» — следующие этапы. Данные заявления для смены владельца пока вводятся вручную (шаблон заявления `acc_give_pers_ru` — позже).
+-- **ЕСИА** — только для доменов физлиц; на вердикт не влияет.
++- **ЕСИА** — для доменов физлиц и юрлиц (.RU/.РФ/.SU); у остальных зон нет; на вердикт не влияет.
+diff -ruN a/docs/USAGE.md b/docs/USAGE.md
+--- a/docs/USAGE.md	2026-10-10 00:56:34.738851085 +0300
++++ b/docs/USAGE.md	2026-10-10 00:56:34.745275930 +0300
+@@ -2,7 +2,7 @@
+ 
+ > С версии 0.7.1 программа называется **PySimpleManager** (раньше — doctool). Внутренние имена не менялись: пакет и команды `python -m doctool …`, файлы `doctool_web.bat` / `doctool_gui.bat`, папка расширения `doctool_extension`, схема выгрузки `doctool.case.v1`.
+ 
+-Версия 0.7.1. Установка описана в `README.md`. Здесь собраны все режимы работы, параметры, правила вердикта, формат выгрузки и решения типичных проблем.
++Версия 0.7.2. Установка описана в `README.md`. Здесь собраны все режимы работы, параметры, правила вердикта, формат выгрузки и решения типичных проблем.
+ 
+ ---
+ 
+@@ -28,7 +28,7 @@
+ 
+ ### 2.1. Порядок работы
+ 
+-1. **Тип заявления** — например, «Смена администратора домена». Типы с пометкой «(скоро)» ещё не настроены.
++1. **Тип заявления** — например, «Смена администратора домена». Типы с пометкой «(скоро)» ещё не настроены. Поля «Название дела» с 0.7.2 нет: дело называется по имени файла заявления (или паспорта); в командной строке — ключ `--case`.
+ 2. **Файлы.** Перетащите заявление в левую область, паспорт — в правую, или нажмите «Выбрать…».
+    - Если оба документа в одном файле, отметьте **«Заявление и паспорт в одном файле»** и положите файл в левую область. Программа сама определит, какие страницы относятся к заявлению, а какие к паспорту (см. п. 2.4).
+    - Паспорт можно загружать целиком, например все страницы PDF. Разворот с фото программа найдёт сама, а остальные страницы использует для поиска «Сведений о ранее выданных паспортах».
+@@ -142,7 +142,7 @@
+ 
+ Внутри группы — порядок заявления. В `export.json` порядок доменов прежний — как в заявлении.
+ 
+-**ЕСИА** (с 0.6.0). У доменов физлиц — колонка «ЕСИА» (поле `state` со страницы «Идентификация через Госуслуги», открытой по ссылке со Sd домена, и итог сверки Sd с файлом данных ЕСИА) и кнопка **ESIA** рядом с Sd / S — окно сверки. На вердикт не влияет. В `export.json` у домена — `esia` (state, ссылки, поля из файла ЕСИА), `esia_rows`, `esia_status`. Подробно — MANAGER.md, раздел 3.
++**ЕСИА** (с 0.6.0; юрлица — с 0.7.2: ИНН, КПП, название с организационно-правовой формой, улица, дом и индекс юридического адреса). У доменов физлиц и юрлиц — колонка «ЕСИА» (поле `state` со страницы «Идентификация через Госуслуги», открытой по ссылке со Sd домена, и итог сверки Sd с файлом данных ЕСИА) и кнопка **ESIA** рядом с Sd / S — окно сверки. На вердикт не влияет. В `export.json` у домена — `esia` (state, ссылки, поля из файла ЕСИА), `esia_rows`, `esia_status`. Подробно — MANAGER.md, раздел 3.
+ 
+ ### 2.5а. Смена владельца ЛК (только веб-интерфейс, с 0.6.0)
+ 
+diff -ruN a/doctool/__init__.py b/doctool/__init__.py
+--- a/doctool/__init__.py	2026-10-10 00:56:34.739082209 +0300
++++ b/doctool/__init__.py	2026-10-10 00:56:34.746005621 +0300
+@@ -3,4 +3,4 @@
+ До 0.7.1 программа называлась doctool. Внутренние имена прежние: пакет `doctool` (python -m doctool …),
+ doctool_web.bat / doctool_gui.bat, папка расширения doctool_extension, схема выгрузки doctool.case.v1."""
+ APP_NAME = "PySimpleManager"
+-__version__ = "0.7.1"
++__version__ = "0.7.2"
+diff -ruN a/doctool/domain_report.py b/doctool/domain_report.py
+--- a/doctool/domain_report.py	2026-10-10 00:56:34.739373088 +0300
++++ b/doctool/domain_report.py	2026-10-10 00:56:34.746024504 +0300
+@@ -6,6 +6,8 @@
+ 
+ С 0.6.0 у доменов физлиц — колонка «ЕСИА» (идентификация через Госуслуги) и кнопка ESIA рядом с Sd / S:
+ окно сверки Sd ↔ ЕСИА встроено в файл (данные — в блоке <script type="application/json" id="esia-data">).
++С 0.7.2 — то же у доменов юрлиц; provider — отдельная колонка; таблицу доменов можно сортировать щелчком
++по заголовку колонки (повторный щелчок — обратный порядок, «По группам» — исходный вид).
+ """
+ from __future__ import annotations
+ 
+@@ -119,7 +121,7 @@
+         st = Counter(d.get("esia_state") or {"none": "не проходил", "no_link": "нет ссылки на Sd", "error": "ошибка"}
+                      .get(d.get("esia_status"), "без state") for d in esia)
+         bad = [d["domain"] for d in esia if d.get("esia_status") == "mismatch"]
+-        out.append("Идентификация через Госуслуги (ЕСИА) по Sd доменов-физлиц: " + ", ".join(f"{_e(k)} — {v}" for k, v in st.most_common())
++        out.append("Идентификация через Госуслуги (ЕСИА) по Sd доменов (физлица и юрлица): " + ", ".join(f"{_e(k)} — {v}" for k, v in st.most_common())
+                    + (f"; данные Sd не совпадают с ЕСИА: {', '.join(map(_e, bad[:15]))}{' и др.' if len(bad) > 15 else ''}" if bad else "")
+                    + ". На вердикт не влияет — кнопка ESIA у домена открывает сверку.")
+     other = Counter(d.get("group") or "?" for d in found if d.get("kind") not in ("person", "org"))
+@@ -172,8 +174,8 @@
+         links.insert(0, _link(urls["sd"], "Sd"))
+     if urls.get("s"):
+         links.insert(1, _link(urls["s"], "S"))
+-    esia_btn = f' <button class="esia" data-d="{_e(dom)}">ESIA</button>' if d.get("esia") else ""
+-    head = f"<td><b>{_e(dom)}</b><br><span class=src>{' '.join(links)}</span>{esia_btn}</td>"
++    esia_btn = f' <button class="esia" data-d="{_e(dom)}">ESIA</button>' if d.get("esia") or d.get("esia_status") else ""
++    head = f'<td data-k="{_e(dom)}"><b>{_e(dom)}</b><br><span class=src>{" ".join(links)}</span>{esia_btn}</td>'
+     if d.get("status") == NOT_FOUND:
+         w = d.get("whois") or {}
+         if w.get("status") == "free":
+@@ -190,11 +192,11 @@
+         if dom in similar:
+             wt += f"<br><span class=hint>похож на {_e(similar[dom])} из списка</span>"
+         return (f'<tr class="fail" data-q="{_e(dom)}">{head}<td>не найден</td><td>{_e(d.get("error") or "")}</td>'
+-                f"<td></td><td></td><td>{wt}</td></tr>")
++                f"<td></td><td></td><td></td><td>{wt}</td></tr>")
+     if d.get("status") != FOUND:
+         svc = "<br>".join(_link(f"{MANAGER}/tech/srv_details?service_id={sid}", f"Sd {sid} ({st})") for sid, st in _services(d))
+         return (f'<tr class="review" data-q="{_e(dom)}">{head}<td>ошибка</td><td>{_e(d.get("error") or "")}</td>'
+-                f"<td></td><td></td><td>{svc}</td></tr>")
++                f"<td></td><td></td><td></td><td>{svc}</td></tr>")
+     sd = d.get("sd") or {}
+     sst = d.get("service_status") or ""
+     mail = (f"<br>e-mail: {', '.join(map(_e, d['emails']))}" if d.get("emails") else "")
+@@ -217,13 +219,14 @@
+             for r in cmp_rows))
+     else:
+         cmp_ = "<span class=src>не выполнялась — нет заявления и паспорта</span>"
+-    extra = (f"provider: {_e(d.get('provider') or '—')}<br>аккаунт: {_e(d.get('account') or '—')}<br>"
++    extra = (f"аккаунт: {_e(d.get('account') or '—')}<br>"
+              f"смена админа: {_e(d.get('last_admin_change') or '—')}<br>"
+              f"страна: {_e(sd.get('country') or sd.get('o_country_code') or '—')}")
+     cls = d.get("verdict") or ""
+-    q += f" {d.get('esia_ru', '')}"
++    q += f" {d.get('esia_ru', '')} {d.get('provider', '')}"
+     return (f'<tr class="{cls}" data-q="{_e(q)}">{head}<td>найден<br><span{"" if sst.startswith("Активна") else " class=bad"}>'
+-            f"{_e(sst)}</span></td><td>{data}</td><td>{cmp_}</td><td>{_esia_cell(d)}</td><td>{extra}</td></tr>")
++            f"{_e(sst)}</span></td><td>{data}</td><td>{cmp_}</td><td>{_esia_cell(d)}</td>"
++            f"<td>{_e(d.get('provider') or '—')}</td><td>{extra}</td></tr>")
+ 
+ 
+ _ESIA_CLS = {"match": "ok", "warn": "warn", "mismatch": "fail", "none": "info", "no_data": "review", "no_link": "info",
+@@ -244,10 +247,13 @@
+     out = {}
+     for d in items:
+         e = d.get("esia") or {}
+-        if not e:
++        if not e and not d.get("esia_status"):
+             continue
+         data, latest = e.get("data") or {}, e.get("latest") or {}
+         out[d["domain"]] = {
++            "group": d.get("group") or "", "kind": d.get("kind") or "",
++            "ogrn": data.get("ogrn") or "", "liquidated": data.get("is_liquidated"),
++            "address": (data.get("legal_address") or {}).get("address_str") or "",
+             "status": d.get("esia_status"), "text": d.get("esia_ru"), "state": e.get("state") or "",
+             "created": latest.get("creation_date") or "", "processed": latest.get("processed_date") or "",
+             "action": latest.get("action") or "", "reason": latest.get("reason") or "", "comment": latest.get("comment") or "",
+@@ -261,10 +267,10 @@
+ 
+ _JS = """
+ (function(){
+-  var q=document.getElementById('q'), shown=document.getElementById('shown');
+-  var rows=[].slice.call(document.querySelectorAll('#dom tr'));
++  var q=document.getElementById('q'), shown=document.getElementById('shown'), tb=document.querySelector('#dom tbody');
++  var rows=[].slice.call(tb.rows), sorted=null;
+   function fin(h){ if(!h) return; var c=h.row.querySelector('.cnt'), t=q.value.trim();
+-    c.textContent=t?(h.n+' из '+c.dataset.total):c.dataset.total; h.row.style.display=(h.n||!t)?'':'none'; }
++    c.textContent=t?(h.n+' из '+c.dataset.total):c.dataset.total; h.row.style.display=(!sorted&&(h.n||!t))?'':'none'; }
+   function apply(){
+     var t=q.value.trim().toLowerCase(), head=null, n=0, total=0;
+     rows.forEach(function(r){
+@@ -276,6 +282,21 @@
+     fin(head); shown.textContent=t?('показано '+n+' из '+total):'';
+   }
+   q.addEventListener('input', apply);
++  // сортировка щелчком по заголовку: повторный щелчок — обратный порядок; «По группам» — исходный вид
++  var heads=[].slice.call(document.querySelectorAll('#dom thead th')), reset=document.getElementById('bygroups');
++  function key(r, i){ var c=r.cells[i]; if(!c) return ''; var k=c.getAttribute('data-k');
++    return (k!==null?k:c.textContent).replace(/\\s+/g,' ').trim().toLowerCase(); }
++  function mark(){ heads.forEach(function(h, i){ var a=h.querySelector('.arr');
++    a.textContent = sorted && sorted.col===i ? (sorted.dir>0?' ▲':' ▼') : ''; }); reset.style.display=sorted?'':'none'; }
++  heads.forEach(function(h, i){ h.addEventListener('click', function(){
++    var dir = sorted && sorted.col===i ? -sorted.dir : 1; sorted={col:i, dir:dir};
++    var data=rows.filter(function(r){ return r.dataset.q; });
++    data.sort(function(a, b){ var x=key(a,i), y=key(b,i), ex=!x||x==='—', ey=!y||y==='—';
++      if(ex!==ey) return ex?1:-1;                       // пустые — всегда в конце
++      return dir*x.localeCompare(y, 'ru', {numeric:true}); });
++    data.forEach(function(r){ tb.appendChild(r); }); mark(); apply(); }); });
++  reset.addEventListener('click', function(){ sorted=null; rows.forEach(function(r){ tb.appendChild(r); }); mark(); apply(); });
++  mark();
+ })();
+ """
+ 
+@@ -296,18 +317,23 @@
+     var h = '<table class="kv"><tr><th>state</th><td>' + e(x.state || '—') + '</td><th>создано / обработано</th><td>' + e(x.created || '—')
+       + ' / ' + e(x.processed || '—') + '</td></tr><tr><th>action</th><td>' + e(x.action || '—') + (x.reason ? '<br>reason: ' + e(x.reason) : '')
+       + (x.comment ? '<br>' + e(x.comment) : '') + '</td><th>данные ЕСИА</th><td>' + (x.trusted === undefined || x.trusted === null ? '—'
+-      : 'trusted: ' + (x.trusted ? 'да' : 'нет')) + (x.vrf ? ' · паспорт: ' + e(x.vrf) : '') + '</td></tr><tr><th>ссылки</th><td colspan="3">'
++      : 'trusted: ' + (x.trusted ? 'да' : 'нет')) + (x.vrf ? ' · паспорт: ' + e(x.vrf) : '')
++      + (x.ogrn ? '<br>ОГРН ' + e(x.ogrn) : '') + (x.liquidated === true ? '<br><b class=bad>ликвидирована</b>' : x.liquidated === false ? ' · действует' : '')
++      + '</td></tr>' + (x.address ? '<tr><th>юр. адрес (ЕСИА)</th><td colspan="3">' + e(x.address) + '</td></tr>' : '')
++      + '<tr><th>ссылки</th><td colspan="3">'
+       + [a(x.url, 'Идентификация через Госуслуги'), a(x.file_url, 'JSON-файл'), a(x.sd_url, 'Sd')].filter(Boolean).join(' · ') + '</td></tr></table>';
+     var why = x.error ? 'Ошибка: ' + x.error : WHY[x.status];
+     if (why) h += '<p class="notes">' + e(why) + '</p>';
+     if (x.rows.length) {
+-      h += '<table><tr><th>Поле</th><th>Sd (ru_pp)</th><th>ЕСИА (JSON)</th><th></th></tr>';
++      h += '<table><tr><th>Поле</th><th>Sd (' + e(x.group || 'ru_pp') + ')</th><th>ЕСИА (JSON)</th><th></th></tr>';
+       x.rows.forEach(function(r){
+         var c = r.status ? ' class="' + r.status + '"' : '';
+         h += '<tr><td>' + e(r.title) + '</td><td' + c + '>' + e(r.sd) + '<br><span class=src>' + e(r.field) + '</span></td><td' + c + '>'
+           + e(r.esia) + '<br><span class=src>' + e(r.esia_field) + '</span></td><td class=src>' + e(r.detail) + '</td></tr>';
+       });
+-      h += '</table><p class=src>Зелёный — совпадает, красный — расходится, жёлтый — «кем выдан» написан по-разному; без цвета — значения нет с одной из сторон.</p>';
++      h += '</table><p class=src>Зелёный — совпадает, красный — расходится, жёлтый — написано по-разному (кем выдан, тип улицы, корпус, '
++        + 'форма организации указана с одной стороны); без цвета — значения нет с одной из сторон. ООО = «Общество с ограниченной '
++        + 'ответственностью», АО/НПАО = «(Непубличное) акционерное общество» и т. п.</p>';
+     }
+     if (x.history.length) {
+       h += '<h3>Все попытки идентификации</h3><table><tr><th>state</th><th>создано</th><th>обработано</th><th>action</th><th>reason / comment</th></tr>';
+@@ -336,6 +362,7 @@
+ .tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
+ .tools input{font:inherit;padding:6px 9px;border:1px solid #d0d0d5;border-radius:6px;min-width:280px}
+ details summary{cursor:pointer;color:#2b6cb0} a{color:#2b6cb0}
++#dom thead th{cursor:pointer;user-select:none} #dom thead th:hover{background:#e8e8ee}
+ button.esia{font:inherit;font-size:12px;padding:0 7px;margin-left:4px;border:1px solid #2b6cb0;color:#2b6cb0;background:#fff;border-radius:5px;cursor:pointer}
+ .tag{display:inline-block;padding:1px 7px;border-radius:9px;font-size:12.5px}
+ dialog{border:1px solid #d0d0d5;border-radius:10px;max-width:900px;width:94vw;padding:0 16px 14px}
+@@ -363,7 +390,7 @@
+     for d in items:
+         if d.get("problem") != group:
+             group = d.get("problem")
+-            rows.append(f'<tr class="grp" id="g-{_e(group or "")}"><td colspan="6">{_e(titles.get(group, group or ""))} — '
++            rows.append(f'<tr class="grp" id="g-{_e(group or "")}"><td colspan="7">{_e(titles.get(group, group or ""))} — '
+                         f'<span class="cnt" data-total="{counts[group]}">{counts[group]}</span></td></tr>')
+         rows.append(_domain_row(d, sim))
+     summary = " · ".join(f'<a href="#g-{code}">{_e(title)}: <b>{counts[code]}</b></a>'
+@@ -386,10 +413,12 @@
+ {('<h2>Администраторы найденных доменов</h2>' + _admins_table(found)) if found else ''}
+ {('<h2>К сведению</h2><ul class="notes">' + ''.join(f'<li>{n}</li>' for n in nts) + '</ul>') if nts else ''}
+ <h2>Домены</h2>
+-<div class="tools"><input type="search" id="q" placeholder="Фильтр: домен, ФИО, паспорт, ИНН, e-mail">
+-<span class="src" id="shown"></span></div>
+-<table id="dom"><tr><th>Домен</th><th>manager</th><th>Администратор (Sd)</th><th>Сверка</th><th>ЕСИА</th><th>Прочее</th></tr>
+-{''.join(rows)}</table>
++<div class="tools"><input type="search" id="q" placeholder="Фильтр: домен, ФИО, паспорт, ИНН, e-mail, provider">
++<span class="src" id="shown"></span><span class="src">Сортировка — щелчок по заголовку колонки</span>
++<button type="button" id="bygroups" style="display:none">По группам</button></div>
++<table id="dom"><thead><tr>{''.join(f'<th title="Сортировать">{h}<span class="arr"></span></th>' for h in
++    ("Домен", "manager", "Администратор (Sd)", "Сверка", "ЕСИА", "Provider", "Прочее"))}</tr></thead>
++<tbody>{''.join(rows)}</tbody></table>
+ <dialog id="esiaDlg"><div class="dhd"><b id="esiaTitle"></b><button onclick="this.closest('dialog').close()">Закрыть</button></div>
+ <div id="esiaBody"></div></dialog>
+ <script type="application/json" id="esia-data">{_esia_data(items)}</script>
+diff -ruN a/doctool/domains.py b/doctool/domains.py
+--- a/doctool/domains.py	2026-10-10 00:56:34.739410187 +0300
++++ b/doctool/domains.py	2026-10-10 00:56:34.745518397 +0300
+@@ -11,6 +11,7 @@
+ С 0.6.0 у доменов физлиц есть статус идентификации через Госуслуги (ЕСИА): расширение открывает ссылку
+ «Идентификация через Госуслуги» со страницы Sd домена (идентификация относится к администратору домена,
+ а не к аккаунту), берёт поле state последней записи и файл данных ЕСИА. Сверка Sd ↔ ЕСИА — esia_compare().
++С 0.7.2 — и у доменов юрлиц (ru_org): ИНН, КПП, название организации, юридический адрес (дом, улица, индекс).
+ На вердикт дела ЕСИА не влияет.
+ """
+ from __future__ import annotations
+@@ -220,6 +221,7 @@
+ # ------------------------------------------------------------------ ЕСИА (идентификация через Госуслуги)
+ 
+ # Sd (группа ru_pp) ↔ файл данных ЕСИА. В ЕСИА last_name — фамилия, middle_name — отчество.
++# (поле Sd, поле ЕСИА, название, вид значения для fieldnorm.same)
+ ESIA_MAP = (
+     ("person_r_surname", "last_name", "Фамилия", "text"),
+     ("person_r_name", "first_name", "Имя", "text"),
+@@ -231,6 +233,17 @@
+     ("passport_date", "rf_passport.issue_date", "Дата выдачи", "date"),
+     ("passport_place", "rf_passport.issued_by", "Кем выдан", "issuer"),
+ )
++# Sd (группа ru_org) ↔ файл данных ЕСИА организации (0.7.2). Название: «ООО» = «Общество с ограниченной
++# ответственностью» и т. п. (fieldnorm.same_org). Дом в Sd — address_r_house; если отдельно заполнены корпус
++# (Sd address_r_frame, ЕСИА frame) или строение (address_r_building, building), они тоже учитываются (_house_variants).
++ESIA_MAP_ORG = (
++    ("code", "inn", "ИНН", "digits"),
++    ("kpp", "kpp", "КПП", "digits"),
++    ("org_r", "full_name", "Название организации", "org"),
++    ("address_r_street", "legal_address.street", "Улица (юр. адрес)", "street"),
++    ("address_r_house", "legal_address.house", "Дом (юр. адрес)", "house"),
++    ("address_r_zip", "legal_address.zip_code", "Индекс (юр. адрес)", "digits"),
++)
+ ESIA_STATUS_RU = {"match": "Sd = ЕСИА", "warn": "Sd ≈ ЕСИА", "mismatch": "Sd ≠ ЕСИА", "none": "не проходил",
+                   "no_data": "нет файла данных", "no_link": "нет ссылки на Sd", "error": "ошибка", "": ""}
+ 
+@@ -242,19 +255,40 @@
+     return "" if cur is None else str(cur).strip()
+ 
+ 
++_BEST = {fieldnorm.OK: 0, fieldnorm.WARN: 1, fieldnorm.FAIL: 2, fieldnorm.NONE: 3}
++
++
++def _house_variants(house, frame, building) -> list[str]:
++    """Варианты дома: вместе с корпусом/строением, если они заполнены отдельно, и только дом."""
++    house = str(house or "").strip()
++    extra = [f"{w} {str(v).strip()}" for w, v in (("корп.", frame), ("стр.", building)) if str(v or "").strip()]
++    return [", ".join([house] + extra), house] if house and extra else [house]
++
++
+ def esia_compare(info: "DomainInfo") -> list[dict]:
+-    """Строки сверки Sd ↔ ЕСИА: [{field, esia_field, title, sd, esia, status, detail}] (status: ok/warn/fail/"")."""
++    """Строки сверки Sd ↔ ЕСИА: [{field, esia_field, title, sd, esia, status, detail}] (status: ok/warn/fail/"").
++    Физлицо (ru_pp) — ESIA_MAP, юрлицо (ru_org) — ESIA_MAP_ORG."""
+     data = (info.esia or {}).get("data") or {}
+-    if info.kind != "person" or not data:
++    if info.kind not in ("person", "org") or not data:
+         return []
+     rows = []
+-    for sd_key, es_key, title, kind in ESIA_MAP:
+-        sv, ev = info.sd.get(sd_key, "") or "", _esia_value(data, es_key)
+-        st, det = fieldnorm.same(kind, sv, ev)
++    la = data.get("legal_address") or {}
++    for sd_key, es_key, title, kind in (ESIA_MAP if info.kind == "person" else ESIA_MAP_ORG):
++        if sd_key == "address_r_house":      # корпус и строение бывают отдельными полями — и в Sd, и в ЕСИА
++            sd_vars = _house_variants(info.sd.get(sd_key), info.sd.get("address_r_frame"), info.sd.get("address_r_building"))
++            es_vars = _house_variants(la.get("house"), la.get("frame"), la.get("building"))
++        else:
++            sd_vars, es_vars = [info.sd.get(sd_key, "") or ""], [_esia_value(data, es_key)]
++        sv, ev, (st, det) = min(((v, w, fieldnorm.same(kind, v, w)) for v in sd_vars for w in es_vars),
++                                key=lambda x: _BEST[x[2][0]])
+         if st == fieldnorm.NONE and (sv or ev):
+             det = "нет в ЕСИА" if sv else "нет в Sd"
+         rows.append({"field": sd_key, "esia_field": es_key, "title": title, "sd": sv, "esia": ev, "status": st,
+                      "detail": det})
++    if info.kind == "org" and data.get("is_liquidated") is True:
++        rows.append({"field": "", "esia_field": "is_liquidated", "title": "Организация действует", "sd": "",
++                     "esia": "ликвидирована", "status": fieldnorm.FAIL,
++                     "detail": "по данным ЕСИА организация ликвидирована"})
+     return rows
+ 
+ 
+@@ -262,7 +296,7 @@
+     """Итог ЕСИА домена: {status, state, text, rows}. status — ключ ESIA_STATUS_RU ("" — не применимо)."""
+     e = info.esia or {}
+     out = {"status": "", "state": e.get("state", "") or "", "text": "", "rows": []}
+-    if info.status != FOUND or info.kind != "person":
++    if info.status != FOUND or info.kind not in ("person", "org"):
+         return out
+     if not e:
+         out["status"] = "no_link"
+diff -ruN a/doctool/fieldnorm.py b/doctool/fieldnorm.py
+--- a/doctool/fieldnorm.py	2026-10-10 00:56:34.739510779 +0300
++++ b/doctool/fieldnorm.py	2026-10-10 00:56:34.745544175 +0300
+@@ -11,6 +11,13 @@
+   phone   — цифры, 8XXXXXXXXXX и XXXXXXXXXX (10 цифр) приводятся к 7XXXXXXXXXX;
+   country — код страны: «RUS» = «RU» = «Россия»;
+   issuer  — «кем выдан»: одинаковый текст → совпадает, похожий (≥ 85 %) → «похоже», иначе расходится.
++
++С 0.7.2 — для юрлиц (Sd группы ru_org ↔ ЕСИА организации):
++  org     — название организации: организационно-правовая форма сокращением и полностью — одно и то же
++            («ООО «Ромашка»» = «ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "РОМАШКА"»), само название должно совпасть;
++  house   — дом: «11» = «Д. 11» = «дом 11»; совпал только номер, а корпус/строение записаны иначе → «похоже»;
++  street  — улица: «ул. Промышленная» = «УЛ. ПРОМЫШЛЕННАЯ» = «Промышленная улица»; тот же адрес с другим
++            типом улицы или похожее название (≥ 85 %) → «похоже».
+ """
+ from __future__ import annotations
+ 
+@@ -74,6 +81,9 @@
+ 
+ def same(kind: str, a, b) -> tuple[str, str]:
+     """Сравнение двух значений: (статус, пояснение). Статус NONE — сравнивать не с чем (одно из значений пустое)."""
++    special = {"org": same_org, "house": same_house, "street": same_street}.get(kind)
++    if special is not None:
++        return special(a, b)
+     na, nb = norm(kind, a), norm(kind, b)
+     if not na or not nb:
+         return NONE, ""
+@@ -86,3 +96,173 @@
+             return WARN, f"написано по-разному, сходство {sim:.0f}%"
+         return FAIL, f"сходство {sim:.0f}%"
+     return FAIL, ""
++
++
++# ------------------------------------------------------------------ юрлица: название, дом, улица (0.7.2)
++
++def _words(s) -> str:
++    """Нижний регистр, ё → е, всё кроме букв и цифр — пробел."""
++    t = ("" if s is None else str(s)).lower().replace("ё", "е")
++    return re.sub(r"\s+", " ", re.sub(r"[^0-9a-zа-я]+", " ", t)).strip()
++
++
++# Организационно-правовые формы: полное название и сокращения → множество кодов. Формы совпадают, если у них
++# есть общий код. «АО», «НАО», «НПАО» и «(непубличное) акционерное общество» — одно и то же (с 2014 г. в ЕГРЮЛ
++# непубличное АО называется «АКЦИОНЕРНОЕ ОБЩЕСТВО»). «Хозяйственное товарищество» — полное товарищество или
++# товарищество на вере. ОАО, ЗАО и ПАО — отдельные формы (смена ЗАО → АО — повод обновить Sd).
++_HT = frozenset({"ХТ", "ПТ", "ТВ"})
++_ORG_PHRASES = sorted((
++    ("общество с ограниченной ответственностью", frozenset({"ООО"})),
++    ("общество с дополнительной ответственностью", frozenset({"ОДО"})),
++    ("непубличное акционерное общество", frozenset({"АО"})),
++    ("акционерное общество", frozenset({"АО"})),
++    ("публичное акционерное общество", frozenset({"ПАО"})),
++    ("открытое акционерное общество", frozenset({"ОАО"})),
++    ("закрытое акционерное общество", frozenset({"ЗАО"})),
++    ("производственный кооператив", frozenset({"ПК"})),
++    ("потребительский кооператив", frozenset({"ПОТРК"})),
++    ("хозяйственное товарищество", _HT),
++    ("полное товарищество", frozenset({"ПТ", "ХТ"})),
++    ("товарищество на вере", frozenset({"ТВ", "ХТ"})),
++    ("коммандитное товарищество", frozenset({"ТВ", "ХТ"})),
++    ("автономная некоммерческая организация", frozenset({"АНО"})),
++    ("федеральное государственное унитарное предприятие", frozenset({"ФГУП"})),
++    ("государственное унитарное предприятие", frozenset({"ГУП"})),
++    ("муниципальное унитарное предприятие", frozenset({"МУП"})),
++), key=lambda x: -len(x[0]))
++_ORG_ABBR = {
++    "ооо": frozenset({"ООО"}), "одо": frozenset({"ОДО"}), "ао": frozenset({"АО"}), "нао": frozenset({"АО"}),
++    "нпао": frozenset({"АО"}), "пао": frozenset({"ПАО"}), "оао": frozenset({"ОАО"}), "зао": frozenset({"ЗАО"}),
++    "пк": frozenset({"ПК", "ПОТРК"}), "хт": _HT, "пт": frozenset({"ПТ", "ХТ"}), "тв": frozenset({"ТВ", "ХТ"}),
++    "кт": frozenset({"ТВ", "ХТ"}), "ано": frozenset({"АНО"}), "фгуп": frozenset({"ФГУП"}), "гуп": frozenset({"ГУП"}),
++    "муп": frozenset({"МУП"}),
++}
++_QUOTES = "\"«»“”„‟'‘’`"
++
++
++def org_parts(s) -> tuple[list, str]:
++    """Название организации → ([формы — множества кодов], название без формы и кавычек).
++
++    Если есть кавычки, название — текст в кавычках (вложенные кавычки убираются), форма — снаружи. Без кавычек
++    полное название формы ищется где угодно, сокращение — только в начале или в конце («ООО Ромашка», «Ромашка, ООО»):
++    внутри названия сокращение может оказаться словом («АО "ТВ Центр"»)."""
++    s = "" if s is None else str(s)
++    qs = [i for i, c in enumerate(s) if c in _QUOTES]
++    quoted = len(qs) >= 2
++    name, outside = (s[qs[0] + 1:qs[-1]], s[:qs[0]] + " " + s[qs[-1] + 1:]) if quoted else (s, "")
++    forms: list = []
++
++    def phrases(t: str) -> list[str]:
++        w = f" {_words(t)} "
++        for phrase, codes in _ORG_PHRASES:
++            while f" {phrase} " in w:
++                forms.append(codes)
++                w = w.replace(f" {phrase} ", " ", 1)
++        return w.split()
++
++    if quoted:
++        forms.extend(_ORG_ABBR[t] for t in phrases(outside) if t in _ORG_ABBR)
++        words = _words(name).split()
++    else:
++        words = phrases(name)
++        while words and words[0] in _ORG_ABBR:
++            forms.append(_ORG_ABBR[words.pop(0)])
++        while words and words[-1] in _ORG_ABBR:
++            forms.append(_ORG_ABBR[words.pop()])
++    return forms, " ".join(words)
++
++
++def _form_ru(forms: list) -> str:
++    return ", ".join("/".join(sorted(f)) for f in forms) or "—"
++
++
++def same_org(a, b) -> tuple[str, str]:
++    """Название организации: форма (сокращение = полное название) + само название (без учёта регистра, кавычек,
++    знаков препинания)."""
++    fa, na = org_parts(a)
++    fb, nb = org_parts(b)
++    if not (fa or na) or not (fb or nb):
++        return NONE, ""
++    if na != nb:
++        return FAIL, "название организации не совпадает"
++    if fa and fb:
++        if any(x & y for x in fa for y in fb):
++            return OK, ""
++        return FAIL, f"разная организационно-правовая форма: {_form_ru(fa)} ≠ {_form_ru(fb)}"
++    if fa or fb:
++        return WARN, "название совпадает, организационно-правовая форма указана только с одной стороны"
++    return OK, ""
++
++
++_HOUSE_MARK = {"к": "к", "корп": "к", "корпус": "к", "кор": "к", "стр": "стр", "строение": "стр", "с": "стр",
++               "лит": "лит", "литер": "лит", "литера": "лит"}
++_HOUSE_DROP = {"д", "дом", "n"}
++
++
++def house_key(s) -> list[str]:
++    """«Д. 11», «дом 11», «11» → ['11']; «д. 5, корп. 2» → ['5', 'к', '2']; «11 А» → ['11а']."""
++    t = ("" if s is None else str(s)).lower().replace("ё", "е")
++    t = re.sub(r"[^0-9a-zа-я/]+", " ", t)
++    t = re.sub(r"(?<=[a-zа-я])(?=\d)", " ", t)          # «д11» → «д 11», «корп2» → «корп 2»
++    out: list[str] = []
++    for tok in t.split():
++        if tok in _HOUSE_DROP:
++            continue
++        if tok in _HOUSE_MARK:
++            out.append(_HOUSE_MARK[tok])
++        elif len(tok) == 1 and tok.isalpha() and out and out[-1][:1].isdigit():
++            out[-1] += tok                                    # «11 а» → «11а»
++        else:
++            out.append(tok)
++    return out
++
++
++def same_house(a, b) -> tuple[str, str]:
++    ka, kb = house_key(a), house_key(b)
++    if not ka or not kb:
++        return NONE, ""
++    if ka == kb:
++        return OK, ""
++    num = lambda k: (re.match(r"\d+", k[0]) or [""])[0]  # noqa: E731
++    if num(ka) and num(ka) == num(kb):
++        return WARN, "номер дома совпадает, корпус, строение или литера записаны по-разному"
++    return FAIL, ""
++
++
++# Типы улиц: полное название и сокращения → одно обозначение. Порядок важен: «пр-д» (проезд) раньше «пр» (проспект).
++_STREET_TYPES = (
++    ("улица|ул", "ул"), ("проезд|пр-?д", "пр-д"), ("проспект|пр-?кт|просп|пр-?т|пр", "пр-кт"), ("переулок|пер", "пер"),
++    ("бульвар|б-?р|бул", "б-р"), ("шоссе|ш", "ш"), ("площадь|пл", "пл"), ("набережная|наб", "наб"), ("тупик|туп", "туп"),
++    ("аллея|ал", "ал"), ("микрорайон|мкр-?н|мкр", "мкр"), ("квартал|кв-?л", "кв-л"), ("территория|тер", "тер"),
++    ("линия|лин", "лин"), ("дорога|дор", "дор"), ("тракт", "тракт"), ("километр|км", "км"), ("спуск", "спуск"),
++    ("въезд", "въезд"), ("просека", "просека"), ("городок", "городок"),
++)
++_STREET_RX = [(re.compile(rf"(?<![0-9a-zа-я])(?:{p})\.?(?![0-9a-zа-я])"), c) for p, c in _STREET_TYPES]
++
++
++def street_parts(s) -> tuple[set, str]:
++    """«ул. Промышленная» → ({'ул'}, 'промышленная'); «Ленинский пр-кт» → ({'пр-кт'}, 'ленинский')."""
++    t = ("" if s is None else str(s)).lower().replace("ё", "е")
++    types: set = set()
++    for rx, canon in _STREET_RX:
++        t, n = rx.subn(" ", t)
++        if n:
++            types.add(canon)
++    words = [w for w in _words(t).split() if w not in ("им", "имени")]
++    return types, " ".join(words)
++
++
++def same_street(a, b) -> tuple[str, str]:
++    ta, na = street_parts(a)
++    tb, nb = street_parts(b)
++    if not na or not nb:
++        return NONE, ""
++    if na == nb:
++        if ta and tb and not ta & tb:
++            return WARN, f"тип улицы разный: {', '.join(sorted(ta))} ≠ {', '.join(sorted(tb))}"
++        return OK, ""
++    from rapidfuzz import fuzz
++    sim = fuzz.token_set_ratio(na, nb)
++    if sim >= 85:
++        return WARN, f"написано по-разному, сходство {sim:.0f}%"
++    return FAIL, f"сходство {sim:.0f}%"
+diff -ruN a/doctool/qt_app.py b/doctool/qt_app.py
+--- a/doctool/qt_app.py	2026-10-10 00:56:34.739855400 +0300
++++ b/doctool/qt_app.py	2026-10-10 00:56:34.745981728 +0300
+@@ -16,7 +16,7 @@
+ from PySide6.QtGui import QDesktopServices, QPixmap
+ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QButtonGroup, QCheckBox, QComboBox, QDialog,
+                                QFileDialog, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QHeaderView, QLabel,
+-                               QLineEdit, QMainWindow, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton,
++                               QMainWindow, QMessageBox, QPlainTextEdit, QProgressBar, QPushButton,
+                                QRadioButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem, QTabWidget,
+                                QVBoxLayout, QWidget)
+ 
+@@ -192,11 +192,8 @@
+         self.operation.addItem("Сверка и выгрузка данных для системы", "check_export")
+         self.operation.addItem("Автозаполнение во внутренней системе (позже)", "autofill")
+         self.operation.model().item(1).setEnabled(False)
+-        self.case_id = QLineEdit()
+-        self.case_id.setPlaceholderText("необязательно, напр. Иванов_домен.рф")
+         form.addRow("Тип заявления", self.case_type)
+         form.addRow("Операция", self.operation)
+-        form.addRow("Название дела", self.case_id)
+         lay.addLayout(form)
+ 
+         self.combined = QCheckBox("Заявление и паспорт в одном файле")
+@@ -365,7 +362,7 @@
+                          page_roles=page_roles, app_mode=self.app_box.mode(), app_handwritten=hand,
+                          pas_mode=self.pas_box.mode(), vlm_model=self.model.currentText() if use_vlm else None,
+                          ollama=self.ollama,
+-                         case_id=self.case_id.text().strip() or None, out_root=self.out_root,
++                         out_root=self.out_root,
+                          llm_fields=self.llm_fields.isChecked(), llm_model=self.llm_model.currentText().strip() or None)
+ 
+     def start(self, _=None, page_roles=None):
+diff -ruN a/doctool/static/index.html b/doctool/static/index.html
+--- a/doctool/static/index.html	2026-10-10 00:56:34.740041293 +0300
++++ b/doctool/static/index.html	2026-10-10 00:56:34.745918508 +0300
+@@ -123,7 +123,6 @@
+         <option value="check_export">Сверка и выгрузка данных для системы</option>
+         <option value="autofill" disabled>Автозаполнение во внутренней системе (позже)</option>
+       </select></label>
+-    <label class="f">Название дела (необязательно) <input type="text" id="caseId" placeholder="напр. Иванов_домен.рф"></label>
+   </div>
+ 
+   <label class="chk" style="margin-top:14px"><input type="checkbox" id="combined"> Заявление и паспорт в одном файле</label>
+@@ -323,7 +322,7 @@
+ function options(extra={}){
+   const v = n => (document.querySelector(`input[name=${n}]:checked`)||{}).value;
+   return {
+-    case_type: $('#caseType').value, case_id: $('#caseId').value.trim(),
++    case_type: $('#caseType').value,
+     combined: $('#combined').checked, app_mode: v('appMode'), pas_mode: v('pasMode'),
+     handwritten: $('#handwritten').checked, use_vlm: $('#handwritten').checked || $('#pasVlm').checked,
+     model: $('#model').value, manager_autoload: $('#mgrAuto').checked,
+@@ -442,7 +441,7 @@
+               : org ? `ИНН ${esc(sd.code||'—')}` : '—';
+   const cmp = (d.compare||[]).filter(r => r.status !== 'ok');
+   const sv = d.verdict ? `<span class="badge s-${d.verdict}">${ST[d.verdict]}</span>` : '';
+-  const esiaBtn = d.esia && Object.keys(d.esia).length ? `<button class="sm esiaBtn" data-esia="${esc(d.domain)}">ESIA</button>` : '';
++  const esiaBtn = d.esia_status || (d.esia && Object.keys(d.esia).length) ? `<button class="sm esiaBtn" data-esia="${esc(d.domain)}" title="Идентификация через Госуслуги: сверка Sd ↔ ЕСИА">ESIA</button>` : '';
+   const accBtn = d.account ? ` <button class="sm" data-acc="${esc(d.account)}" title="Открыть вкладку «Смена владельца ЛК» с этим аккаунтом">→ ЛК</button>` : '';
+   return `<tr><td><b>${esc(d.domain)}</b><br><small>${link((d.urls||{}).sd,'Sd')} ${link((d.urls||{}).s,'S')}</small>${esiaBtn}</td>
+     <td><span class="badge s-ok">найден</span><br><small>${esc(d.service_status||'')}</small></td>
+@@ -542,12 +541,15 @@
+       <div><b>state</b>${e.state ? `<span class="badge s-${e.state === 'approved' ? 'ok' : 'info'}">${esc(e.state)}</span>` : '—'}</div>
+       <div><b>Создано / обработано</b>${esc(l.creation_date || '—')} / ${esc(l.processed_date || '—')}</div>
+       <div><b>action</b>${esc(l.action || '—')}${l.reason ? '<br>reason: ' + esc(l.reason) : ''}${l.comment ? '<br>' + esc(l.comment) : ''}</div>
+-      <div><b>Данные ЕСИА</b>${data.trusted === undefined ? '—' : 'trusted: ' + (data.trusted ? 'да' : 'нет')}${p.vrf_stu ? ' · паспорт: ' + esc(p.vrf_stu) : ''}</div>
++      <div><b>Данные ЕСИА</b>${data.trusted === undefined ? '—' : 'trusted: ' + (data.trusted ? 'да' : 'нет')}${p.vrf_stu ? ' · паспорт: ' + esc(p.vrf_stu) : ''}${data.ogrn ? ' · ОГРН ' + esc(data.ogrn) : ''}${data.is_liquidated === true ? ' · <b style="color:#9b1c1c">ликвидирована</b>' : data.is_liquidated === false ? ' · действует' : ''}</div>
++      ${(data.legal_address || {}).address_str ? `<div><b>Юр. адрес (ЕСИА)</b>${esc(data.legal_address.address_str)}</div>` : ''}
+       <div><b>Ссылки</b>${[lk(e.url, 'Идентификация через Госуслуги'), lk(e.file_url, 'JSON-файл'), lk((d.urls || {}).sd, 'Sd')].filter(Boolean).join(' · ')}</div>
+     </div>
+     ${why ? `<div class="msg">${esc(why)}</div>` : ''}
+-    ${rows ? `<table style="margin-top:12px"><tr><th>Поле</th><th>Sd (ru_pp)</th><th>ЕСИА (JSON)</th><th></th></tr>${rows}</table>
+-      <p class="hint">Зелёный — совпадает, красный — расходится, жёлтый — «кем выдан» написан по-разному; без цвета — значения нет с одной из сторон.</p>` : ''}
++    ${rows ? `<table style="margin-top:12px"><tr><th>Поле</th><th>Sd (${esc(d.group || 'ru_pp')})</th><th>ЕСИА (JSON)</th><th></th></tr>${rows}</table>
++      <p class="hint">Зелёный — совпадает, красный — расходится, жёлтый — написано по-разному (кем выдан, тип улицы, корпус,
++        форма организации указана с одной стороны); без цвета — значения нет с одной из сторон.
++        ${d.kind === 'org' ? 'ООО = «Общество с ограниченной ответственностью», АО/НПАО = «(Непубличное) акционерное общество», ОАО, ПК, хозяйственное товарищество — так же; название должно совпасть.' : ''}</p>` : ''}
+     ${hist}`;
+   $('#esiaDlg').showModal();
+ }
+diff -ruN a/doctool_extension/background.js b/doctool_extension/background.js
+--- a/doctool_extension/background.js	2026-10-10 00:56:34.740109811 +0300
++++ b/doctool_extension/background.js	2026-10-10 00:56:34.746074496 +0300
+@@ -2,7 +2,8 @@
+  *
+  * 1) Держит WebSocket-соединение с doctool на этом компьютере: ws://127.0.0.1:<порт>/ext.
+  * 2) Получает команды и выполняет их по очереди:
+- *    lookup      — данные домена (счета, Sd, S, с 0.6.0 — идентификация через Госуслуги и JSON ЕСИА);
++ *    lookup      — данные домена (счета, Sd, S, с 0.6.0 — идентификация через Госуслуги и JSON ЕСИА;
++ *                  с 0.7.2 — и у юрлиц);
+  *    account     — данные аккаунта и базовая анкета (0.6.0);
+  *    fill_runic  — заполнить поля базовой анкеты во вкладке оператора (0.6.0).
+  *    lookup и account читают страницы в отдельной фоновой вкладке manager.
+@@ -182,9 +183,24 @@
+ // ------------------------------------------------------------------ JSON ЕСИА (identity.reg.ru)
+ 
+ // Из файла ЕСИА в doctool передаются только поля для сверки с Sd и признаки проверки данных.
+-// ИНН, СНИЛС, адреса, телефон, e-mail, oid не передаются.
++// Физлицо: ИНН, СНИЛС, адреса, телефон, e-mail, oid не передаются.
++// Организация (0.7.2; в файле есть full_name / ogrn / legal_address): название, ИНН, КПП, ОГРН, признак ликвидации
++// и юридический адрес. ФИО представителя (prs_auth_*), телефон, e-mail, почтовый адрес, oid не передаются.
+ function esiaFields(j) {
+   const d = (j && j.data) || j || {};
++  if (d.full_name !== undefined || d.ogrn !== undefined || d.legal_address) {
++    const a = d.legal_address || {};
++    return {
++      status: (j && j.status) || '', kind: 'org',
++      full_name: d.full_name || '', inn: d.inn || '', kpp: d.kpp || '', ogrn: d.ogrn || '',
++      is_liquidated: d.is_liquidated, trusted: d.trusted,
++      legal_address: d.legal_address ? {
++        zip_code: a.zip_code || '', region: a.region || '', area: a.area || '', city: a.city || '',
++        settlement: a.settlement || '', street: a.street || '', house: a.house || '', building: a.building || '',
++        frame: a.frame || '', flat: a.flat || '', address_str: a.address_str || '',
++      } : null,
++    };
++  }
+   const p = d.rf_passport || {};
+   return {
+     status: (j && j.status) || '',
+diff -ruN a/doctool_extension/content/manager.js b/doctool_extension/content/manager.js
+--- a/doctool_extension/content/manager.js	2026-10-10 00:56:34.740230933 +0300
++++ b/doctool_extension/content/manager.js	2026-10-10 00:56:34.746189144 +0300
+@@ -8,8 +8,8 @@
+  *   1) /bill/bills?searchstring=<домен>&from_head=1&_csrf=<токен>  — строка домена, service_id;
+  *   2) /tech/srv_details?service_id=<id>                           — Sd: данные администратора;
+  *   3) /tech/service_details?service_id=<id>                       — S: provider, user_id, dname;
+- *   4) (0.6.0, физлица) ссылка «Идентификация через Госуслуги» со страницы Sd — state и ссылка на JSON
+- *      ЕСИА. Сам JSON лежит на другом сайте (identity.reg.ru) — его загружает background.js.
++ *   4) (0.6.0 — физлица, с 0.7.2 — и юрлица) ссылка «Идентификация через Госуслуги» со страницы Sd — state
++ *      и ссылка на JSON ЕСИА. Сам JSON лежит на другом сайте (identity.reg.ru) — его загружает background.js.
+  *
+  * Аккаунт (account, 0.6.0): /manager/user_details?user_id=N (базовая анкета — скрытый блок страницы,
+  * логин, обслуживающая организация) и /user/N/runic_details (тип анкеты, значения формы).
+@@ -20,18 +20,19 @@
+  * подсветила изменённые поля и пересчитала English name. Кнопку «Сохранить» не нажимает.
+  */
+ (() => {
+-  const VERSION = '0.6.0';
++  const VERSION = '0.7.2';
+   if (window.__doctoolManager && window.__doctoolManager.version === VERSION) return;
+ 
+   // Поля Sd, которые передаются в doctool. authinfo, телефоны, адреса и служебные поля не передаются.
+   // E-mail администратора передаётся (с 0.5.0): e_mail — зоны .RU/.РФ/.SU, o_email — остальные зоны.
++  // Юридический адрес юрлица (улица, дом, корпус, строение, индекс) — с 0.7.2, для сверки с ЕСИА.
+   const SD_FIELDS = [
+     // физлицо (.RU/.РФ/.SU)
+     'person_r_surname', 'person_r_name', 'person_r_patronimic', 'person_surname', 'person_name', 'person_patronimic',
+     'birth_date', 'passport_series', 'passport_number_short', 'passport_date', 'passport_place', 'passport_place_id',
+     'passport_expiration_date', 'is_entrepreneur',
+-    // юрлицо (.RU/.РФ/.SU)
+-    'org_r', 'org', 'kpp',
++    // юрлицо (.RU/.РФ/.SU); юридический адрес — для сверки с ЕСИА (0.7.2)
++    'org_r', 'org', 'kpp', 'address_r_street', 'address_r_house', 'address_r_frame', 'address_r_building', 'address_r_zip',
+     // администратор (владелец) в остальных зонах — группа o_* (o_deti_org, o_gtld…)
+     'o_company', 'o_company_ru', 'o_first_name', 'o_first_name_ru', 'o_last_name', 'o_last_name_ru',
+     'o_patronimic', 'o_patronimic_ru', 'o_country_code', 'o_birth_date',
+@@ -418,9 +419,9 @@
+       if (s.dname && !names.includes(norm(s.dname))) {
+         throw new LookupError('mismatch', `Страница S относится к другому домену: ${s.dname}`);
+       }
+-      // ЕСИА — только для физлиц (ru_pp): по ссылке со страницы Sd этого домена
++      // ЕСИА — у физлиц (ru_pp) и юрлиц (ru_org, с 0.7.2): по ссылке со страницы Sd этого домена
+       let esia = null;
+-      if (opts.esia !== false && sd.group === 'ru_pp' && sd.links && sd.links.esia) {
++      if (opts.esia !== false && (sd.group === 'ru_pp' || sd.group === 'ru_org') && sd.links && sd.links.esia) {
+         progress('esia', `${domain}: идентификация через Госуслуги`);
+         esia = await esiaFor(sd.links.esia, opts.task);
+       }
+diff -ruN a/doctool_extension/manifest.json b/doctool_extension/manifest.json
+--- a/doctool_extension/manifest.json	2026-10-10 00:56:34.740134957 +0300
++++ b/doctool_extension/manifest.json	2026-10-10 00:56:34.746099466 +0300
+@@ -1,7 +1,7 @@
+ {
+   "manifest_version": 3,
+   "name": "PySimpleManager",
+-  "version": "0.7.1",
++  "version": "0.7.2",
+   "description": "Читает данные доменов и аккаунтов из manager.reg.ru для программы PySimpleManager. По кнопке в программе заполняет поля базовой анкеты, но не сохраняет её.",
+   "minimum_chrome_version": "116",
+   "permissions": ["tabs", "scripting", "storage", "alarms", "webRequest"],
+diff -ruN a/tests/fixtures/manager/esia_org.json b/tests/fixtures/manager/esia_org.json
+--- a/tests/fixtures/manager/esia_org.json	1970-01-01 03:00:00.000000000 +0300
++++ b/tests/fixtures/manager/esia_org.json	2026-10-10 00:56:34.747353875 +0300
+@@ -0,0 +1 @@
++{"status":"success","data":{"prs_auth_oid":"100000001","prs_auth_name":"Тестов Пётр Сергеевич","prs_auth_active":true,"oid_esia":"1000000002","trusted":true,"full_name":"ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"ТЕСТ\"","inn":"7701234567","kpp":"770101001","phone":"+7(999)0000002","email":"org@example.com","is_liquidated":false,"legal_address":{"house":"Д. 1","region":"МОСКОВСКАЯ ОБЛАСТЬ","street":"УЛ. ТЕСТОВАЯ","zip_code":"140000","country_id":"RUS","address_str":"МОСКОВСКАЯ ОБЛАСТЬ, Р-Н ТЕСТОВЫЙ, УЛ. ТЕСТОВАЯ","area":"Р-Н ТЕСТОВЫЙ","settlement":"","etag":"0000000000000000000000000000000000000000"},"mail_address":{"house":"1","region":"Московская обл","street":"ул Тестовая","zip_code":"140000","country_id":"RUS","address_str":"Московская обл, Тестовый р-н, ул Тестовая","area":"Тестовый р-н","settlement":"","etag":"0000000000000000000000000000000000000000","fias_code":"00000000-0000-0000-0000-000000000000"},"ogrn":"1000000000001","leg":"12300"}}
+diff -ruN a/tests/test_domains.py b/tests/test_domains.py
+--- a/tests/test_domains.py	2026-10-10 00:56:34.740666103 +0300
++++ b/tests/test_domains.py	2026-10-10 00:56:34.746508944 +0300
+@@ -281,9 +281,13 @@
+     assert with_esia(None).to_dict()["esia_status"] == "no_link"
+     assert with_esia({**ESIA_PAGE, "data": {"status": "error"}}).to_dict()["esia_status"] == "error"
+     assert with_esia({**ESIA_PAGE, "data": {"status": "success", "rf_passport": None}}).to_dict()["esia_status"] == "no_data"
+-    # юрлица — без ЕСИА
++    # юрлица (с 0.7.2) — тоже со статусом ЕСИА; без ссылки на странице Sd — «нет ссылки»
+     org = domains.from_extension("testdomain-org.ru", reply(SD_ORG, S_ORG, "testdomain-org.ru"))
+-    assert org.to_dict()["esia_status"] == ""
++    assert org.to_dict()["esia_status"] == "no_link"
++    # остальные зоны (группа o_*) — без ЕСИА
++    intl = domains.from_extension("x.com", reply({"group": "o_gtld", "fields": {"o_company": "X"}},
++                                                {"provider": "x", "dname": "x.com", "contype": "o_gtld", "user_id": "1"}, "x.com"))
++    assert intl.to_dict()["esia_status"] == ""
+     # значения нет с одной стороны — не красный, а «нет в ЕСИА»
+     part = with_esia({**ESIA_PAGE, "data": {**ESIA_JSON, "middle_name": ""}}).to_dict()
+     row = next(r for r in part["esia_rows"] if r["field"] == "person_r_patronimic")
+@@ -296,7 +300,7 @@
+     bad = with_esia({**ESIA_PAGE, "data": {**ESIA_JSON, "birth_date": "16.03.1990"}}, domain="second-pp.ru",
+                     s={**S_PP, "dname": "second-pp.ru"}).to_dict()
+     html = domain_report.build([good, bad])
+-    assert '<th>ЕСИА</th>' in html and 'class="esia" data-d="testdomain-pp.ru"' in html
++    assert '>ЕСИА<span class="arr">' in html and 'class="esia" data-d="testdomain-pp.ru"' in html
+     assert 'id="esia-data"' in html and '"last_name"' in html and "VERIFIED" in html
+     assert "Идентификация через Госуслуги (ЕСИА)" in html and "second-pp.ru" in html.split("К сведению")[1]
+     assert "</script" not in html.split('id="esia-data">')[1].split("</script>")[0]
+diff -ruN a/tests/test_esia_org.py b/tests/test_esia_org.py
+--- a/tests/test_esia_org.py	1970-01-01 03:00:00.000000000 +0300
++++ b/tests/test_esia_org.py	2026-10-10 00:56:34.746431489 +0300
+@@ -0,0 +1,161 @@
++"""0.7.2: ЕСИА у доменов юрлиц (Sd ru_org ↔ файл ЕСИА организации), provider отдельной колонкой в выгрузке
++по доменам, без поля «Название дела». Без сети и без браузера."""
++import json
++import re
++import sys
++from pathlib import Path
++
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT))
++
++from doctool import domain_report, domains, fieldnorm  # noqa: E402
++
++# Ответ расширения для домена юрлица: поля Sd — как parseSd на обезличенной странице sd_org.html (+ КПП),
++# данные ЕСИА — как esiaFields() из background.js по tests/fixtures/manager/esia_org.json
++SD_ORG = {"group": "ru_org", "trustee": "Нет", "status": "Активна (A)", "fields": {
++    "code": "7701234567", "kpp": "770101001", "country": "RU", "org": "Test Org LLC",
++    "org_r": 'Общество с ограниченной ответственностью "Тест"', "address_r_street": "ул. Тестовая",
++    "address_r_house": "1", "address_r_frame": "", "address_r_building": "", "address_r_zip": "140000",
++    "e_mail": "org@example.com"}}
++S_ORG = {"provider": "cctldru", "dname": "testdomain-org.ru", "contype": "ru_org", "state": "A", "user_id": "2000"}
++ESIA_ORG = {"status": "success", "kind": "org", "full_name": 'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ТЕСТ"',
++            "inn": "7701234567", "kpp": "770101001", "ogrn": "1000000000001", "is_liquidated": False, "trusted": True,
++            "legal_address": {"zip_code": "140000", "region": "МОСКОВСКАЯ ОБЛАСТЬ", "area": "Р-Н ТЕСТОВЫЙ",
++                              "street": "УЛ. ТЕСТОВАЯ", "house": "Д. 1",
++                              "address_str": "МОСКОВСКАЯ ОБЛАСТЬ, Р-Н ТЕСТОВЫЙ, УЛ. ТЕСТОВАЯ"}}
++ESIA_PAGE = {"url": "https://manager.reg.ru/manager/esia_identifications?person_id=3000", "count": 1, "state": "approved",
++             "file_url": "https://identity.reg.ru/esia/fedcba9876543210fedcba9876543210.json",
++             "latest": {"state": "approved", "creation_date": "2026-10-06 14:33:59", "processed_date": "2026-10-06 14:34:04",
++                        "action": "identification"}}
++
++
++def org_domain(esia=None, sd_fields=None, domain="testdomain-org.ru", provider="cctldru"):
++    sd = {**SD_ORG, "fields": {**SD_ORG["fields"], **(sd_fields or {})}}
++    s = {**S_ORG, "dname": domain, "provider": provider}
++    r = {"ok": True, "data": {"domain": domain, "service_id": "2", "account": "2000", "sd": sd, "s": s, "esia": esia,
++                              "urls": {"sd": "https://manager.reg.ru/tech/srv_details?service_id=2",
++                                       "s": "https://manager.reg.ru/tech/service_details?service_id=2"}}}
++    return domains.from_extension(domain, r)
++
++
++def with_data(**changes):
++    data = json.loads(json.dumps(ESIA_ORG))
++    for k, v in changes.items():
++        if k.startswith("la_"):
++            data["legal_address"][k[3:]] = v
++        else:
++            data[k] = v
++    return {**ESIA_PAGE, "data": data}
++
++
++# ------------------------------------------------------------------ сравнение значений
++
++def test_org_name_legal_forms():
++    same = lambda a, b: fieldnorm.same("org", a, b)[0]  # noqa: E731
++    full = 'ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "АЛЬСТРОМ ТВЕРЬ"'
++    assert same("ООО «Альстром Тверь»", full) == "ok"                 # ООО = полностью, «» = ""
++    assert same("ООО Альстром-Тверь", full) == "ok"                   # без кавычек, дефис
++    assert same('АО "Ромашка"', 'НЕПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО "РОМАШКА"') == "ok"
++    assert same('НПАО "Ромашка"', 'АКЦИОНЕРНОЕ ОБЩЕСТВО "РОМАШКА"') == "ok"
++    assert same('ОАО "Ромашка"', 'ОТКРЫТОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО "РОМАШКА"') == "ok"
++    assert same('ПК "Заря"', 'ПРОИЗВОДСТВЕННЫЙ КООПЕРАТИВ "ЗАРЯ"') == "ok"
++    assert same('Хозяйственное товарищество "Заря"', 'ПОЛНОЕ ТОВАРИЩЕСТВО "ЗАРЯ"') == "ok"
++    assert same('АО "ТВ Центр"', 'АКЦИОНЕРНОЕ ОБЩЕСТВО "ТВ ЦЕНТР"') == "ok"   # «ТВ» в кавычках — часть названия
++    st, why = fieldnorm.same("org", "ООО «Альстром»", full)
++    assert st == "fail" and "название" in why
++    st, why = fieldnorm.same("org", 'ООО "Ромашка"', 'АКЦИОНЕРНОЕ ОБЩЕСТВО "РОМАШКА"')
++    assert st == "fail" and "форма" in why
++    assert same('ОАО "Ромашка"', 'ПУБЛИЧНОЕ АКЦИОНЕРНОЕ ОБЩЕСТВО "РОМАШКА"') == "fail"
++    assert same("Альстром Тверь", full) == "warn"                     # форма указана только с одной стороны
++    assert same("", full) == ""
++
++
++def test_house_and_street():
++    house = lambda a, b: fieldnorm.same("house", a, b)[0]  # noqa: E731
++    street = lambda a, b: fieldnorm.same("street", a, b)[0]  # noqa: E731
++    assert house("11", "Д. 11") == "ok" and house("дом 11", "д.11") == "ok" and house("11А", "Д. 11 А") == "ok"
++    assert house("11, корп. 2", "Д. 11 КОРП. 2") == "ok"
++    assert house("11", "Д. 11 КОРП. 2") == "warn" and house("12", "Д. 11") == "fail"
++    assert street("ул. Промышленная", "УЛ. ПРОМЫШЛЕННАЯ") == "ok"
++    assert street("Промышленная улица", "УЛ. ПРОМЫШЛЕННАЯ") == "ok" and street("Промышленная", "УЛ. ПРОМЫШЛЕННАЯ") == "ok"
++    assert street("пр-кт Ленинский", "ЛЕНИНСКИЙ ПРОСПЕКТ") == "ok"
++    assert street("пер. Ленинский", "УЛ. ЛЕНИНСКИЙ") == "warn"
++    assert street("ул. Тестовая", "УЛ. САДОВАЯ") == "fail"
++    assert fieldnorm.same("digits", "171261", "171260")[0] == "fail"
++
++
++# ------------------------------------------------------------------ сверка Sd ↔ ЕСИА у домена юрлица
++
++def test_esia_org_match():
++    info = org_domain({**ESIA_PAGE, "data": ESIA_ORG})
++    d = info.to_dict()
++    assert info.kind == "org" and d["esia_status"] == "match" and d["esia_state"] == "approved"
++    assert d["esia_ru"] == "approved · Sd = ЕСИА (6 из 6)"
++    rows = {r["field"]: r for r in d["esia_rows"]}
++    assert [r["field"] for r in d["esia_rows"]] == ["code", "kpp", "org_r", "address_r_street", "address_r_house",
++                                                    "address_r_zip"]
++    assert rows["code"]["esia_field"] == "inn" and rows["org_r"]["esia_field"] == "full_name"
++    assert rows["address_r_house"]["sd"] == "1" and rows["address_r_house"]["esia"] == "Д. 1"
++    assert all(r["status"] == "ok" for r in d["esia_rows"])
++    assert info.verdict == "" and domains.problem(info) == "unchecked"    # на вердикт не влияет
++
++
++def test_esia_org_mismatch_and_partial():
++    d = org_domain(with_data(la_zip_code="140001")).to_dict()            # индекс другой → красный
++    assert d["esia_status"] == "mismatch" and d["esia_ru"].endswith("Sd ≠ ЕСИА: Индекс (юр. адрес)")
++    d = org_domain(with_data(full_name='АКЦИОНЕРНОЕ ОБЩЕСТВО "ТЕСТ"')).to_dict()
++    row = next(r for r in d["esia_rows"] if r["field"] == "org_r")
++    assert row["status"] == "fail" and "форма" in row["detail"]
++    d = org_domain(with_data(la_house="Д. 1 КОРП. 2")).to_dict()          # совпал только номер дома → жёлтый
++    assert d["esia_status"] == "warn" and "Дом (юр. адрес)" in d["esia_ru"]
++    d = org_domain(with_data(la_house="Д. 1 КОРП. 2"), {"address_r_frame": "2"}).to_dict()   # корпус в Sd отдельно
++    row = next(r for r in d["esia_rows"] if r["field"] == "address_r_house")
++    assert row["status"] == "ok" and row["sd"] == "1, корп. 2"
++    d = org_domain({**ESIA_PAGE, "data": ESIA_ORG}, {"kpp": ""}).to_dict()   # КПП в Sd пустой — без цвета
++    row = next(r for r in d["esia_rows"] if r["field"] == "kpp")
++    assert row["status"] == "" and row["detail"] == "нет в Sd" and d["esia_status"] == "match"
++    d = org_domain(with_data(is_liquidated=True)).to_dict()
++    assert d["esia_status"] == "mismatch" and "Организация действует" in d["esia_ru"]
++    # файл ЕСИА физлица у домена юрлица: сверять нечего
++    d = org_domain({**ESIA_PAGE, "data": {"status": "success", "last_name": "Тестов"}}).to_dict()
++    assert d["esia_status"] == "no_data"
++
++
++def test_user_sample_shape():
++    """Форма файла ЕСИА организации из manager (поля как в присланном пользователем файле, значения обезличены):
++    дом «Д. 11» = «11», улица «УЛ. …» = «ул. …», «ООО «…»» = «ОБЩЕСТВО С …», индекс 171261 ≠ 171260."""
++    info = org_domain(with_data(full_name='ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ "ПРИМЕР ТВЕРЬ"', la_house="Д. 11",
++                                la_street="УЛ. ПРОМЫШЛЕННАЯ", la_zip_code="171260"),
++                      {"org_r": "ООО «Пример Тверь»", "address_r_house": "11", "address_r_street": "ул. Промышленная",
++                       "address_r_zip": "171261"})
++    st = {r["field"]: r["status"] for r in info.to_dict()["esia_rows"]}
++    assert st == {"code": "ok", "kpp": "ok", "org_r": "ok", "address_r_street": "ok", "address_r_house": "ok",
++                  "address_r_zip": "fail"}
++
++
++# ------------------------------------------------------------------ выгрузка по доменам и веб-интерфейс
++
++def test_domain_report_provider_column_sort_and_org_esia():
++    a = org_domain({**ESIA_PAGE, "data": ESIA_ORG}).to_dict()
++    b = org_domain(with_data(la_zip_code="140001"), domain="second-org.ru", provider="RU-CENTER-RU").to_dict()
++    c = org_domain(None, domain="third-org.ru", provider="").to_dict()            # нет ссылки ЕСИА на Sd
++    html = domain_report.build([a, b, c])
++    heads = re.findall(r'<th title="Сортировать">([^<]+)<span class="arr">', html)
++    assert heads == ["Домен", "manager", "Администратор (Sd)", "Сверка", "ЕСИА", "Provider", "Прочее"]
++    assert "<td>RU-CENTER-RU</td>" in html and "<td>cctldru</td>" in html and "provider:" not in html
++    assert 'colspan="7"' in html and 'id="bygroups"' in html and "localeCompare" in html
++    # кнопка ESIA — у всех найденных доменов юрлиц, и когда сверки нет (окно объяснит почему)
++    for dom in ("testdomain-org.ru", "second-org.ru", "third-org.ru"):
++        assert f'class="esia" data-d="{dom}"' in html
++    data = json.loads(html.split('id="esia-data">')[1].split("</script>")[0])
++    assert data["testdomain-org.ru"]["group"] == "ru_org" and data["testdomain-org.ru"]["ogrn"] == "1000000000001"
++    assert data["third-org.ru"]["status"] == "no_link"
++    assert "Идентификация через Госуслуги (ЕСИА) по Sd доменов (физлица и юрлица)" in html
++    # фильтр находит и по provider
++    assert any("RU-CENTER-RU" in q for q in re.findall(r'data-q="([^"]*)"', html))
++
++
++def test_web_has_no_case_name_field():
++    page = (ROOT / "doctool" / "static" / "index.html").read_text(encoding="utf-8")
++    assert 'id="caseId"' not in page and "Название дела" not in page and "case_id:" not in page
++    assert "d.esia_status ||" in page                                   # кнопка ESIA и у доменов без файла ЕСИА
+diff -ruN a/tests/test_extension_parsers.py b/tests/test_extension_parsers.py
+--- a/tests/test_extension_parsers.py	2026-10-10 00:56:34.740902575 +0300
++++ b/tests/test_extension_parsers.py	2026-10-10 00:56:34.746537557 +0300
+@@ -11,6 +11,7 @@
+ ROOT = Path(__file__).resolve().parent.parent
+ FIX = ROOT / "tests" / "fixtures" / "manager"
+ JS = (ROOT / "doctool_extension" / "content" / "manager.js").read_text(encoding="utf-8")
++BG = (ROOT / "doctool_extension" / "background.js").read_text(encoding="utf-8")
+ 
+ 
+ @pytest.fixture(scope="module")
+@@ -148,3 +149,34 @@
+     r = page.evaluate("f => window.__doctoolManager.fillRunic('1000', f)", NEW_OWNER)
+     assert not r["ok"] and r["error"]["code"] == "not_person" and "юрлиц" in r["error"]["message"]
+     assert page.evaluate("() => document.querySelector('#ru_pp_contacts [name=person_r_surname]').value") == "Тестов"
++
++
++# ------------------------------------------------------------------ 0.7.2: ЕСИА у юрлиц
++
++def test_sd_org_legal_address(page):
++    # юридический адрес юрлица — для сверки с ЕСИА; почтовый адрес (p_addr_*) и квартира/офис не передаются
++    org = json.loads(run(page, "sd_org.html", "M.parseSd(document)"))
++    f = org["fields"]
++    assert f["address_r_street"] == "ул. Тестовая" and f["address_r_house"] == "1" and f["address_r_zip"] == "140000"
++    assert f["address_r_frame"] == "" and f["address_r_building"] == ""
++    assert "address_r_flat" not in f and "p_addr_street" not in f and "phone" not in f
++
++
++def test_esia_fields_org_and_person(page):
++    # esiaFields() из background.js: что из файла ЕСИА уходит в программу
++    import re
++    src = re.search(r"function esiaFields\(j\) \{.*?\n\}\n", BG, re.S).group(0)
++    page.goto("about:blank")
++    org_json = json.loads((FIX / "esia_org.json").read_text(encoding="utf-8"))
++    org = page.evaluate(f"j => {{ {src}; return esiaFields(j); }}", org_json)
++    assert org["kind"] == "org" and org["inn"] == "7701234567" and org["kpp"] == "770101001"
++    assert org["full_name"].startswith("ОБЩЕСТВО С ОГРАНИЧЕННОЙ") and org["ogrn"] == "1000000000001"
++    assert org["is_liquidated"] is False and org["trusted"] is True
++    la = org["legal_address"]
++    assert la["house"] == "Д. 1" and la["street"] == "УЛ. ТЕСТОВАЯ" and la["zip_code"] == "140000"
++    text = json.dumps(org, ensure_ascii=False)
++    for secret in ("prs_auth", "Тестов", "+7(999)", "org@example.com", "mail_address", "oid"):
++        assert secret not in text, secret
++    pp = page.evaluate(f"j => {{ {src}; return esiaFields(j); }}",
++                       json.loads((FIX / "esia_pp.json").read_text(encoding="utf-8")))
++    assert pp["last_name"] == "Тестов" and "inn" not in pp and "snils" not in pp and "kind" not in pp
