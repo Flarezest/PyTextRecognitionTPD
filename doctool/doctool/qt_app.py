@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
         self.res: CaseResult | None = None
         self.thread: QThread | None = None
         self.worker: Worker | None = None
-        self.setWindowTitle("PySimpleManager")
+        self.setWindowTitle("doctool — проверка заявлений")
         self.resize(1400, 900)
         split = QSplitter(Qt.Horizontal)
         split.addWidget(self._build_left())
