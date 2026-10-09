@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QButtonGroup, QC
                                QRadioButton, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem, QTabWidget,
                                QVBoxLayout, QWidget)
 
-from . import progress
+from . import APP_NAME, __version__, progress
 from .compare import STATUS_RU
 from .integrations import push_to_system
 from .service import APP_MODES, PAS_MODES, CaseInput, CaseResult, recompute, run_case, table_rows
@@ -169,7 +169,7 @@ class MainWindow(QMainWindow):
         self.res: CaseResult | None = None
         self.thread: QThread | None = None
         self.worker: Worker | None = None
-        self.setWindowTitle("doctool — проверка заявлений")
+        self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.resize(1400, 900)
         split = QSplitter(Qt.Horizontal)
         split.addWidget(self._build_left())
@@ -357,7 +357,7 @@ class MainWindow(QMainWindow):
         combined = self.combined.isChecked()
         app, pas = self.app_box.path, (None if combined else self.pas_box.path)
         if not app and not pas:
-            QMessageBox.information(self, "doctool", "Загрузите файл заявления и/или паспорта.")
+            QMessageBox.information(self, APP_NAME, "Загрузите файл заявления и/или паспорта.")
             return None
         hand = self.app_box.extra.isChecked()
         use_vlm = hand or self.pas_box.extra.isChecked()
@@ -552,7 +552,7 @@ class MainWindow(QMainWindow):
 def main(out_root: str = "results", model: str = "qwen3-vl:4b-instruct", ollama: str = "http://127.0.0.1:11434",
          llm_model: str | None = None):
     app = QApplication.instance() or QApplication(sys.argv)
-    app.setApplicationName("doctool")
+    app.setApplicationName(APP_NAME)
     w = MainWindow(out_root, model, ollama, llm_model)
     w.show()
     sys.exit(app.exec())

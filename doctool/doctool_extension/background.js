@@ -70,7 +70,7 @@ async function connect() {
     state.connected = true;
     state.lastError = '';
     send({ type: 'hello', version: VERSION });
-    note(`Подключено к doctool (порт ${port})`);
+    note(`Подключено к PySimpleManager (порт ${port})`);
     clearInterval(keepalive);
     keepalive = setInterval(() => send({ type: 'ping' }), 20000);   // не даёт service worker уснуть
     badge();
@@ -83,12 +83,12 @@ async function connect() {
   sock.onclose = () => {
     if (ws === sock) ws = null;
     clearInterval(keepalive);
-    if (state.connected) note('Связь с doctool потеряна');
+    if (state.connected) note('Связь с PySimpleManager потеряна');
     state.connected = false;
     badge();
     scheduleReconnect();
   };
-  sock.onerror = () => { state.lastError = `doctool не отвечает на порту ${port}`; };
+  sock.onerror = () => { state.lastError = `PySimpleManager не отвечает на порту ${port}`; };
 }
 
 function scheduleReconnect() {

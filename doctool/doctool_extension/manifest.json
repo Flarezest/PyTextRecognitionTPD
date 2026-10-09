@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PySimpleManager",
-  "version": "0.6.0",
-  "description": "Читает данные доменов и аккаунтов из manager.reg.ru для doctool. По кнопке в doctool заполняет поля базовой анкеты, но не сохраняет её.",
+  "version": "0.7.1",
+  "description": "Читает данные доменов и аккаунтов из manager.reg.ru для программы PySimpleManager. По кнопке в программе заполняет поля базовой анкеты, но не сохраняет её.",
   "minimum_chrome_version": "116",
   "permissions": ["tabs", "scripting", "storage", "alarms", "webRequest"],
   "host_permissions": ["https://manager.reg.ru/*", "https://identity.reg.ru/*"],

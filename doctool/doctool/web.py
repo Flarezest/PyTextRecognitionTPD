@@ -18,7 +18,7 @@ import numpy as np
 from fastapi import Body, FastAPI, File, Form, HTTPException, UploadFile, WebSocket
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 
-from . import account, domain_report
+from . import APP_NAME, __version__, account, domain_report
 from .domains import ManagerUnavailable, sort_by_problem, split_domains
 from .integrations import push_to_system
 from .jobs import JobManager, result_payload
@@ -34,7 +34,7 @@ def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-inst
                ollama: str = "http://127.0.0.1:11434", llm_model: str | None = None) -> FastAPI:
     from .llm_extract import DEFAULT_MODEL as LLM_DEFAULT
     llm_model = llm_model or LLM_DEFAULT
-    app = FastAPI(title="doctool", docs_url=None, redoc_url=None)
+    app = FastAPI(title=APP_NAME, version=__version__, docs_url=None, redoc_url=None)
     bridge = ExtensionBridge()
     manager = ManagerTasks(bridge)
     jobs = JobManager(manager=manager)
@@ -61,7 +61,8 @@ def create_app(out_root: str = "results", default_model: str = "qwen3-vl:4b-inst
                 models = [m["name"] for m in json.load(r).get("models", [])]
         except Exception:  # noqa: BLE001
             pass
-        return {"case_types": types, "app_modes": APP_MODES, "pas_modes": PAS_MODES,
+        return {"app": APP_NAME, "version": __version__,
+                "case_types": types, "app_modes": APP_MODES, "pas_modes": PAS_MODES,
                 "default_model": default_model, "ollama": ollama, "ollama_models": models,
                 "default_llm_model": llm_model}
 
@@ -326,7 +327,7 @@ def serve(host: str = "127.0.0.1", port: int = 8765, out_root: str = "results",
 
     import uvicorn
     url = f"http://{'127.0.0.1' if host in ('0.0.0.0', '::') else host}:{port}"
-    print(f"doctool: веб-интерфейс на {url}  (остановить — Ctrl+C)")
+    print(f"{APP_NAME} {__version__}: веб-интерфейс на {url}  (остановить — Ctrl+C)")
     if host not in ("127.0.0.1", "localhost"):
         print("[!] Интерфейс доступен другим компьютерам сети. Документы будут обрабатываться на этом компьютере.")
     if open_browser:

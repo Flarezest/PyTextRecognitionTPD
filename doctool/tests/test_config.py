@@ -185,3 +185,22 @@ def test_validate_command(capsys):
     main(["validate", "--list"])
     out = capsys.readouterr().out
     assert "Конфигурация в порядке" in out and "manager_domains" in out and "applicant_fio" in out
+
+
+def test_name_and_version_match_changelog_and_extension(capsys):
+    """Название программы и версия: __init__.py = верхний раздел CHANGELOG.md; расширение — то же название,
+    версия не новее программы (расширение меняется не в каждой версии)."""
+    import json
+    import re
+
+    from doctool import APP_NAME, __version__
+    from doctool.__main__ import main
+    assert APP_NAME == "PySimpleManager"
+    top = re.search(r"^## \[(\d+\.\d+\.\d+)\]", (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"), re.M)
+    assert top and top.group(1) == __version__
+    manifest = json.loads((ROOT / "doctool_extension" / "manifest.json").read_text(encoding="utf-8"))
+    ver = lambda v: tuple(map(int, v.split(".")))  # noqa: E731
+    assert manifest["name"] == APP_NAME and ver(manifest["version"]) <= ver(__version__)
+    with pytest.raises(SystemExit):
+        main(["--version"])
+    assert capsys.readouterr().out.strip() == f"{APP_NAME} {__version__}"

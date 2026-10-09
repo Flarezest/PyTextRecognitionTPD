@@ -1,4 +1,4 @@
-"""Командная строка.
+"""Командная строка PySimpleManager (пакет doctool).
 
 Примеры (подробно — docs/USAGE.md):
   python -m doctool gui                                    # окно приложения
@@ -22,6 +22,7 @@ import argparse
 import json
 from pathlib import Path
 
+from . import APP_NAME, __version__
 from .compare import STATUS_RU
 from .integrations import JsonFileAdminData
 from .ocr import OllamaVLM, check_tesseract, load_document
@@ -142,7 +143,9 @@ def main(argv=None):
     for stream in (sys.stdout, sys.stderr):
         if stream is not None and hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
-    p = argparse.ArgumentParser(prog="doctool", description="Локальная проверка заявлений и паспортов РФ")
+    p = argparse.ArgumentParser(prog="python -m doctool",
+                                description=f"{APP_NAME} {__version__} — локальная проверка заявлений и паспортов РФ")
+    p.add_argument("--version", action="version", version=f"{APP_NAME} {__version__}")
     p.add_argument("--vlm", default=None, help=f"модель Ollama для рукописного текста, напр. {DEFAULT_MODEL}")
     p.add_argument("--ollama", default="http://127.0.0.1:11434", help="адрес Ollama")
     p.add_argument("-q", "--quiet", action="store_true", help="не показывать ход работы")

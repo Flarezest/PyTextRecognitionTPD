@@ -1,4 +1,6 @@
-# doctool: локальная проверка заявлений и паспортов РФ
+# PySimpleManager: локальная проверка заявлений и паспортов РФ
+
+> С версии 0.7.1 программа называется **PySimpleManager** (раньше — doctool). Внутренние имена не менялись: пакет и команды `python -m doctool …`, файлы `doctool_web.bat` / `doctool_gui.bat`, папка расширения `doctool_extension`, схема выгрузки `doctool.case.v1`.
 
 Инструмент извлекает данные из заявления (PDF с текстовым слоем, DOCX, скан или фото) и из паспорта РФ (скан или фото), сверяет их между собой, выполняет формальные проверки и выносит вердикт: **принять / отклонить / ручная проверка**. Правила вердикта задаются в конфиге отдельно для каждого типа заявления.
 
@@ -41,7 +43,7 @@
    - На шаге компонентов раскройте *Additional language data (download)* и отметьте **Russian**.
    - Проверка в новом окне командной строки: `tesseract --list-langs` — в списке должны быть `eng`, `osd`, `rus`.
    - Если `rus` нет (установщик качает языки из интернета и мог не скачать): возьмите `rus.traineddata` из https://github.com/tesseract-ocr/tessdata и положите в `C:\Program Files\Tesseract-OCR\tessdata`.
-   - doctool сам ищет Tesseract в PATH и стандартных папках; если поставили в другое место — `set TESSERACT_CMD=D:\путь\tesseract.exe`.
+   - PySimpleManager сам ищет Tesseract в PATH и стандартных папках; если поставили в другое место — `set TESSERACT_CMD=D:\путь\tesseract.exe`.
 3. Отдельное окружение и зависимости (в папке проекта):
    ```
    py -3.12 -m venv .venv
@@ -119,7 +121,7 @@ llm_test/         (0.7.0) сравнение «шаблон ↔ нейросет
 tests/            быстрые тесты без OCR: python -m pytest tests -q
                   (test_extension_parsers.py — разбор страниц manager, нужен Playwright, иначе пропускается)
 doctool_extension/ расширение Chrome «PySimpleManager» (Manifest V3, JavaScript)
-  background.js     связь с doctool, очередь, фоновая вкладка manager, ожидание входа
+  background.js     связь с программой, очередь, фоновая вкладка manager, ожидание входа
   content/manager.js разбор страниц manager: счета, Sd, S, ЕСИА, данные пользователя, базовая анкета; заполнение анкеты
   popup.*, options.* окно расширения и настройки
 ```
